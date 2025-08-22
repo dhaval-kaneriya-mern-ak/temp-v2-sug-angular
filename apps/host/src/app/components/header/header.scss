@@ -1,0 +1,336 @@
+@use '../../config/variable' as *;
+.headerStyledMain {
+  background-color: $primary-color;
+  padding: 7px 0;
+  @media (max-width: 575px) {
+    padding-bottom: 15px;
+  }
+}
+.headerStyled {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logoImage {
+  width: 144px;
+  height: auto;
+}
+.toggleIcon {
+  margin-left: 7px;
+  fill: $white-color;
+  width: 20px;
+  cursor: pointer;
+  margin-top: 2px;
+  svg {
+    vertical-align: top;
+    opacity: 0.9;
+  }
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+
+  &:focus {
+    outline: 2px solid var(--primary-color-light);
+    outline-offset: 2px;
+  }
+}
+.extendedWrap {
+  position: absolute;
+  background-color: $white-color;
+  // max-width: 530px;
+  max-width: 530px;
+  width: auto;
+  margin-left: 4px;
+  position: absolute;
+  display: block;
+  z-index: 1000;
+  padding: 20px 15px 15px;
+  top: 55px;
+  box-shadow: 0 30px 100px -30px rgba(246, 139, 28, 0.6);
+  @media (max-width: 767px) {
+    max-width: 350px;
+    width: 100%;
+  }
+  &::after {
+    transform-origin: bottom;
+    top: -28px;
+    left: 14px;
+    border: solid transparent;
+    content: ' ';
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    border-color: rgba(255, 255, 255, 0);
+    border-bottom-color: #fff;
+    border-width: 14px;
+    margin-left: -14px;
+    z-index: 1040;
+  }
+  h5 {
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    color: $foreground;
+  }
+}
+.explore-giving {
+  display: flex;
+  // border-bottom: 1px solid #dfdfdf;
+  // margin-bottom: 12px;
+  @media (max-width: 767px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+.discoverLogo {
+  display: flex;
+  width: 50%;
+  // margin-bottom: 12px;
+  @media (max-width: 767px) {
+    width: 100%;
+  }
+  img {
+    margin: 0 15px 0 0;
+    height: 40px;
+    width: 40px;
+  }
+}
+.discoverInfo {
+  width: calc(100% - 65px);
+  line-height: 1;
+  h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: $black-color;
+    margin: 0;
+    font-family: $helvetica-neue-font;
+  }
+  span {
+    display: inline-block;
+    font-size: 13px;
+    color: $black-color;
+    font-family: $helvetica-neue-font;
+    line-height: 1;
+  }
+}
+.explore-listWrap {
+  display: flex;
+  flex-wrap: wrap;
+  .explore-list {
+    display: flex;
+    width: 50%;
+    gap: 25px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    img {
+      height: 40px;
+      width: 40px;
+    }
+  }
+}
+.discoverMoreLink {
+  color: $primary-color;
+  font-size: 13px;
+  font-weight: 800;
+}
+.headerMenuWrap {
+  display: flex;
+  gap: 30px;
+  flex: 1 1 auto;
+  padding: 0;
+  margin: 0 0 0 19px;
+  list-style: none;
+  @media (max-width: 991px) {
+    gap: 15px;
+    margin: 0 0 0 10px;
+  }
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+.headerMenuLink {
+  text-decoration: none;
+  color: $white-color;
+  font-size: 16px;
+  &:hover {
+    color: $primary-color-light;
+  }
+}
+.headerMenuLinkBtn {
+  text-decoration: none;
+  color: $white-color;
+  font-size: 16px;
+  position: relative;
+  cursor: pointer;
+  &:hover {
+    color: $primary-color-light;
+  }
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    margin-left: -4px;
+    top: auto;
+    bottom: -5px;
+    transition: bottom 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+    display: inline-block;
+    width: 0;
+    height: 0;
+    vertical-align: middle;
+    border-top: 4px dashed;
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+  }
+  &:after {
+    transform-origin: bottom;
+    bottom: -5px;
+    left: 50%;
+    border: solid transparent;
+    content: ' ';
+    height: 0;
+    width: 0;
+    position: absolute;
+    top: 14px;
+    pointer-events: none;
+    border-color: rgba(248, 127, 24, 0);
+    border-bottom-color: $primary-color;
+    border-width: 14px;
+    margin-left: -14px;
+    z-index: 1040;
+    opacity: 0;
+    transform: scale(0.2);
+    transition: 0.2s all;
+  }
+  &.menu-show {
+    color: #fff590;
+    &:before {
+      bottom: -19px;
+    }
+    &:after {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  // Additional styles for button elements to maintain original appearance
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    outline-offset: 0;
+  }
+}
+.headerRightWrap {
+  display: flex;
+  align-items: center;
+  @media (max-width: 767px) {
+    flex: 1 1 auto;
+    justify-content: space-between;
+  }
+  .btn-primary {
+    margin-right: 10px;
+    padding: 6px 10px;
+    margin-left: 4px;
+    @media (max-width: 767px) {
+      font-weight: 500;
+      font-size: 20px;
+    }
+  }
+  .btn-text {
+    font-size: 16px;
+    color: $white-color;
+    border: none;
+    &:focus,
+    &:active {
+      color: $white-color;
+    }
+    &:hover {
+      color: $primary-color-light;
+    }
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+  .desktop-search {
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+}
+.searchLink {
+  font-size: 20px;
+  color: $white-color;
+  border: none;
+  text-decoration: none;
+  padding: 7px 12px 3px;
+  @media (max-width: 767px) {
+    font-size: 16px;
+  }
+}
+.extendedMenuWrap {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  z-index: 9;
+  width: 100%;
+  background-color: $primary-color;
+  box-shadow: 0 10px 40px -10px rgba(34, 34, 34, 0.35);
+  padding: 8px 100px 0 0;
+  margin: 0;
+  height: 45px;
+  justify-content: center;
+  gap: 8px;
+  display: none;
+  list-style: none;
+  &.open-menu {
+    display: flex;
+  }
+  &.extendedLoginMenuWrap {
+    padding: 10px 44px 0 0;
+    justify-content: flex-end;
+    @media (min-width: 1200px) {
+      padding-right: 4%;
+    }
+    @media (min-width: 1600px) {
+      padding-right: 12%;
+    }
+    @media (min-width: 2000px) and (max-width: 2799px) {
+      padding-right: 20%;
+    }
+    @media (min-width: 2800px) {
+      padding-right: 32%;
+    }
+    ul {
+      li {
+        a {
+          display: flex;
+          gap: 5px;
+          align-items: center;
+        }
+      }
+    }
+  }
+}
+.extendedMenuLink {
+  text-decoration: none;
+  color: $white-color;
+  font-size: 16px;
+  background: transparent;
+  border-bottom: 5px solid transparent;
+  padding: 5px 12px;
+  font-family: $helvetica-neue-font;
+  &:hover {
+    color: #fff590;
+    border-bottom: 5px solid #fff590;
+  }
+}

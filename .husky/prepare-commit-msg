@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Read the commit message
+commit_msg=$(cat "$1")
+
+# Function to validate commit message
+validate_commit_msg() {
+  # Allow ticket formats: "MAR-123: Description" or "A5X0-T34: Description"
+  if echo "$commit_msg" | grep -qE "^[A-Z0-9]+-[A-Z0-9]+: .+"; then
+    return 0
+  fi
+
+  # Invalid format
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Commit message must follow this format:"
+  echo "  • Must start with ticket ID followed by a colon and a space"
+  echo "  • Include descriptive message that is sentence case or title case"
+  echo "  • For example: 'MAR-123: Update component' or 'A5X0-T34: Fix bug'"
+  echo ""
+  echo "Your message: '$commit_msg'"
+  return 1
+}
+
+# Validate commit message (fast check)
+echo "🔍 Validating commit message format..."
+if ! validate_commit_msg; then
+  exit 1
+fi
+
+echo "✅ Commit message format is valid"

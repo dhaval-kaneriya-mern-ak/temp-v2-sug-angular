@@ -1,0 +1,36 @@
+.signup-reports {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.signup-reports h2 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.recent-signups {
+  margin-bottom: 2rem;
+}
+
+.recent-signups h3 {
+  color: #34495e;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.actions button {
+  transition: all 0.3s ease;
+}

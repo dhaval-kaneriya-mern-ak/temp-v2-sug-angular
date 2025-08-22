@@ -1,0 +1,167 @@
+{
+  "name": "reports",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "sug",
+  "sourceRoot": "apps/reports/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:webpack-browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/reports",
+        "index": "apps/reports/src/index.html",
+        "main": "apps/reports/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/reports/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/reports/public"
+          }
+        ],
+        "styles": ["apps/reports/src/styles.scss"],
+        "customWebpackConfig": {
+          "path": "apps/reports/webpack.config.ts"
+        }
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all",
+          "customWebpackConfig": {
+            "path": "apps/reports/webpack.prod.config.ts"
+          }
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/angular:dev-server",
+      "options": {
+        "port": 4201,
+        "publicHost": "http://localhost:4201"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "reports:build:production"
+        },
+        "development": {
+          "buildTarget": "reports:build:development"
+        },
+        "https": {
+          "buildTarget": "reports:build:development",
+          "port": 4201,
+          "host": "reports.sug.rocks",
+          "publicHost": "https://reports.sug.rocks:4201",
+          "ssl": true,
+          "sslCert": "ssl-certs/sug-rocks.crt",
+          "sslKey": "ssl-certs/sug-rocks.key",
+          "disableHostCheck": true,
+          "liveReload": true,
+          "hmr": true,
+          "allowedHosts": ["reports.sug.rocks", "localhost"],
+          "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+          }
+        }
+      },
+      "defaultConfiguration": "development",
+      "dependsOn": ["host:serve"]
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "reports:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/reports"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "reports:build",
+        "port": 4201,
+        "watch": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "reports:build:development"
+        },
+        "production": {
+          "buildTarget": "reports:build:production"
+        }
+      }
+    },
+    "check-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --check apps/reports/",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write apps/reports/",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx prettier --write apps/reports/",
+          "npx nx lint reports --fix"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx prettier --check apps/reports/",
+          "npx nx lint reports"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

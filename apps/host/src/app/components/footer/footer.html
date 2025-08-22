@@ -1,0 +1,246 @@
+<footer class="footerStyled">
+  <div class="footer text-black">
+    <div class="container">
+      <div class="footer-container">
+        <div class="row">
+          <div class="mobile-footer d-block d-md-none">
+            <div class="row">
+              <div class="col">
+                <div class="d-flex justify-content-center">
+                  <button
+                    [class]="
+                      'mobileToggleMenu footer-toggle ' +
+                      (isCollapsed ? 'collapsed' : '')
+                    "
+                    (click)="toggleCollapse()"
+                    [attr.aria-expanded]="!isCollapsed"
+                    aria-controls="collapseFooter"
+                    aria-label="Toggle footer menu"
+                    type="button"
+                  >
+                    <span class="toggleMenuSpan"></span>
+                    <span class="toggleMenuSpan"></span>
+                    <span class="toggleMenuSpan"></span>
+                    <span class="toggleMenuSpanSmall"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            *ngFor="let column of footerData.slice(0, 4); let i = index"
+            [class]="
+              'col-6 col-md footer-collapse-content ' +
+              (isCollapsed ? 'd-none' : '')
+            "
+            id="collapseFooter"
+          >
+            <h2 class="d-flex">
+              <ng-container
+                *ngIf="column.title === 'About SignUpGenius'; else regularTitle"
+              >
+                About
+                <span class="d-block d-lg-none mx-1">Us</span>
+                <span class="d-none d-lg-block mx-1">SignUpGenius</span>
+              </ng-container>
+              <ng-template #regularTitle> {{ column.title }} </ng-template>
+            </h2>
+
+            <ul *ngIf="column.links" class="list-group list-group-flush">
+              <li
+                *ngFor="let link of column.links"
+                class="list-group-item border-0 p-0"
+              >
+                <a
+                  [href]="link.href"
+                  class="text-decoration-none"
+                  [attr.aria-label]="link.label"
+                  [target]="link.target || '_self'"
+                  (click)="clickOnLinkHandle()"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-xl col-lg-12">
+            <div class="form-column">
+              <h2>{{ footerData[4].title }}</h2>
+
+              <!-- Buttons -->
+              <div class="d-grid gap-2 mb-2">
+                <a
+                  *ngFor="let button of footerData[4].buttons"
+                  [href]="button.href"
+                  class="btn btn-primary"
+                >
+                  {{ button.label }}
+                </a>
+              </div>
+
+              <!-- Search Input -->
+              <div class="search-input-container">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    [placeholder]="footerData[4].search?.placeholder || ''"
+                    [(ngModel)]="searchQuery"
+                    aria-label="Search Resources"
+                  />
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    (click)="onSearchClick()"
+                    aria-label="Search"
+                  >
+                    <svg
+                      stroke="currentColor"
+                      fill="none"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      height="1em"
+                      width="1em"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Social Media Icons -->
+              <div class="d-flex justify-content-center social-icons--content">
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://pinterest.com/signupgenius"
+                  target="_blank"
+                  aria-label="Pinterest"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 64 64"
+                    width="64"
+                    height="64"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M0,57.33V6.66A6.69,6.69,0,0,1,6.67,0H57.35A6.69,6.69,0,0,1,64,6.66V57.33A6.69,6.69,0,0,1,57.35,64H6.67A6.69,6.69,0,0,1,0,57.33Zm22.15-.54a1.17,1.17,0,0,0,.93-.49,25.48,25.48,0,0,0,4.36-8c.19-.68,1.39-4.17,2.28-6.72a8.31,8.31,0,0,0,5.49,2.11c7.85,0,13.55-7.14,13.55-17,0-7-5.89-14.33-15.75-14.33-11.07,0-17.68,7.91-17.68,15.56,0,4.75,2,8.4,5.33,9.77a1.93,1.93,0,0,0,.71.14,1.58,1.58,0,0,0,1.55-1.27l.48-1.9a2.67,2.67,0,0,0,.1-.69,2,2,0,0,0-.6-1.35,6,6,0,0,1-1.37-4.12A10.45,10.45,0,0,1,32.36,18c5.57,0,9,3.16,9,8.25,0,6.71-2.87,11.77-6.69,11.77a3.08,3.08,0,0,1-2.46-1.12,2.7,2.7,0,0,1-.58-1.7,3.27,3.27,0,0,1,.09-.75c.25-1.06.59-2.16.92-3.22a20.2,20.2,0,0,0,1.19-5.34c0-2.6-1.6-4.35-4-4.35-3,0-5.36,3-5.36,6.92a10.35,10.35,0,0,0,.7,3.79c-.56,1.91-3.66,12.51-4.08,14.29A19.74,19.74,0,0,0,20.68,51a33.83,33.83,0,0,0,.37,4.81a1.1,1.1,0,0,0,1.1,1Z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://www.facebook.com/signupgenius"
+                  target="_blank"
+                  aria-label="Facebook"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 64 64"
+                    width="64"
+                    height="64"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M0,57.33V6.65A6.67,6.67,0,0,1,6.67,0H57.35A6.67,6.67,0,0,1,64,6.65V57.33A6.67,6.67,0,0,1,57.35,64H42.68V40h8l2-10.67h-10l.24-5.47c0-2.64.72-4.19,4.29-4.19h5.65l1.28-9.55s-6.05-.8-9.63-.8c-8,0-12.67,5.36-12.67,13.58L32,29.33H24V40h8V64H6.67A6.67,6.67,0,0,1,0,57.33Z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://twitter.com/signupgenius"
+                  target="_blank"
+                  aria-label="Twitter"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 64 64"
+                    width="64"
+                    height="64"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M0,57.33V6.66A6.69,6.69,0,0,1,6.67,0H57.35A6.69,6.69,0,0,1,64,6.66V57.33A6.69,6.69,0,0,1,57.35,64H6.67A6.69,6.69,0,0,1,0,57.33ZM51.09,25c0-.41,0-.83,0-1.24a19.57,19.57,0,0,0,4.77-4.95,18.83,18.83,0,0,1-5.49,1.5A9.58,9.58,0,0,0,54.54,15a19.06,19.06,0,0,1-6.07,2.32,9.57,9.57,0,0,0-16.29,8.72,27.14,27.14,0,0,1-19.71-10,9.57,9.57,0,0,0,3,12.76,9.45,9.45,0,0,1-4.33-1.19s0,.07,0,.12a9.56,9.56,0,0,0,7.67,9.38,9.83,9.83,0,0,1-2.52.33,9.36,9.36,0,0,1-1.8-.17,9.57,9.57,0,0,0,8.93,6.64A19.2,19.2,0,0,1,11.51,48a19.55,19.55,0,0,1-2.28-.14,27,27,0,0,0,14.66,4.3C41.47,52.19,51.09,37.62,51.09,25Z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://instagram.com/signupgenius"
+                  target="_blank"
+                  aria-label="Instagram"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 64 64"
+                    width="64"
+                    height="64"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M57.32,0H6.64A6.69,6.69,0,0,0,0,6.66V57.33A6.69,6.69,0,0,0,6.64,64H57.32A6.69,6.69,0,0,0,64,57.33V6.66A6.69,6.69,0,0,0,57.32,0ZM54.17,42.16a12,12,0,0,1-12,12H21.84a12,12,0,0,1-12-12V21.84a12,12,0,0,1,12-12H42.17a12,12,0,0,1,12,12ZM42.17,13.84H21.84a8,8,0,0,0-8,8V42.16a8,8,0,0,0,8,8H42.17a8,8,0,0,0,8-8V21.84A8,8,0,0,0,42.17,13.84ZM32,45.27A13.27,13.27,0,1,1,45.27,32,13.28,13.28,0,0,1,32,45.27ZM44.19,22A2.86,2.86,0,1,1,47,19.1,2.86,2.86,0,0,1,44.19,22ZM32,22.73A9.27,9.27,0,1,0,41.27,32,9.27,9.27,0,0,0,32,22.73Z"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-footer">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="d-flex align-items-center gap-3 subfooter-content">
+            <div class="logo">
+              <a routerLink="/" aria-label="Go to homepage">
+                <img
+                  src="./logo-signupgenius-white-r.svg"
+                  alt="SignUpGenius Logo"
+                  class="logo-img"
+                />
+              </a>
+            </div>
+
+            <div class="text-content d-flex">
+              <div class="copyright-text">
+                <p>
+                  ©{{ currentYear }} SignUpGenius, Inc. All Rights Reserved.
+                </p>
+              </div>
+              <div class="d-flex links gap-3">
+                <a href="/privacy" aria-label="Privacy Policy" target="_blank">
+                  Privacy Policy
+                </a>
+                <a
+                  href="/terms-of-service"
+                  aria-label="Terms of Service"
+                  target="_blank"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  class="change-consent pmLink"
+                  aria-label="Do Not Sell My Information"
+                  style="visibility: visible; cursor: pointer"
+                  >Do Not Sell or Share My Personal Information</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

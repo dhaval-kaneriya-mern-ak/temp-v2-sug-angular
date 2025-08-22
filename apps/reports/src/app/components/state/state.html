@@ -1,0 +1,83 @@
+<div class="state-reports">
+  <h2>State Reports</h2>
+  <div class="filter-section">
+    <label for="state-select">Filter by State:</label>
+    <select id="state-select">
+      <option value="">All States</option>
+      <option value="CA">California</option>
+      <option value="TX">Texas</option>
+      <option value="NY">New York</option>
+      <option value="FL">Florida</option>
+    </select>
+    <button class="btn-secondary">Apply Filter</button>
+  </div>
+
+  <div class="state-stats">
+    <div class="stat-card">
+      <h3>Top Performing State</h3>
+      <span class="state-name">California</span>
+      <p class="metric">2,456 signups</p>
+    </div>
+    <div class="stat-card">
+      <h3>Fastest Growing</h3>
+      <span class="state-name">Texas</span>
+      <p class="metric">+45% growth</p>
+    </div>
+    <div class="stat-card">
+      <h3>Total States Active</h3>
+      <span class="number">48</span>
+      <p class="metric">2 new this month</p>
+    </div>
+  </div>
+
+  <div class="state-breakdown">
+    <h3>State Breakdown</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Total Signups</th>
+          <th>Active Events</th>
+          <th>Avg. Participation</th>
+          <th>Growth Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>California</td>
+          <td>2,456</td>
+          <td>89</td>
+          <td>27.6 per event</td>
+          <td class="positive">+12%</td>
+        </tr>
+        <tr>
+          <td>Texas</td>
+          <td>1,834</td>
+          <td>67</td>
+          <td>27.4 per event</td>
+          <td class="positive">+45%</td>
+        </tr>
+        <tr>
+          <td>New York</td>
+          <td>1,567</td>
+          <td>52</td>
+          <td>30.1 per event</td>
+          <td class="positive">+8%</td>
+        </tr>
+        <tr>
+          <td>Florida</td>
+          <td>1,289</td>
+          <td>43</td>
+          <td>30.0 per event</td>
+          <td class="negative">-3%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary">Export State Report</button>
+    <button class="btn-secondary">View Map</button>
+    <button class="btn-secondary">Compare States</button>
+  </div>
+</div>

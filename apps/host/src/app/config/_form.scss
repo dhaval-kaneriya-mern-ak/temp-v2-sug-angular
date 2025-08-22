@@ -1,0 +1,46 @@
+@use './variable' as *;
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  .form-check-input {
+    height: 24px;
+    width: 24px;
+    border: none;
+    background: url('/n_icons/form-control-checkboxes.webp');
+    background-position: -24px 0;
+    box-shadow: none;
+    &:hover,
+    &:focus {
+      background-position: -48px 0;
+    }
+    &:checked {
+      background-position: -96px 0;
+    }
+  }
+}
+.form-control {
+  font-size: 16px;
+  border-color: $border-d9;
+  box-shadow: none;
+  color: $foreground;
+  &input {
+    height: 36px;
+  }
+  &:focus {
+    box-shadow: 0 0 15px rgba(246, 139, 28, 0.3);
+    border-color: $gray-8d;
+  }
+}
+select.form-select {
+  background-size: 16px auto;
+  background-position: right center;
+  appearance: none;
+  padding: 5px 16px;
+  background-image: url('/n_icons/select.svg');
+  border: 1px solid $border-d9;
+  &:focus {
+    box-shadow: none;
+    border-color: $border-d9;
+  }
+}
