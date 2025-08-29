@@ -896,4 +896,60 @@ app-dashboard.sug.rocks:4304 # Dashboard remote
 - [Angular Documentation](https://angular.io/docs)
 - [Angular CLI](https://angular.io/cli)
 - [Angular Style Guide](https://angular.io/guide/styleguide)
-// Test change to trigger hooks
+  // Test change to trigger hooks
+
+## 📌 Dependency Pinning and Module Federation Notes
+
+This section documents the dependency pinning we applied, why it was required, and how to upgrade safely later.
+
+### What broke
+
+- After regenerating the lockfile, dev servers failed with:
+  - `compiler.__internal__registerBuiltinPlugin is not a function`
+- Cause: transitive upgrades pulled a Module Federation/Rspack/Webpack combination that routed Nx’s MF through an Rspack-only plugin while Angular builders used Webpack, breaking startup of static remotes.
+
+### What we pinned (exact)
+
+- Angular core (20.1.6): `@angular/common`, `@angular/compiler`, `@angular/core`, `@angular/forms`, `@angular/router`, `@angular/platform-browser`
+- Angular toolchain:
+  - 20.1.5: `@angular/cli`, `@angular/build`, `@angular-devkit/build-angular`, `@angular-devkit/core`, `@angular-devkit/schematics`, `@schematics/angular`
+  - 20.1.6: `@angular/compiler-cli`, `@angular/language-service`
+- Extras: `rxjs@7.8.2`, `zone.js@0.15.1`
+- Nx MF/Webpack: `@nx/module-federation@21.3.11`, `@nx/webpack@21.3.11`
+
+### npm overrides (to freeze transitive deps)
+
+- `@module-federation/node: 2.7.12`
+- `@module-federation/enhanced: 0.17.1`
+- `@rspack/core: 1.4.11`
+- `webpack: 5.99.9`
+
+Note: if a package is also a direct dependency, it must match the override or npm throws `EOVERRIDE`.
+
+### Why we pinned
+
+- Patch drift within 20.1.x pulled newer MF/Rspack/Webpack internals that triggered the Rspack-only plugin path and the startup error.
+- Pinning restores the Webpack-based MF integration used by Angular builders/Nx and keeps dev stable.
+
+### Repro-safe install
+
+- Normal: `npm install`
+- Clean rebuild (only when intentionally changing pins):
+  - `rm -rf node_modules package-lock.json`
+  - `npm install`
+- Avoid `--force` / `--legacy-peer-deps` in normal operation.
+
+### Safe upgrade playbook
+
+1. Decide scope (e.g., Angular 20.1.x patch, Nx MF minor, MF libs).
+2. Relax/remove one pin/override at a time.
+3. `npm install` → `npm run dev:all` → verify remotes start.
+4. If the MF error returns, revert that single change and note the incompatibility.
+5. Commit `package.json` + `package-lock.json` together once stable.
+
+### Troubleshooting
+
+- Error `compiler.__internal__registerBuiltinPlugin is not a function`:
+  - Check `package.json` overrides are present and aligned with any direct dependencies.
+  - Verify versions above are installed.
+  - Ensure `@nx/module-federation` and `@nx/webpack` are `21.3.11`.
