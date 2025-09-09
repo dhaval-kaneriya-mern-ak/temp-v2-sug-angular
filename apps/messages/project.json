@@ -74,15 +74,15 @@
         "https": {
           "buildTarget": "messages:build:development",
           "port": 4202,
-          "host": "messages.sug.rocks",
-          "publicHost": "https://messages.sug.rocks:4202",
+          "host": "messages.signupgenius.rocks",
+          "publicHost": "https://messages.signupgenius.rocks:4202",
           "ssl": true,
           "sslCert": "ssl-certs/sug-rocks.crt",
           "sslKey": "ssl-certs/sug-rocks.key",
           "disableHostCheck": true,
           "liveReload": true,
           "hmr": true,
-          "allowedHosts": ["messages.sug.rocks", "localhost"],
+          "allowedHosts": ["messages.signupgenius.rocks", "localhost"],
           "headers": {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",

@@ -74,15 +74,15 @@
         "https": {
           "buildTarget": "reports:build:development",
           "port": 4201,
-          "host": "reports.sug.rocks",
-          "publicHost": "https://reports.sug.rocks:4201",
+          "host": "reports.signupgenius.rocks",
+          "publicHost": "https://reports.signupgenius.rocks:4201",
           "ssl": true,
           "sslCert": "ssl-certs/sug-rocks.crt",
           "sslKey": "ssl-certs/sug-rocks.key",
           "disableHostCheck": true,
           "liveReload": true,
           "hmr": true,
-          "allowedHosts": ["reports.sug.rocks", "localhost"],
+          "allowedHosts": ["reports.signupgenius.rocks", "localhost"],
           "headers": {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",

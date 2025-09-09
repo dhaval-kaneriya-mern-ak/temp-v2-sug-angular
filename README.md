@@ -187,12 +187,12 @@ cd ssl-certs
 Generate certificates for the custom domains used in this project:
 
 ```bash
-mkcert "*.sug.rocks" localhost 127.0.0.1 ::1
+mkcert "*.signupgenius.rocks" localhost 127.0.0.1 ::1
 ```
 
 This creates a wildcard certificate for:
 
-- `*.sug.rocks` (covers host.sug.rocks, messages.sug.rocks, reports.sug.rocks)
+- `*.signupgenius.rocks` (covers host.signupgenius.rocks, messages.signupgenius.rocks, reports.signupgenius.rocks)
 - `localhost`
 - `127.0.0.1` (IPv4 loopback)
 - `::1` (IPv6 loopback)
@@ -203,14 +203,14 @@ For consistency, rename the generated certificate files:
 
 ```bash
 # macOS/Linux
-mv "_wildcard.sug.rocks+3.pem" "sug-rocks.crt"
-mv "_wildcard.sug.rocks+3-key.pem" "sug-rocks.key"
+mv "_wildcard.signupgenius.rocks+3.pem" "sug-rocks.crt"
+mv "_wildcard.signupgenius.rocks+3-key.pem" "sug-rocks.key"
 ```
 
 ```powershell
 # Windows (PowerShell)
-Rename-Item "_wildcard.sug.rocks+3.pem" "sug-rocks.crt"
-Rename-Item "_wildcard.sug.rocks+3-key.pem" "sug-rocks.key"
+Rename-Item "_wildcard.signupgenius.rocks+3.pem" "sug-rocks.crt"
+Rename-Item "_wildcard.signupgenius.rocks+3-key.pem" "sug-rocks.key"
 ```
 
 ##### Step 6: Update Hosts File
@@ -220,13 +220,13 @@ Add the custom domains to your system's hosts file:
 **macOS/Linux:**
 
 ```bash
-echo "127.0.0.1 host.sug.rocks messages.sug.rocks reports.sug.rocks" | sudo tee -a /etc/hosts
+echo "127.0.0.1 host.signupgenius.rocks messages.signupgenius.rocks reports.signupgenius.rocks" | sudo tee -a /etc/hosts
 ```
 
 **Windows (Run as Administrator):**
 
 ```powershell
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 host.sug.rocks messages.sug.rocks reports.sug.rocks"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 host.signupgenius.rocks messages.signupgenius.rocks reports.signupgenius.rocks"
 ```
 
 Or manually edit the hosts file:
@@ -237,7 +237,7 @@ Or manually edit the hosts file:
 Add this line:
 
 ```
-127.0.0.1 host.sug.rocks messages.sug.rocks reports.sug.rocks
+127.0.0.1 host.signupgenius.rocks messages.signupgenius.rocks reports.signupgenius.rocks
 ```
 
 ##### Step 7: Verify Setup
@@ -245,7 +245,7 @@ Add this line:
 Test that the domains resolve correctly:
 
 ```bash
-ping host.sug.rocks
+ping host.signupgenius.rocks
 ```
 
 You should see responses from `127.0.0.1`.
@@ -268,9 +268,9 @@ npm run dev:reports:https
 
 After setup, access your applications via:
 
-- **Host Application**: https://host.sug.rocks:4200
-- **Messages Application**: https://messages.sug.rocks:4202
-- **Reports Application**: https://reports.sug.rocks:4201
+- **Host Application**: https://host.signupgenius.rocks:4200
+- **Messages Application**: https://messages.signupgenius.rocks:4202
+- **Reports Application**: https://reports.signupgenius.rocks:4201
 
 #### 🔧 Certificate Management
 
@@ -293,9 +293,9 @@ If you need to regenerate certificates:
 ```bash
 cd ssl-certs
 rm sug-rocks.crt sug-rocks.key
-mkcert "*.sug.rocks" localhost 127.0.0.1 ::1
-mv "_wildcard.sug.rocks+3.pem" "sug-rocks.crt"
-mv "_wildcard.sug.rocks+3-key.pem" "sug-rocks.key"
+mkcert "*.signupgenius.rocks" localhost 127.0.0.1 ::1
+mv "_wildcard.signupgenius.rocks+3.pem" "sug-rocks.crt"
+mv "_wildcard.signupgenius.rocks+3-key.pem" "sug-rocks.key"
 ```
 
 #### 🛠️ Troubleshooting HTTPS
@@ -475,7 +475,7 @@ This project includes comprehensive HTTPS support for local development with cus
 
 **Key Features:**
 
-- Custom domains (`host.sug.rocks`, `messages.sug.rocks`, `reports.sug.rocks`)
+- Custom domains (`host.signupgenius.rocks`, `messages.signupgenius.rocks`, `reports.signupgenius.rocks`)
 - Wildcard SSL certificates for development
 - Production-like testing environment
 - Proper CORS configuration for cross-domain communication
@@ -484,7 +484,7 @@ This project includes comprehensive HTTPS support for local development with cus
 
 ```
 ssl-certs/
-├── sug-rocks.crt    # SSL certificate (wildcard for *.sug.rocks)
+├── sug-rocks.crt    # SSL certificate (wildcard for *.signupgenius.rocks)
 ├── sug-rocks.key    # Private key
 └── .gitignore       # Certificates are excluded from version control
 ```
@@ -647,8 +647,8 @@ Add HTTPS configuration to `apps/my-new-host/project.json`:
       "https": {
         "buildTarget": "my-new-host:build:development",
         "port": 4300,
-        "host": "my-new-host.sug.rocks",
-        "publicHost": "https://my-new-host.sug.rocks:4300",
+        "host": "my-new-host.signupgenius.rocks",
+        "publicHost": "https://my-new-host.signupgenius.rocks:4300",
         "ssl": true,
         "sslCert": "../../ssl-certs/sug-rocks.crt",
         "sslKey": "../../ssl-certs/sug-rocks.key"
@@ -661,7 +661,7 @@ Add HTTPS configuration to `apps/my-new-host/project.json`:
 Don't forget to add the new domain to your hosts file:
 
 ```bash
-echo "127.0.0.1 my-new-host.sug.rocks" | sudo tee -a /etc/hosts
+echo "127.0.0.1 my-new-host.signupgenius.rocks" | sudo tee -a /etc/hosts
 ```
 
 ### Adding New Remote Applications
@@ -718,9 +718,9 @@ const config: ModuleFederationConfig = {
 const config: ModuleFederationConfig = {
   name: 'host',
   remotes: [
-    ['reports', 'https://reports.sug.rocks:4201'],
-    ['messages', 'https://messages.sug.rocks:4202'],
-    ['my-new-remote', 'https://my-new-remote.sug.rocks:4203'], // Add new remote
+    ['reports', 'https://reports.signupgenius.rocks:4201'],
+    ['messages', 'https://messages.signupgenius.rocks:4202'],
+    ['my-new-remote', 'https://my-new-remote.signupgenius.rocks:4203'], // Add new remote
   ],
 };
 ```
@@ -752,8 +752,8 @@ Add HTTPS configuration to `apps/my-new-remote/project.json`:
       "https": {
         "buildTarget": "my-new-remote:build:development",
         "port": 4203,
-        "host": "my-new-remote.sug.rocks",
-        "publicHost": "https://my-new-remote.sug.rocks:4203",
+        "host": "my-new-remote.signupgenius.rocks",
+        "publicHost": "https://my-new-remote.signupgenius.rocks:4203",
         "ssl": true,
         "sslCert": "../../ssl-certs/sug-rocks.crt",
         "sslKey": "../../ssl-certs/sug-rocks.key",
@@ -772,7 +772,7 @@ Add HTTPS configuration to `apps/my-new-remote/project.json`:
 Add the new domain to your hosts file:
 
 ```bash
-echo "127.0.0.1 my-new-remote.sug.rocks" | sudo tee -a /etc/hosts
+echo "127.0.0.1 my-new-remote.signupgenius.rocks" | sudo tee -a /etc/hosts
 ```
 
 ### Advanced Module Federation Patterns
@@ -868,14 +868,14 @@ For multiple applications, use subdomain patterns:
 
 ```
 # Admin applications
-admin.sug.rocks:4200        # Admin shell
-admin-users.sug.rocks:4301  # User management remote
-admin-billing.sug.rocks:4302 # Billing remote
+admin.signupgenius.rocks:4200        # Admin shell
+admin-users.signupgenius.rocks:4301  # User management remote
+admin-billing.signupgenius.rocks:4302 # Billing remote
 
 # Customer applications
-app.sug.rocks:4201          # Customer shell
-app-profile.sug.rocks:4303  # Profile remote
-app-dashboard.sug.rocks:4304 # Dashboard remote
+app.signupgenius.rocks:4201          # Customer shell
+app-profile.signupgenius.rocks:4303  # Profile remote
+app-dashboard.signupgenius.rocks:4304 # Dashboard remote
 ```
 
 ## �📚 Additional Resources

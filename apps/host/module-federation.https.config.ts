@@ -7,8 +7,8 @@ const config: ModuleFederationConfig = {
    * Using tuple-syntax to define remote URLs with HTTPS and custom domains
    */
   remotes: [
-    ['reports', 'https://reports.sug.rocks:4201'],
-    ['messages', 'https://messages.sug.rocks:4202'],
+    ['reports', 'https://reports.signupgenius.rocks:4201'],
+    ['messages', 'https://messages.signupgenius.rocks:4202'],
   ],
 };
 

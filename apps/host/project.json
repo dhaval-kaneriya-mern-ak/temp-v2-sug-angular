@@ -85,8 +85,8 @@
         "https": {
           "buildTarget": "host:build:https",
           "port": 4200,
-          "host": "host.sug.rocks",
-          "publicHost": "https://host.sug.rocks:4200",
+          "host": "host.signupgenius.rocks",
+          "publicHost": "https://host.signupgenius.rocks:4200",
           "ssl": true,
           "sslCert": "ssl-certs/sug-rocks.crt",
           "sslKey": "ssl-certs/sug-rocks.key"
