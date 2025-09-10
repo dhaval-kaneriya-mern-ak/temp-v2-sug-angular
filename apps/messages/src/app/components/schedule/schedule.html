@@ -1,35 +1,16 @@
 <div class="scheduled-messages">
   <h2>Scheduled Messages</h2>
-  <div class="message-list">
-    <div class="message-item">
-      <h4>Birthday Reminder</h4>
-      <p>Scheduled for: Tomorrow, 9:00 AM</p>
-      <p class="preview">Don't forget it's Sarah's birthday tomorrow!</p>
-      <span class="status pending">Pending</span>
-      <div class="actions">
-        <button class="btn-primary">Edit</button>
-        <button class="btn-secondary">Cancel</button>
-      </div>
-    </div>
-    <div class="message-item">
-      <h4>Monthly Report Reminder</h4>
-      <p>Scheduled for: Friday, 2:00 PM</p>
-      <p class="preview">Monthly reports are due this Friday...</p>
-      <span class="status pending">Pending</span>
-      <div class="actions">
-        <button class="btn-primary">Edit</button>
-        <button class="btn-secondary">Cancel</button>
-      </div>
-    </div>
-    <div class="message-item">
-      <h4>Event Announcement</h4>
-      <p>Scheduled for: Next Monday, 10:00 AM</p>
-      <p class="preview">Join us for our annual company picnic...</p>
-      <span class="status pending">Pending</span>
-      <div class="actions">
-        <button class="btn-primary">Edit</button>
-        <button class="btn-secondary">Cancel</button>
-      </div>
-    </div>
-  </div>
+  <sug-ui-table
+    [data]="tableData"
+    [columns]="tableColumns"
+    [paginator]="true"
+    [rows]="10"
+    [globalFilterFields]="['scheduled', 'subject', 'type']"
+    (sort)="onSort($event)"
+    (page)="onPage($event)"
+  >
+  </sug-ui-table>
+  <!-- <div class="bottom-note">
+    <span>NOTE: Dates are in mm/dd/yyyy. Times are shown in - EST. To modify, update your</span><a href="https://test.signupgenius.rocks/index.cfm?go=m.otherSettings">settings.</a>
+  </div> -->
 </div>

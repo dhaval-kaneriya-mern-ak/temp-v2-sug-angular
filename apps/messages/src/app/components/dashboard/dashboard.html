@@ -1,29 +1,91 @@
-<div class="message-dashboard">
-  <h2>Messages Dashboard</h2>
-  <div class="dashboard-stats">
-    <div class="stat-card">
-      <h3>Total Messages</h3>
-      <p class="stat-number">1,234</p>
+<div class="row">
+  <div class="dashboard-stats col-md-12">
+    <div class="account-overview">
+      <h3>Account Overview: <span>August</span></h3>
     </div>
-    <div class="stat-card">
-      <h3>Unread Messages</h3>
-      <p class="stat-number">45</p>
+    <div class="plan">
+      <p><strong>Plan:</strong> Basic</p>
     </div>
-    <div class="stat-card">
-      <h3>Sent Today</h3>
-      <p class="stat-number">12</p>
+    <div class="d-flex flex-column">
+      <div class="progressbar col-sm-5">
+        <sug-ui-progress-bar
+          [value]="500"
+          [max]="1000"
+          type="default"
+          [striped]="false"
+          [animated]="false"
+          [showLabel]="true"
+          [label]="progressone"
+        ></sug-ui-progress-bar>
+      </div>
+      <div class="progressbar col-sm-5">
+        <sug-ui-progress-bar
+          [value]="0"
+          [max]="20"
+          type="default"
+          [striped]="false"
+          [animated]="false"
+          [showLabel]="true"
+          [label]="progresstwo"
+        ></sug-ui-progress-bar>
+      </div>
+      <div class="progressbar col-sm-5">
+        <sug-ui-progress-bar
+          [value]="10"
+          [max]="14"
+          type="default"
+          [striped]="false"
+          [animated]="false"
+          [showLabel]="true"
+          [label]="progressthree"
+        ></sug-ui-progress-bar>
+      </div>
     </div>
-    <div class="stat-card">
-      <h3>Scheduled</h3>
-      <p class="stat-number">8</p>
+    <div class="account-overview">
+      <h3>Recently Sent</h3>
     </div>
+    <sug-ui-table
+      [data]="tableData"
+      [columns]="tableColumns"
+      [(selection)]="selectedItems"
+      (selectionChange)="onSelectionChange($event)"
+      [paginator]="false"
+      [responsiveLayout]="'scroll'"
+    >
+      <!-- <ng-template pTemplate="footer">
+        <tr>
+          <td [attr.colspan]="tableColumns.length">
+            <div class="flex items-center justify-end p-2">test
+              <sug-ui-button label="View More" />
+            </div>
+          </td>
+        </tr>
+      </ng-template> -->
+      <ng-template #footerTemplate>
+        <tr>
+          <td colspan="4">
+            <div class="text-end p-1">
+              <sug-ui-button
+                icon=""
+                size="small"
+                varient="outlined"
+                [rounded]="false"
+                styleClass="bg-white rounded-1 text-black"
+                [raised]="false"
+                label="View More"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </sug-ui-table>
   </div>
-  <div class="recent-activity">
+  <!-- <div class="recent-activity">
     <h3>Recent Activity</h3>
     <ul>
       <li>Message sent to John Doe - 2 minutes ago</li>
       <li>Draft saved for "Weekly Newsletter" - 15 minutes ago</li>
       <li>Message scheduled for tomorrow - 1 hour ago</li>
     </ul>
-  </div>
+  </div> -->
 </div>

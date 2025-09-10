@@ -1,0 +1,131 @@
+<div class="compose-container">
+  <div *ngIf="showRadioButtons" class="radio-selection">
+    <h2>Choose Email Type</h2>
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="size"
+      [options]="radioOptions"
+      inputId="size-selection"
+      [(value)]="selectedValue"
+      (changeEvent)="handleSelection($event)"
+    ></sug-ui-radio-checkbox-button>
+  </div>
+  <div *ngIf="!showRadioButtons">
+    <div [ngSwitch]="selectedValue">
+      <div *ngSwitchCase="'emailoptionone'" class="email-form-section">
+        <h3>Invite People to Sign Up</h3>
+
+        <form>
+          <div class="form-wrapper">
+            <label for="signup-links">Sign Up Link(s)</label>
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon=""
+              label="Select Sign Ups"
+              (onClick)="isVisible = true"
+            ></sug-ui-button>
+          </div>
+          <div class="form-wrapper">
+            <label for="from-email">From</label>
+            <input
+              type="email"
+              placeholder="Enter sender email address"
+              id="from-email"
+            />
+          </div>
+          <div class="form-wrapper">
+            <label for="reply-to">Reply To</label>
+            <sug-ui-select-box
+              id="reply-to"
+              [options]="selectOptions"
+              [design]="'default'"
+              [size]="'large'"
+              [initialSelectedOption]="defaultOption"
+            ></sug-ui-select-box>
+          </div>
+          <div class="form-wrapper">
+            <label for="to-people">To</label>
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon=""
+              label="Select People"
+            ></sug-ui-button>
+          </div>
+          <div class="form-wrapper">
+            <label for="from-subject">Subject</label>
+            <input
+              type="text"
+              placeholder="Enter email subject"
+              id="from-subject"
+            />
+          </div>
+          <div class="form-wrapper">
+            <label for="from-message">Message</label>
+            <textarea
+              id="from-message"
+              placeholder="Type your message here..."
+            ></textarea>
+          </div>
+          <div class="form-wrapper">
+            <label for="attachments">Attachments</label>
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon="pi pi-paperclip"
+              label="Add Attachments"
+            ></sug-ui-button>
+          </div>
+          <div class="btn-wrapper">
+            <sug-ui-button
+              severity="success"
+              [outlined]="false"
+              class="send-btn"
+              icon=""
+              label="Preview & Send"
+            ></sug-ui-button>
+            <sug-ui-button
+              severity="secondary"
+              class="draft-btn"
+              icon=""
+              label="Save Draft"
+            ></sug-ui-button>
+          </div>
+        </form>
+      </div>
+
+      <div *ngSwitchCase="'emailoptiontwo'">
+        <h3>Content for second</h3>
+        <p>You have selected the Medium option. It has different content.</p>
+      </div>
+    </div>
+    <button (click)="showOptionsAgain()" class="back-btn">Back</button>
+  </div>
+</div>
+<sug-ui-dialog
+  [config]="dialogConf"
+  [(visible)]="isVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Help: Compose Message</h2>
+  <p>
+    SignUpGenius provides a simple and powerful messaging tool to make
+    communicating with your group members easy. Our "Compose" tab in the
+    Messages area allows you to create a variety of messages.
+  </p>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Upgrade Now"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (onClick)="isVisible = false"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>
