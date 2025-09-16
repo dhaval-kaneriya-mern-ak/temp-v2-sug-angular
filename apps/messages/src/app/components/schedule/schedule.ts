@@ -95,25 +95,15 @@ export class Schedule {
               </div>`,
     },
   ];
-  onSort(event: { field: string; order: number }) {
-    console.log('Sort event:', event);
+  onSort() {
+    // Implement your sorting logic here
   }
 
-  onFilter(event: {
-    filters: Record<
-      string,
-      { value: string | number | boolean; matchMode: string }
-    >;
-  }) {
-    console.log('Filter event:', event);
+  onFilter() {
+    // Implement your filtering logic here
   }
 
-  onPage(event: {
-    first: number;
-    rows: number;
-    page: number;
-    pageCount: number;
-  }) {
-    console.log('Page event:', event);
+  onPage() {
+    // Implement your pagination logic here
   }
 }

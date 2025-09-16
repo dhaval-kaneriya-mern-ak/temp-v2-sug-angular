@@ -1,3 +1,371 @@
 <div class="compose-container">
-  <h2>Compose text</h2>
+  @if (showRadioButtons) {
+  <div class="radio-selection">
+    <!-- <h2>Choose Email Type</h2> -->
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="size"
+      [options]="radioOptions"
+      inputId="size-selection"
+      [(value)]="selectedValue"
+      (changeEvent)="handleSelection($event)"
+    ></sug-ui-radio-checkbox-button>
+  </div>
+  } @if (!showRadioButtons) {
+  <div>
+    @switch (selectedValue) { @case ('emailoptionone') {
+    <div class="email-form-section">
+      <h3>
+        Invite People to Opt In to Text Messages
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="pi pi-question-circle info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <div class="info-note">
+        <strong>Note:</strong> At this time, only mobile numbers from US,
+        Canada, and US territories are supported.
+      </div>
+      <form>
+        <div class="form-wrapper">
+          <label for="signup-links">From</label>
+          <input
+            type="text"
+            placeholder="Enter sender email address"
+            id="from-email"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">Reply To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            [options]="selectOptions"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            [options]="selectOptions"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-subject">Subject</label>
+          <input
+            type="text"
+            placeholder="Enter email subject"
+            id="from-subject"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+          ></textarea>
+        </div>
+        <!-- <div class="form-wrapper">
+            <label for="attachments">Attachments</label>
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon="pi pi-paperclip"
+              label="Add Attachments"
+              (buttonClick)="openSelectFileDialog()"
+            ></sug-ui-button>
+          </div> -->
+        <div class="btn-wrapper">
+          <sug-ui-button
+            severity="success"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            label="Preview & Send"
+          ></sug-ui-button>
+          <sug-ui-button
+            severity="secondary"
+            class="draft-btn"
+            icon=""
+            label="Save Draft"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } @case ('emailoptiontwo') {
+    <div class="email-form-section email-form-people">
+      <h3>
+        Send a Text Message to People Participating in a Sign Up
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="pi pi-question-circle info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <form>
+        <div class="form-wrapper">
+          <label for="reply-to">Sign Up</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            [options]="selectOptions"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="attachments">To</label>
+          <sug-ui-button
+            type="button"
+            class="add-link-btn"
+            icon=" "
+            label="Select People"
+            (buttonClick)="openPeopleDialog()"
+          ></sug-ui-button>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+          ></textarea>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-email"></label>
+          <div class="check-options-wrap">
+            <sug-ui-radio-checkbox-button
+              type="checkbox"
+              name="size"
+              [options]="checkboxOptions"
+              inputId="size-selection"
+              [(value)]="selectedCheckboxes"
+              (changeEvent)="handleCheckboxSelection($event)"
+            ></sug-ui-radio-checkbox-button>
+            @if (isCheckbox1Selected()) {
+            <div class="check-option-form check-option-form-profile">
+              <input type="text" id="from-email" />
+              <sug-ui-button
+                severity="primary"
+                [outlined]="false"
+                class="send-btn"
+                icon=""
+                label="Update My Profile"
+              ></sug-ui-button>
+            </div>
+            } @if (isCheckbox3Selected()) {
+            <div class="check-option-form">
+              <div class="form-wrapper">
+                <label for="email-subject">Email Subject</label>
+                <input type="text" id="email-subject" />
+              </div>
+              <div class="form-wrapper">
+                <label for="email-subject">Email From</label>
+                <input type="text" id="email-subject" />
+              </div>
+              <div class="form-wrapper">
+                <label for="email-subject">Email Reply To</label>
+                <sug-ui-multi-select-dropdown
+                  id="signup-select"
+                  [options]="sendMessageSelectOne"
+                ></sug-ui-multi-select-dropdown>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        <div class="btn-wrapper">
+          <sug-ui-button
+            severity="success"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            label="Send"
+          ></sug-ui-button>
+          <sug-ui-button
+            severity="secondary"
+            class="draft-btn"
+            icon=""
+            label="Save Draft"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } }
+    <button (click)="showOptionsAgain()" class="back-btn">
+      <i class="pi pi-arrow-left"></i> Back
+    </button>
+  </div>
+  }
 </div>
+<sug-ui-dialog
+  [config]="helpDialogConf"
+  [(visible)]="isHelpDialogVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Help: Invite People to Opt in to Text Messages</h2>
+  <div class="help-dialog-content">
+    <p>
+      Before you can send text messages to your group members, they must first
+      opt in to receive text messages from SignUpGenius. One way to do this is
+      by sending an opt-in invite to your group.
+    </p>
+    <h4>Will there be a sign up link in the opt-in invitation?</h4>
+    <p>
+      No. Because text messaging opt-in applies to all sign ups you create and
+      is not limited to a specific sign up, a sign up link is not included in
+      the opt-in invite. However, it is still necessary to create and publish a
+      sign up prior to sending any messages.
+    </p>
+    <h4>What if I dont know my participants email addresses?</h4>
+    <p>
+      Another way to invite participants to opt in to text messages is by
+      requesting their mobile number when they sign up. When creating a sign up,
+      check the “Phone” option under “Ask Participants For” in the Settings tab.
+      Below the mobile phone field on the sign up form, an opt-in checkbox will
+      be displayed to allow participants to give consent to receiving text
+      messages from you.
+    </p>
+    <h4>Will SignUpGenius send one group text or send individual texts?</h4>
+    <p>
+      We send out individual texts to the opted-in participants you select. They
+      will not see the mobile numbers of any other group members. You’ll be able
+      to confirm that each text was delivered by viewing the "Sent" tab of our
+      Messages area.
+    </p>
+    <h4>Is there a limit to the number of messages I can send?</h4>
+    <p>
+      The number of opt-in invitations you can send is determined by your
+      premium plan email limit. The text message limit is also based on your
+      premium plan. Learn more about your plan features and limitations
+      <a href="">here</a>.
+    </p>
+    <h4>Which countries can I send text messages to?</h4>
+    <p>
+      At this time, only mobile numbers from US, Canada, and US territories are
+      supported.
+    </p>
+  </div>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Okay"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeHelpDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>
+<sug-ui-dialog
+  [config]="peopleDialogConf"
+  [(visible)]="isPeopleDialogVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Send this message to...</h2>
+  <div class="dialog-content">
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="dialogRadio"
+      [options]="sendMessageRadioOptions"
+      inputId="dialog-radio-selection"
+      [(value)]="dialogSelectedValue"
+      (changeEvent)="handleDialogSelection($event)"
+    ></sug-ui-radio-checkbox-button>
+
+    <!-- Select box for the second radio option -->
+    @if (dialogSelectedValue === 'sendMessageRadioThree') {
+    <div class="signup-radio-content send-msg-dialog-content">
+      <div class="form-wrapper">
+        <label for="group-alias">Assign the email entries to</label>
+        <sug-ui-multi-select-dropdown
+          id="signup-select"
+          [maxSelection]="1"
+          [options]="sendMessageSelectTwo"
+        ></sug-ui-multi-select-dropdown>
+      </div>
+      <sug-ui-radio-checkbox-button
+        type="checkbox"
+        label="Also include people that signed up but are not in the group(s)"
+        inputId="email-checkbox"
+        [(value)]="accepted"
+      ></sug-ui-radio-checkbox-button>
+    </div>
+    }
+    <!-- Select box for the Three radio option -->
+    @if (dialogSelectedValue === 'sendMessageRadioFour') {
+    <div class="signup-radio-content send-msg-dialog-content">
+      <div class="btn-wrapper">
+        <sug-ui-button
+          type="button"
+          class="add-link-btn"
+          icon=""
+          label="From my groups"
+        ></sug-ui-button>
+        <sug-ui-button
+          type="button"
+          class="add-link-btn"
+          icon=""
+          label="From this sign up"
+        ></sug-ui-button>
+      </div>
+    </div>
+    }
+  </div>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Okay"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closePeopleDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>
+<sug-ui-dialog
+  [config]="selectFileDialogConf"
+  [(visible)]="isSelectFileDialogVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Select File</h2>
+  <div class="dialog-content">
+    <div class="file-selection-wrap">
+      <span
+        ><i class="pi pi-folder-open" aria-hidden="true"></i> GeniusDrive</span
+      >
+      <sug-ui-radio-checkbox-button
+        type="radio"
+        name="dialogRadio"
+        [options]="selectFileRadioOptions"
+        inputId="dialog-radio-selection"
+        [(value)]="dialogSelectedValue"
+        (changeEvent)="handleDialogSelection($event)"
+      ></sug-ui-radio-checkbox-button>
+      <div class="btn-wrapper">
+        <sug-ui-button
+          severity="success"
+          [outlined]="false"
+          class="send-btn"
+          icon=""
+          label="Select"
+          (buttonClick)="closeSelectFileDialog()"
+        ></sug-ui-button>
+      </div>
+    </div>
+  </div>
+</sug-ui-dialog>

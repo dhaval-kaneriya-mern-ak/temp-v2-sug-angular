@@ -1,0 +1,231 @@
+.compose-container {
+  padding: 30px 0;
+  position: relative;
+  h2 {
+    font-size: 30px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    @media (max-width: 767px) {
+      font-size: 18px;
+      .info-icon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+.email-form-section {
+  max-width: 800px;
+  .form-wrapper {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+    @media (max-width: 767px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    label {
+      width: 30%;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+    }
+    input,
+    .add-link-btn {
+      width: 70%;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+      ::ng-deep {
+        .p-button {
+          width: 100%;
+        }
+      }
+    }
+    ::ng-deep {
+      .pi {
+        font-size: 20px;
+      }
+      .p-icon {
+        height: 20px;
+        width: 20px;
+      }
+      sug-ui-select-box {
+        width: 60%;
+      }
+      p-select,
+      .select-wrapper {
+        width: 100%;
+      }
+    }
+    textarea,
+    input {
+      padding: 5px 10px;
+      width: 70%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+    }
+    textarea {
+      height: 200px;
+    }
+  }
+  .btn-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+}
+::ng-deep {
+  sug-ui-multi-select-dropdown {
+    width: 70%;
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    .multi-select-wrapper .p-multiselect {
+      background: transparent;
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+  .p-multiselect-header {
+    .p-icon {
+      height: 20px;
+      width: 20px;
+    }
+    .p-inputicon {
+      margin-top: -11px;
+    }
+    .p-inputtext {
+      padding-block: 5px;
+    }
+  }
+}
+
+// Dialog custom radio options styling
+.dialog-content {
+  padding: 20px 0;
+  ::ng-deep {
+    .signup-radio-content {
+      margin-top: 16px;
+      margin-left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .signup-tooltip-content {
+      margin-top: 16px;
+      margin-left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      label {
+        font-weight: 500;
+        color: #374151;
+        white-space: nowrap;
+      }
+      .p-icon {
+        height: 16px;
+        width: 16px;
+      }
+      sug-ui-select-box {
+        flex: 1;
+        max-width: 300px;
+        width: 100%;
+      }
+      .p-select,
+      .select-wrapper {
+        width: 100%;
+      }
+
+      // Styling for buttons in second radio option
+      .link-button {
+        background: none;
+        border: none;
+        color: #f68b1c;
+        text-decoration: underline;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        &:hover {
+          color: #e67e22;
+          text-decoration: none;
+        }
+      }
+      .info-button {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        .pi-icon {
+          font-size: 12px;
+        }
+      }
+    }
+    .send-msg-dialog-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: flex-start;
+      .form-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 90%;
+      }
+      sug-ui-multi-select-dropdown {
+        width: 100%;
+      }
+    }
+    .social-btn-wrapper {
+      display: flex;
+      gap: 10px;
+      .social-btn .p-button {
+        background: transparent;
+        border: transparent;
+        cursor: pointer;
+        padding: 0;
+        border-radius: 0;
+        .p-icon {
+          height: 20px;
+          width: 20px;
+          color: #6b7280;
+        }
+        &:hover {
+          box-shadow: none;
+          color: #f68b1c;
+        }
+      }
+    }
+  }
+}
+.file-selection-wrap {
+  span {
+    margin-bottom: 10px;
+    display: block;
+    font-size: 16px;
+    i {
+      font-size: 16px;
+      color: #334155;
+    }
+  }
+  .btn-wrapper {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+}

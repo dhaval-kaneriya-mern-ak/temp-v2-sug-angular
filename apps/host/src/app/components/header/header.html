@@ -27,8 +27,8 @@
         </button>
 
         <!-- Extended Solutions Menu -->
+        @if (isVisible()) {
         <div
-          *ngIf="isVisible()"
           class="extendedWrap"
           role="region"
           aria-labelledby="solutions-menu"
@@ -86,6 +86,7 @@
             </a>
           </div>
         </div>
+        }
       </div>
 
       <!-- Logo -->
