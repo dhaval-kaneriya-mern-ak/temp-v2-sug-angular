@@ -13,9 +13,27 @@
         padding: 5px;
         color: #1e293b;
         &:hover {
-          background-color: #f68b1c;
+          color: #f68b1c;
         }
       }
     }
   }
+}
+::ng-deep {
+  .subject-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    .subject-text {
+      color: #222;
+      font-size: 16px;
+    }
+    .sub-text {
+      color: #777;
+      font-size: 11px;
+    }
+  }
+}
+.sent-message-title {
+  margin-bottom: 25px;
 }

@@ -6,8 +6,15 @@
     [paginator]="true"
     [rows]="10"
     [globalFilterFields]="['scheduled', 'subject', 'type']"
-    (sort)="onSort($event)"
-    (page)="onPage($event)"
+    (sort)="onSort()"
+    (page)="onPage()"
   >
   </sug-ui-table>
+</div>
+<h2 class="sent-message-title">Sent Message: Sign Up Invite</h2>
+<div class="sent-tab">
+  <sug-ui-menu-tabs [tabs]="navigationComposeTabs"></sug-ui-menu-tabs>
+</div>
+<div class="sent-content">
+  <router-outlet></router-outlet>
 </div>

@@ -14,3 +14,28 @@
     <span>NOTE: Dates are in mm/dd/yyyy. Times are shown in - EST. To modify, update your</span><a href="https://test.signupgenius.rocks/index.cfm?go=m.otherSettings">settings.</a>
   </div> -->
 </div>
+<sug-ui-dialog
+  [config]="dialogConf"
+  [(visible)]="isVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Confirmation</h2>
+  <p>
+    Are you sure you want to delete "{{ selectedItem?.subject }}" draft from the
+    list?
+  </p>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Yes"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeDeleteDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>

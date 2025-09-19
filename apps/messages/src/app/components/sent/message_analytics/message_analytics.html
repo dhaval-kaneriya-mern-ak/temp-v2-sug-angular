@@ -1,0 +1,34 @@
+<div class="message-analytics-wrapper">
+  <div class="stats-wrapper">
+    <h3>Delivery Stats</h3>
+    <div class="row">
+      <sug-ui-delivery-stats
+        [deliveryStats]="stats"
+        columnClass="col-xs-12 col-sm-6 col-md-4"
+      >
+      </sug-ui-delivery-stats>
+    </div>
+  </div>
+  <div class="stats-wrapper">
+    <h3>Response Stats</h3>
+    <div class="row">
+      <sug-ui-delivery-stats
+        [deliveryStats]="stats"
+        columnClass="col-xs-12 col-sm-6 col-md-4"
+      >
+      </sug-ui-delivery-stats>
+    </div>
+  </div>
+  <div class="detail-table">
+    <h3>Delivery Details</h3>
+    <sug-ui-table
+      [data]="tableData"
+      [columns]="tableColumns"
+      [paginator]="true"
+      [rows]="10"
+      (sort)="onSort()"
+      (page)="onPage()"
+    >
+    </sug-ui-table>
+  </div>
+</div>

@@ -1,10 +1,22 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { ISugTableConfig, ISugTableColumn } from '@lumaverse/sug-ui';
+import {
+  ISugTableConfig,
+  ISugTableColumn,
+  SugUiDialogComponent,
+  DialogConfig,
+} from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { HttpClientModule } from '@angular/common/http';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
+
+interface DraftItem {
+  created: string;
+  subject: string;
+  type: string;
+  status: undefined;
+}
 
 @Component({
   selector: 'sug-draft',
@@ -12,6 +24,7 @@ import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
     CommonModule,
     SugUiTableComponent,
     SugUiButtonComponent,
+    SugUiDialogComponent,
     ButtonModule,
     BadgeModule,
     HttpClientModule,
@@ -20,6 +33,31 @@ import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
   styleUrl: './draft.scss',
 })
 export class Draft {
+  dialogConf: DialogConfig = {
+    modal: true,
+    draggable: true,
+    resizable: false,
+    closable: true,
+    closeOnEscape: true,
+    dismissableMask: true,
+    focusOnShow: true,
+    position: 'center',
+    appendTo: 'body',
+    width: '40vw',
+  };
+  isVisible = false;
+  selectedItem: DraftItem | null = null;
+
+  openDeleteDialog(item: DraftItem) {
+    this.selectedItem = item;
+    this.isVisible = true;
+  }
+
+  closeDeleteDialog() {
+    this.isVisible = false;
+    this.selectedItem = null;
+  }
+
   tableConfig: ISugTableConfig = {};
   tableColumns: ISugTableColumn[] = [
     {
@@ -54,8 +92,8 @@ export class Draft {
       subject: 'test reminder',
       type: 'Custom Reminder',
       status: `<div class="table-action-wrapper">
-                <a href="#" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="#" class="btn-action"><i class="pi pi-times"></i></a>
+                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
+                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
               </div>`,
     },
     {
@@ -63,8 +101,8 @@ export class Draft {
       subject: 'test psql signup Invite',
       type: 'Custom Confirmation',
       status: `<div class="table-action-wrapper">
-                <a href="#" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="#" class="btn-action"><i class="pi pi-times"></i></a>
+                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
+                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
               </div>`,
     },
     {
@@ -72,8 +110,8 @@ export class Draft {
       subject: 'test Invite',
       type: 'Invite',
       status: `<div class="table-action-wrapper">
-                <a href="#" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="#" class="btn-action"><i class="pi pi-times"></i></a>
+                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
+                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
               </div>`,
     },
     {
@@ -81,8 +119,8 @@ export class Draft {
       subject: 'test Invite',
       type: 'Invite',
       status: `<div class="table-action-wrapper">
-                <a href="#" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="#" class="btn-action"><i class="pi pi-times"></i></a>
+                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
+                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
               </div>`,
     },
     {
@@ -90,8 +128,8 @@ export class Draft {
       subject: 'OTHER',
       type: '	Custom Confirmation',
       status: `<div class="table-action-wrapper">
-                <a href="#" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="#" class="btn-action"><i class="pi pi-times"></i></a>
+                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
+                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
               </div>`,
     },
   ];

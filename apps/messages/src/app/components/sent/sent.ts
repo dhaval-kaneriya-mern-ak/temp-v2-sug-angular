@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ISugTableConfig, ISugTableColumn } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { HttpClientModule } from '@angular/common/http';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
+import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
+import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 
 @Component({
   selector: 'sug-sent',
@@ -12,6 +14,8 @@ import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
     CommonModule,
     SugUiTableComponent,
     SugUiButtonComponent,
+    RouterOutlet,
+    SugUiMenuTabsComponent,
     ButtonModule,
     BadgeModule,
     HttpClientModule,
@@ -20,6 +24,9 @@ import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
   styleUrl: './sent.scss',
 })
 export class Sent {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   tableConfig: ISugTableConfig = {};
   tableColumns: ISugTableColumn[] = [
     {
@@ -104,25 +111,20 @@ export class Sent {
                 </div>`,
     },
   ];
-  onSort(event: { field: string; order: number }) {
-    console.log('Sort event:', event);
+  onSort() {
+    // Handle sorting if needed
   }
 
-  onFilter(event: {
-    filters: Record<
-      string,
-      { value: string | number | boolean; matchMode: string }
-    >;
-  }) {
-    console.log('Filter event:', event);
+  onFilter() {
+    // Handle filtering if needed
   }
 
-  onPage(event: {
-    first: number;
-    rows: number;
-    page: number;
-    pageCount: number;
-  }) {
-    console.log('Page event:', event);
+  onPage() {
+    // Handle pagination if needed
   }
+  navigationComposeTabs: Tabs[] = [
+    { name: 'Message Details', route: 'message-details' },
+    { name: 'Message Analytics', route: 'message-analytics' },
+  ];
+  activeTabRoute: string = this.navigationComposeTabs[0].route;
 }

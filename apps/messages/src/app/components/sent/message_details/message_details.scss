@@ -1,0 +1,94 @@
+.message-content-details {
+  margin: 20px 0;
+  .content-info {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    .info {
+      width: 50%;
+      font-size: 14px;
+      color: #666;
+      span {
+        color: #777;
+        text-transform: uppercase;
+        font-size: 13px;
+        margin-left: 6px;
+      }
+    }
+    .download-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      ::ng-deep {
+        .p-button {
+          padding: 0;
+          border: none;
+          &:hover,
+          &:active {
+            background: none;
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  }
+}
+.template-wrapper-main {
+  background-color: #fff9ec;
+  max-width: 710px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px auto;
+  .template-wrapper {
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 5px 90px #fbd3a4;
+    border-bottom: 5px solid #f68b1c;
+    max-width: 640px;
+    margin: 30px auto;
+    .template-header {
+      background-color: #f68b1c;
+      padding: 10px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 4%;
+      justify-content: space-between;
+      h3 {
+        width: 58%;
+        margin: 0;
+        text-align: right;
+      }
+      img {
+        max-width: 38%;
+        width: 160px;
+      }
+    }
+    .template-body {
+      padding: 30px 20px;
+      p {
+        margin-bottom: 20px;
+        color: #000000;
+        font-size: 18px;
+        text-align: left;
+        line-height: 27px;
+      }
+      li {
+        font-size: 18px;
+        a {
+          color: #9f9f9f;
+          font-size: 18px;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+  .template-footer {
+    margin-bottom: 30px;
+    text-align: center;
+    color: #aaaaaa;
+  }
+}
