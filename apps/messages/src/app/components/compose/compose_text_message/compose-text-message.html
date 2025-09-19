@@ -274,51 +274,59 @@
 >
   <h2 slot="header">Send this message to...</h2>
   <div class="dialog-content">
-    <sug-ui-radio-checkbox-button
-      type="radio"
-      name="dialogRadio"
-      [options]="sendMessageRadioOptions"
-      inputId="dialog-radio-selection"
-      [(value)]="dialogSelectedValue"
-      (changeEvent)="handleDialogSelection($event)"
-    ></sug-ui-radio-checkbox-button>
-
-    <!-- Select box for the second radio option -->
-    @if (dialogSelectedValue === 'sendMessageRadioThree') {
-    <div class="signup-radio-content send-msg-dialog-content">
-      <div class="form-wrapper">
-        <label for="group-alias">Assign the email entries to</label>
-        <sug-ui-multi-select-dropdown
-          id="signup-select"
-          [maxSelection]="1"
-          [options]="sendMessageSelectTwo"
-        ></sug-ui-multi-select-dropdown>
-      </div>
+    @for (option of sendMessageRadioOptions; track option.value) {
+    <div class="radio-option-wrapper">
       <sug-ui-radio-checkbox-button
-        type="checkbox"
-        label="Also include people that signed up but are not in the group(s)"
-        inputId="email-checkbox"
-        [(value)]="accepted"
-      ></sug-ui-radio-checkbox-button>
-    </div>
-    }
-    <!-- Select box for the Three radio option -->
-    @if (dialogSelectedValue === 'sendMessageRadioFour') {
-    <div class="signup-radio-content send-msg-dialog-content">
-      <div class="btn-wrapper">
-        <sug-ui-button
-          type="button"
-          class="add-link-btn"
-          icon=""
-          label="From my groups"
-        ></sug-ui-button>
-        <sug-ui-button
-          type="button"
-          class="add-link-btn"
-          icon=""
-          label="From this sign up"
-        ></sug-ui-button>
+        type="radio"
+        name="sendMessageRadioGroup"
+        [(value)]="dialogSelectedValue"
+        [options]="[{ label: option.label, value: option.value }]"
+      >
+      </sug-ui-radio-checkbox-button>
+
+      @if (dialogSelectedValue === option.value) {
+      <div class="radio-content-panel">
+        @switch (option.value) { @case ('sendMessageRadioThree') {
+        <div class="signup-radio-content send-msg-dialog-content">
+          <div class="form-wrapper">
+            <label for="group-alias">Assign the email entries to</label>
+            <sug-ui-multi-select-dropdown
+              id="signup-select"
+              [maxSelection]="1"
+              [options]="sendMessageSelectTwo"
+            >
+            </sug-ui-multi-select-dropdown>
+          </div>
+          <sug-ui-radio-checkbox-button
+            type="checkbox"
+            inputId="email-checkbox"
+            [(value)]="accepted"
+          >
+            Also include people that signed up but are not in the group(s)
+          </sug-ui-radio-checkbox-button>
+        </div>
+        } @case ('sendMessageRadioFour') {
+        <div class="signup-radio-content send-msg-dialog-content">
+          <div class="btn-wrapper">
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon=""
+              label="From my groups"
+            >
+            </sug-ui-button>
+            <sug-ui-button
+              type="button"
+              class="add-link-btn"
+              icon=""
+              label="From this sign up"
+            >
+            </sug-ui-button>
+          </div>
+        </div>
+        } }
       </div>
+      }
     </div>
     }
   </div>

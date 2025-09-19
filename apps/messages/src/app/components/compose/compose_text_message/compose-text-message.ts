@@ -46,6 +46,7 @@ export class ComposeTextMessageComponent {
     width: '600px',
   };
   isPeopleDialogVisible = false;
+  includeNonGroupMembersForGroups = false;
 
   // Methods for "Select People" dialog
   openPeopleDialog() {

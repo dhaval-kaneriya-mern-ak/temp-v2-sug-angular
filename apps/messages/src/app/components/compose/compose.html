@@ -1,107 +1,109 @@
 <div class="row">
   <div class="col-md-12">
     <div class="account-overview">
-      <h3>Compose Message</h3>
+      <h3>
+        Compose Message
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (onClick)="isVisible = true"
+            ><i class="pi pi-question-circle info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+        <sug-ui-dialog
+          [config]="dialogConf"
+          [(visible)]="isVisible"
+          [showFooter]="true"
+        >
+          <h2 slot="header">Help: Compose Message</h2>
+          <p>
+            SignUpGenius provides a simple and powerful messaging tool to make
+            communicating with your group members easy. Our "Compose" tab in the
+            Messages area allows you to create a variety of messages.
+          </p>
+          <h4>Invite People to a Sign Up</h4>
+          <p>
+            Select this option to compose an email that will send members a link
+            to your sign up page and invite them to participate. You can send it
+            to an existing group of email addresses in your account or upload a
+            new list of contacts.
+          </p>
+          <h4>Email People Participating in a Sign Up</h4>
+          <p>
+            Select this option to compose an email to people who have already
+            been invited to a sign up. Need to send out directions to your
+            participants? Want to only contact those who haven't signed up and
+            encourage them to get involved? It's easy to send a message to the
+            specific group you need to reach.
+          </p>
+          <h4>
+            Create a Custom Reminder Email Template
+            <span><img [src]="badgeUrl" alt="badge" /></span>
+          </h4>
+          <p>
+            With our premium plans, you can compose a custom reminder message
+            that takes place of the standard reminder message. Build a template
+            and assign it to one or more sign ups in your account. You can also
+            add attachments to the email message. <a href="#">Learn More</a>
+          </p>
+          <h4>
+            Create a Custom Confirmation Email Template
+            <span><img src="../../../../public/pro.webp" alt="badge" /></span>
+          </h4>
+          <p>
+            A confirmation email is sent to participants immediately after they
+            sign up. With a premium subscription, the sign up creator can
+            customize the confirmation email. You can build a template message
+            and assign it to one or more sign ups in your account. To edit your
+            confirmation template later, look for it in the "Drafts & Templates"
+            tab of the Messages area. <a href="#">Learn More</a>
+          </p>
+          <h4>
+            Invite People to Opt in to Text Messages
+            <span><img src="../../../../public/pro.webp" alt="badge" /></span>
+          </h4>
+          <p>
+            Select this option to compose an email that will send members a link
+            to opt in to receive text messages. You can send it to an existing
+            group of email addresses in your account or upload a new list of
+            contacts. Once opted in, you can text participants regarding any
+            sign up in your account. <a href="#">Learn More</a>
+          </p>
+          <h4>
+            Send a Text Message to People Participating in a Sign Up
+            <span><img src="../../../../public/pro.webp" alt="badge" /></span>
+          </h4>
+          <p>
+            Select this option to compose a text message. You can send the text
+            to an entire group, only those signed up, individual group members,
+            or even participants signed up for specific sign up slots, including
+            those on a waitlist. If some of the selected recipients have not
+            opted in to text messages, they can receive your message via email.
+            <a href="#">Learn More</a>
+          </p>
+
+          <div
+            slot="footer"
+            class="d-flex justify-content-center align-items-center w-100"
+          >
+            <sug-ui-button
+              label="Upgrade Now"
+              icon=""
+              [rounded]="false"
+              [size]="'large'"
+              [severity]="'success'"
+              [outlined]="false"
+              (onClick)="isVisible = false"
+            ></sug-ui-button>
+          </div>
+        </sug-ui-dialog>
+      </h3>
     </div>
     <p class="compose-subtext">
       Select the type of message you would like to compose.
-      <sug-ui-tooltip
-        [text]="'Click to learn more about composing messages.'"
-        [position]="'bottom'"
-        [tooltipClass]="'custom-tooltip'"
-        [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
-      >
-        <p-button variant="text" size="small" (onClick)="isVisible = true"
-          ><i class="pi pi-question-circle info-icon"></i>
-        </p-button>
-      </sug-ui-tooltip>
-      <sug-ui-dialog
-        [config]="dialogConf"
-        [(visible)]="isVisible"
-        [showFooter]="true"
-      >
-        <h2 slot="header">Help: Compose Message</h2>
-        <p>
-          SignUpGenius provides a simple and powerful messaging tool to make
-          communicating with your group members easy. Our "Compose" tab in the
-          Messages area allows you to create a variety of messages.
-        </p>
-        <h4>Invite People to a Sign Up</h4>
-        <p>
-          Select this option to compose an email that will send members a link
-          to your sign up page and invite them to participate. You can send it
-          to an existing group of email addresses in your account or upload a
-          new list of contacts.
-        </p>
-        <h4>Email People Participating in a Sign Up</h4>
-        <p>
-          Select this option to compose an email to people who have already been
-          invited to a sign up. Need to send out directions to your
-          participants? Want to only contact those who haven't signed up and
-          encourage them to get involved? It's easy to send a message to the
-          specific group you need to reach.
-        </p>
-        <h4>
-          Create a Custom Reminder Email Template
-          <span><img [src]="badgeUrl" alt="badge" /></span>
-        </h4>
-        <p>
-          With our premium plans, you can compose a custom reminder message that
-          takes place of the standard reminder message. Build a template and
-          assign it to one or more sign ups in your account. You can also add
-          attachments to the email message. <a href="#">Learn More</a>
-        </p>
-        <h4>
-          Create a Custom Confirmation Email Template
-          <span><img src="../../../../public/pro.webp" alt="badge" /></span>
-        </h4>
-        <p>
-          A confirmation email is sent to participants immediately after they
-          sign up. With a premium subscription, the sign up creator can
-          customize the confirmation email. You can build a template message and
-          assign it to one or more sign ups in your account. To edit your
-          confirmation template later, look for it in the "Drafts & Templates"
-          tab of the Messages area. <a href="#">Learn More</a>
-        </p>
-        <h4>
-          Invite People to Opt in to Text Messages
-          <span><img src="../../../../public/pro.webp" alt="badge" /></span>
-        </h4>
-        <p>
-          Select this option to compose an email that will send members a link
-          to opt in to receive text messages. You can send it to an existing
-          group of email addresses in your account or upload a new list of
-          contacts. Once opted in, you can text participants regarding any sign
-          up in your account. <a href="#">Learn More</a>
-        </p>
-        <h4>
-          Send a Text Message to People Participating in a Sign Up
-          <span><img src="../../../../public/pro.webp" alt="badge" /></span>
-        </h4>
-        <p>
-          Select this option to compose a text message. You can send the text to
-          an entire group, only those signed up, individual group members, or
-          even participants signed up for specific sign up slots, including
-          those on a waitlist. If some of the selected recipients have not opted
-          in to text messages, they can receive your message via email.
-          <a href="#">Learn More</a>
-        </p>
-
-        <div
-          slot="footer"
-          class="d-flex justify-content-center align-items-center w-100"
-        >
-          <sug-ui-button
-            label="Upgrade Now"
-            icon=""
-            [rounded]="false"
-            [size]="'large'"
-            [severity]="'success'"
-            [outlined]="false"
-            (onClick)="isVisible = false"
-          ></sug-ui-button>
-        </div>
-      </sug-ui-dialog>
     </p>
   </div>
   <div class="compose-tab">

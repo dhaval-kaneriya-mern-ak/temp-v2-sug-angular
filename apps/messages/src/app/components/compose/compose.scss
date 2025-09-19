@@ -70,20 +70,25 @@
   font-style: normal;
 }
 .account-overview {
+  position: relative;
+  z-index: 9;
   h3 {
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
     margin: 0px auto;
     font-size: 26px;
     line-height: 32px;
     margin-bottom: 20px;
-    font-weight: 600;
+    font-weight: 400;
+    display: flex;
+    gap: 10px;
   }
 }
 .compose-subtext {
+  .info-icon {
+    font-size: 13px;
+  }
   font-size: 16px;
   margin-bottom: 20px;
-  position: relative;
-  z-index: 9;
 }
 ::ng-deep sug-ui-dialog {
   .p-dialog-header {
@@ -112,4 +117,10 @@
 }
 .info-icon {
   font-size: 13px;
+}
+::ng-deep p-button {
+  display: flex;
+  .p-button {
+    padding: 0;
+  }
 }

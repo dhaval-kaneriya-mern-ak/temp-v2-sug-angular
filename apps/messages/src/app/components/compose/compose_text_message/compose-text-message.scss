@@ -20,6 +20,17 @@
 }
 .email-form-section {
   max-width: 800px;
+  h3 {
+    display: flex;
+    gap: 10px;
+    font-weight: 400;
+    .info-icon {
+      font-size: 13px;
+    }
+    @media (max-width: 767px) {
+      font-size: 18px;
+    }
+  }
   .form-wrapper {
     display: flex;
     margin-bottom: 20px;
@@ -106,6 +117,9 @@
       }
     }
   }
+  .sug-ui-radio-checkbox-button-container {
+    padding-bottom: 10px;
+  }
   .p-multiselect-header {
     .p-icon {
       height: 20px;
@@ -127,7 +141,7 @@
   padding: 20px 0;
   ::ng-deep {
     .signup-radio-content {
-      margin-top: 16px;
+      margin-top: 5px;
       margin-left: 28px;
       display: flex;
       align-items: center;
@@ -194,7 +208,7 @@
     .send-msg-dialog-content {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      // gap: 20px;
       align-items: flex-start;
       width: 90%;
       .form-wrapper {

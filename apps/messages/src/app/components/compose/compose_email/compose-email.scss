@@ -9,7 +9,9 @@
   h3 {
     font-size: 26px;
     margin-bottom: 20px;
-    font-weight: 600;
+    font-weight: 400;
+    display: flex;
+    gap: 10px;
     @media (max-width: 767px) {
       font-size: 18px;
       .info-icon {
@@ -113,11 +115,15 @@
   padding: 20px 0;
   ::ng-deep {
     .signup-radio-content {
-      margin-top: 16px;
+      margin-top: 5px;
       margin-left: 28px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      padding-bottom: 12px;
+      position: relative;
+    }
+    .sug-ui-radio-checkbox-button-container {
+      margin-bottom: 12px;
     }
     .signup-tooltip-content {
       margin-top: 16px;
@@ -180,7 +186,6 @@
     .send-msg-dialog-content {
       display: flex;
       flex-direction: column;
-      gap: 20px;
       align-items: flex-start;
       .form-wrapper {
         display: flex;

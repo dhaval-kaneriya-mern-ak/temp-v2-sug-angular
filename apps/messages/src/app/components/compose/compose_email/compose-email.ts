@@ -326,6 +326,8 @@ export class ComposeEmailComponent {
 
   // Dialog state for people send message radio selection
   peopleSendMessageSelectedValue: string | null = null;
+  includeNonGroupMembers = false;
+  useGroupAlias = false;
 
   // Method to handle dialog radio selection
   handleDialogSelection(event: RadioCheckboxChangeEvent) {
@@ -356,6 +358,7 @@ export class ComposeEmailComponent {
   ];
 
   selectedValue: string | null = null;
+  includeNonGroupMembersForPeople = false;
 
   handleSelection(event: RadioCheckboxChangeEvent) {
     this.selectedValue = event.value; // Update the selected size
