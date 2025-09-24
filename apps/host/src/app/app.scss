@@ -16,7 +16,8 @@
   min-height: calc(100vh - 140px);
   max-width: calc(100% - 70px);
   @media (max-width: 768px) {
-    max-width: calc(100% - 50px);
+    max-width: 100%;
+    width: 100%;
     padding: 1rem;
     min-height: auto;
   }
