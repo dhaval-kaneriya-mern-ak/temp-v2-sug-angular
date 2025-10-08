@@ -924,7 +924,7 @@ This section documents the dependency pinning we applied, why it was required, a
 - `@rspack/core: 1.4.11`
 - `webpack: 5.99.9`
 
-Note:: if a package is also a direct dependency, it must match the override or npm throws `EOVERRIDE`.
+Note: if a package is also a direct dependency, it must match the override or npm throws `EOVERRIDE`.
 
 ### Why we pinned
 
