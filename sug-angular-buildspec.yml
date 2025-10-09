@@ -24,7 +24,7 @@ phases:
         cat > environments/environment.ts <<EOL
 export const environment = {
   production: false,
-  apiBaseUrl: '$API_BASE_URL'
+  apiBaseUrl: "$API_BASE_URL"
 };
 EOL
 
