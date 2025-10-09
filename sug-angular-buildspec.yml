@@ -20,13 +20,6 @@ phases:
       - echo "REPORTS_URL=$REPORTS_URL" > .env
       - echo "MESSAGES_URL=$MESSAGES_URL" >> .env
       - echo "Creating environments/environment.ts..."
-      - |
-        cat > environments/environment.ts <<EOL
-export const environment = {
-  production: false,
-  apiBaseUrl: "$API_BASE_URL"
-};
-EOL
 
   build:
     commands:
