@@ -1,4 +1,6 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
@@ -11,6 +13,7 @@ describe('App', () => {
         App,
         NxWelcome,
       ],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 

@@ -1,57 +1,72 @@
 <div class="message-details">
+  @if (detailsMessage) {
   <div class="message-content-details">
     <div class="content-info">
       <div class="info">Sent</div>
-      <div class="info">09/10/2025 7:35pm <span>EST</span></div>
+      <div class="info">
+        <span>{{ formatSentDate() }}</span>
+        <span>{{ detailsMessage.timezone.zone }}</span>
+      </div>
     </div>
     <div class="content-info">
       <div class="info">Related Signup</div>
-      <div class="info">Multiple Signups</div>
+      <div class="info">
+        @if (detailsMessage.signups && detailsMessage.signups.length > 0) { @if
+        (detailsMessage.signups.length === 1) {
+        <span>{{ detailsMessage.signups[0].title }}</span>
+        } @else {
+        <span>Multiple Signups</span>
+        } } @else {
+        <span>{{ detailsMessage.title }}</span>
+        }
+      </div>
     </div>
     <div class="content-info">
       <div class="info">From</div>
-      <div class="info">aly gold</div>
+      <div class="info">{{ detailsMessage.contactname }}</div>
     </div>
     <div class="content-info">
       <div class="info">Reply To</div>
-      <div class="info">alygold@skylark.net, alysilver@skylark.net</div>
+      <div class="info">{{ detailsMessage.createdby.email }}</div>
     </div>
     <div class="content-info">
       <div class="info">Sent To</div>
-      <div class="info">A,Aly Automation</div>
+      <div class="info">{{ detailsMessage.totalsent }} recipients</div>
     </div>
-    <div class="content-info">
-      <div class="info">Attachments</div>
-      <div class="info download-container">
-        <sug-ui-button icon="pi pi-arrow-circle-down" label=" "></sug-ui-button>
-        Screenshot 2024-05-23 at 1.png
-      </div>
-    </div>
+    <!-- TODO: Add attachments support when available in API -->
+    <!-- <div class="content-info">
+        <div class="info">Attachments</div>
+        <div class="info download-container">
+          <sug-ui-button icon="pi pi-arrow-circle-down" label=" "></sug-ui-button>
+          Screenshot 2024-05-23 at 1.png
+        </div>
+      </div> -->
   </div>
   <div class="template-wrapper-main">
     <div class="template-wrapper">
       <div class="template-header">
         <img src="/logo-signupgenius.svg" alt="logo" />
-        <h3>Group Organizing Made Easy</h3>
+        <h3>{{ detailsMessage.subject }}</h3>
       </div>
       <div class="template-body">
-        <p>Hi!</p>
-        <p>
-          You have been invited by aly gold to sign up for one or more events.
-        </p>
-        <ul>
-          <li><a href="">Venmo</a></li>
-          <li><a href="">test</a></li>
-        </ul>
+        <!-- Email preview content -->
+        <div class="email-preview">
+          <div class="link-blocking-cover"></div>
+          <div class="email-content" [innerHTML]="detailsMessage.preview"></div>
+        </div>
       </div>
     </div>
-    <div class="template-footer">
-      <span class="appleLinksGray"
-        >1213 W. Morehead Street, Suite 500, Charlotte, NC 28208<br />© 2025
+    <!-- <div class="template-footer">
+      <span class="appleLinksGray">1213 W. Morehead Street, Suite 500, Charlotte, NC 28208<br />© 2025
         SignUpGenius. All Rights Reserved.
       </span>
       | <a href="#" style="color: inherit !important">Contact Support</a> |
       <a href="#" style="color: inherit !important">Unsubscribe</a>
-    </div>
+    </div> -->
   </div>
+  } @else {
+  <div class="no-message-selected">
+    <p>No message selected</p>
+  </div>
+  }
 </div>

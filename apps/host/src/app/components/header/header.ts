@@ -5,28 +5,15 @@ import {
   OnInit,
   ViewChild,
   signal,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { MobileMenuComponent } from './mobile-menu';
-
-// Define interfaces for the component
-interface UserProfile {
-  profilepicture: {
-    text?: string;
-    small?: string;
-  };
-  ispro: boolean;
-  isadmin?: boolean;
-}
-
-interface UserRole {
-  // Define based on your user role structure
-  id: string;
-  name: string;
-  permissions: string[];
-}
+import { HeaderService } from './header.service';
+import { environment } from '@environments/environment';
+import { MemberProfile, UserRole } from '@services/interfaces';
 
 @Component({
   selector: 'sug-header',
@@ -40,23 +27,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('moreLoginMenuRef') moreLoginMenuRef!: ElementRef<HTMLDivElement>;
   @ViewChild('extendedWrapRef') extendedWrapRef!: ElementRef<HTMLDivElement>;
 
+  // Inject services
+  private headerService = inject(HeaderService);
+
   // State signals
   isVisible = signal(false);
   moreMenu = signal(false);
   moreLoginMenu = signal(false);
   mobileMenu = signal(false);
   isLoading = signal(false);
-
-  // User data - these would typically come from a service
-  userProfile = signal<UserProfile | null>(null);
-  userRoles = signal<UserRole[]>([]);
-
-  private destroy$ = new Subject<void>();
-
-  // Environment variables - replace with your actual URLs
   auctionUrl = 'https://auction.signupgenius.com';
   donationUrl = 'https://giving.signupgenius.com';
   ticketUrl = 'https://tickets.signupgenius.com';
+  // // User data - these would typically come from a service
+  userProfile = signal<MemberProfile | null>(null);
+  userRoles = signal<UserRole[]>([]);
+  environment = environment;
+  private destroy$ = new Subject<void>();
 
   ngOnInit() {
     this.setupEventListeners();
@@ -75,21 +62,34 @@ export class HeaderComponent implements OnInit, OnDestroy {
     window.addEventListener('beforeunload', this.handlePageReload.bind(this));
   }
 
-  private loadUserProfile() {
-    // Replace with actual user service
-    // this.userService.getUserProfile().subscribe(profile => {
-    //   this.userProfile.set(profile);
-    //   this.isLoading.set(false);
-    // });
+  private loadUserRole() {
+    this.headerService.getUserRole().subscribe({
+      next: (response) => {
+        this.userRoles.set(response.data ? response.data : []);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.handleLogout();
+        this.isLoading.set(false);
+      },
+    });
+  }
 
-    // Mock data for demonstration
-    this.isLoading.set(false);
-    // Uncomment and modify based on your user service
-    // this.userProfile.set({
-    //   profilepicture: { text: 'JD', small: '' },
-    //   ispro: true,
-    //   isadmin: false
-    // });
+  private loadUserProfile() {
+    this.isLoading.set(true);
+    this.headerService.getUserProfile().subscribe({
+      next: (response) => {
+        this.userProfile.set(response.data);
+        this.isLoading.set(false);
+        if (response.success) {
+          // this.loadUserRole();
+        }
+      },
+      error: () => {
+        this.handleLogout();
+        this.isLoading.set(false);
+      },
+    });
   }
 
   private handleClickOutside(event: MouseEvent) {

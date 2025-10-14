@@ -1,15 +1,49 @@
 <div class="scheduled-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <h2>Scheduled Messages</h2>
+  @if (tableData.length > 0) {
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
     [paginator]="true"
     [rows]="10"
+    (actionClick)="onActionClick($event)"
     [globalFilterFields]="['scheduled', 'subject', 'type']"
-    (sort)="onSort()"
-    (page)="onPage()"
+    (sort)="onSort($event)"
+    (page)="onPage($event)"
   >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="pi pi-pencil btn-action"
+          (click)="editMessage(rowData)"
+          title="Edit message"
+          style="cursor: pointer"
+        ></i>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="pi pi-times btn-action"
+          (click)="openDeleteDialog(rowData)"
+          title="Delete message"
+          style="cursor: pointer"
+        ></i>
+      </div>
+    </ng-template>
   </sug-ui-table>
+  } @else if (tableData.length === 0) {
+  <div class="no-scheduled-messages">
+    <p>You have no scheduled messages.</p>
+  </div>
+  }
   <!-- <div class="bottom-note">
     <span>NOTE: Dates are in mm/dd/yyyy. Times are shown in - EST. To modify, update your</span><a href="https://test.signupgenius.rocks/index.cfm?go=m.otherSettings">settings.</a>
   </div> -->
@@ -35,7 +69,7 @@
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
-      (buttonClick)="closeDeleteDialog()"
+      (buttonClick)="deleteScheduleMessage()"
     ></sug-ui-button>
   </div>
 </sug-ui-dialog>

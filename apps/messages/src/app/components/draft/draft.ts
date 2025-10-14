@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import {
@@ -6,16 +6,24 @@ import {
   ISugTableColumn,
   SugUiDialogComponent,
   DialogConfig,
+  SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
-import { HttpClientModule } from '@angular/common/http';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
+import { DraftService } from './draft.service';
+import { DraftMessage } from '@services/interfaces';
+import { Router } from '@angular/router';
 
 interface DraftItem {
   created: string;
   subject: string;
   type: string;
   status: undefined;
+}
+
+interface ExtendedDraftMessage extends DraftMessage {
+  actions?: string;
+  _itemData?: DraftMessage;
 }
 
 @Component({
@@ -27,12 +35,12 @@ interface DraftItem {
     SugUiDialogComponent,
     ButtonModule,
     BadgeModule,
-    HttpClientModule,
+    SugUiLoadingSpinnerComponent,
   ],
   templateUrl: './draft.html',
   styleUrl: './draft.scss',
 })
-export class Draft {
+export class Draft implements OnInit {
   dialogConf: DialogConfig = {
     modal: true,
     draggable: true,
@@ -47,6 +55,13 @@ export class Draft {
   };
   isVisible = false;
   selectedItem: DraftItem | null = null;
+  isLoading = false;
+  draftService = inject(DraftService);
+  private router = inject(Router);
+  page = 1;
+  rows = 10;
+  sortField = 'created';
+  sortOrder = 'desc';
 
   openDeleteDialog(item: DraftItem) {
     this.selectedItem = item;
@@ -73,76 +88,72 @@ export class Draft {
       filterable: false,
     },
     {
-      field: 'type',
+      field: 'messagetype',
       header: 'Type',
       sortable: true,
       filterable: false,
     },
     {
-      field: 'status',
+      field: 'action',
       header: ' ',
       sortable: false,
       filterable: false,
     },
   ];
 
-  tableData = [
-    {
-      created: '06/20/2025 10:08am',
-      subject: 'test reminder',
-      type: 'Custom Reminder',
-      status: `<div class="table-action-wrapper">
-                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
-              </div>`,
-    },
-    {
-      created: '07/30/2025 10:26am',
-      subject: 'test psql signup Invite',
-      type: 'Custom Confirmation',
-      status: `<div class="table-action-wrapper">
-                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
-              </div>`,
-    },
-    {
-      created: '08/19/2025 3:15am',
-      subject: 'test Invite',
-      type: 'Invite',
-      status: `<div class="table-action-wrapper">
-                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
-              </div>`,
-    },
-    {
-      created: '08/19/2025 3:15am',
-      subject: 'test Invite',
-      type: 'Invite',
-      status: `<div class="table-action-wrapper">
-                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
-              </div>`,
-    },
-    {
-      created: '07/30/2025 10:27am',
-      subject: 'OTHER',
-      type: '	Custom Confirmation',
-      status: `<div class="table-action-wrapper">
-                <a href="javascript:void(0)" class="btn-action"><i class="pi pi-pencil"></i></a>
-                <a href="javascript:void(0)" class="btn-action" (click)="openDeleteDialog(item)"><i class="pi pi-times"></i></a>
-              </div>`,
-    },
-  ];
+  tableData: ExtendedDraftMessage[] = [];
 
-  onSort() {
-    // Implement your sorting logic here
+  getMessageTemplates() {
+    this.isLoading = true;
+    this.draftService.getMessageTemplates().subscribe((response) => {
+      // Handle the response from the service
+      this.tableData = response.data.map(
+        (item): ExtendedDraftMessage => ({
+          created: item.created,
+          subject: item.subject,
+          messageid: item.messageid,
+          messagetypeid: item.messagetypeid,
+          messagetype: item.messagetype,
+          _itemData: item, // Store original item data
+        })
+      );
+      this.isLoading = false;
+    });
   }
 
-  onFilter() {
-    // Implement your filtering logic here
+  ngOnInit(): void {
+    this.getMessageTemplates();
   }
 
-  onPage() {
-    // Implement your pagination logic here
+  onActionClick(event: any) {
+    this.openDeleteDialog(event.data);
+  }
+
+  editDraft() {
+    this.router.navigate([`/messages/compose/email`]);
+  }
+
+  deleteItem(item: DraftMessage) {
+    // Convert item to DraftItem for the dialog
+    const draftItem: DraftItem = {
+      created: item.created,
+      subject: item.subject,
+      type: item.messagetype,
+      status: undefined,
+    };
+    this.openDeleteDialog(draftItem);
+  }
+
+  onSort(event: { field: string; order: number }) {
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.page = 1; // Reset to first page when sorting
+    // this.getMessageTemplates();
+  }
+  onPage(event: { first: number; rows: number }) {
+    this.tableData = [];
+    this.page = event.first / event.rows + 1;
+    this.rows = event.rows;
+    this.getMessageTemplates();
   }
 }

@@ -1,12 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   SugUiProgressBarComponent,
   SugUiTableComponent,
   SugUiButtonComponent,
+  SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 import { ISugTableConfig, ISugTableColumn } from '@lumaverse/sug-ui';
-
+import { SugApiService } from '@services/sug-api.service';
+import { DashboardService } from './dashboard.service';
+import { environment } from '@environments/environment';
+import { MessageItem } from '@services/interfaces';
+import { Router } from '@angular/router';
+import { format } from 'date-fns';
 @Component({
   selector: 'sug-dashboard',
   imports: [
@@ -14,23 +20,33 @@ import { ISugTableConfig, ISugTableColumn } from '@lumaverse/sug-ui';
     SugUiProgressBarComponent,
     SugUiTableComponent,
     SugUiButtonComponent,
+    SugUiLoadingSpinnerComponent,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class Dashboard {
-  emailMessagesUsedToday = 'Loading files..';
-  progressone = '0 / 10,000 email messages used today';
-  progresstwo = '0 / 20 email messages used this month';
-  progressthree = '0 / 14 text messages used this month';
+export class Dashboard implements OnInit {
+  protected dashboardService = inject(DashboardService);
+  protected sugApiService = inject(SugApiService);
+  protected router = inject(Router);
+  // emailMessagesUsedToday = 'Loading files..';
+  progressToday = '0 / 10,000 email messages used today';
+  progressTodayValue = 0;
+  progressTodayMaxValue = 0;
+  progressMonth = '0 / 20 email messages used this month';
+  progressMonthValue = 0;
+  progressMonthMaxValue = 0;
+  progressTextMessage = '0 / 14 text messages used this month';
+  progressTextMessageValue = 0;
+  progressTextMessageMaxValue = 0;
 
-  tableData: any[] = [];
-  selectedItems: any[] = [];
+  tableData: MessageItem[] = [];
+  selectedItems: MessageItem[] = [];
   tableConfig: ISugTableConfig = {};
-
+  isLoading = false;
   tableColumns: ISugTableColumn[] = [
     {
-      field: 'dateSent',
+      field: 'sentdate',
       header: 'Date Sent',
       sortable: true,
       filterable: false,
@@ -45,13 +61,13 @@ export class Dashboard {
     },
     {
       field: 'sentTo',
-      header: '	Sent To',
+      header: 'Sent To',
       sortable: true,
       filterable: false,
       width: '200px',
     },
     {
-      field: 'chart',
+      field: 'action',
       header: '',
       sortable: false,
       filterable: false,
@@ -59,43 +75,101 @@ export class Dashboard {
     },
   ];
 
-  ngOnInit(): void {
-    // 2. PROVIDE DATA FOR THE TABLE
-    this.tableData = [
-      {
-        dateSent: '01/07/2025 10:23am',
-        subject: 'john.doe@example.com',
-        sentTo: 'All Group Members Only',
-        chart: '<a href="#"><i class="pi pi-chart-bar"></i></a>',
-      },
-      {
-        dateSent: '08/06/2025 9:16am	',
-        subject: 'jane.smith@example.com',
-        sentTo: 'All Group Members Only',
-        chart: '<a href="#"><i class="pi pi-chart-bar"></i></a>',
-      },
-      {
-        dateSent: '08/06/2025 10:09am	',
-        subject: 'sam.wilson@example.com',
-        sentTo: 'People Who Have Not Signed Up',
-        chart: '<a href="#"><i class="pi pi-chart-bar"></i></a>',
-      },
-      {
-        dateSent: '08/27/2025 6:05am',
-        subject: 'sam.wilson@example.com',
-        sentTo: 'Select Members',
-        chart: '<a href="#"><i class="pi pi-chart-bar"></i></a>',
-      },
-      {
-        dateSent: '08/06/2025 10:09am',
-        subject: 'sam.wilson@example.com',
-        sentTo: 'Select Members',
-        chart: '<a href="#"><i class="pi pi-chart-bar"></i></a>',
-      },
-    ];
+  constructor() {
+    // console.log('Table Data Length:', this.tableData.length);
   }
 
-  onSelectionChange(event: any): void {
+  ngOnInit(): void {
+    this.sugApiService.createSugApiClient(environment.apiBaseUrl);
+    this.getMessageLimit();
+    this.getMessageSummary();
+  }
+
+  onSelectionChange(): void {
     console.log('Selected items:', this.selectedItems);
+  }
+
+  onViewMore(): void {
+    this.router.navigate(['messages/sent']);
+  }
+
+  getCurrentMonthName(): string {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return months[new Date().getMonth()];
+  }
+
+  getMessageLimit() {
+    this.dashboardService.getMessageLimits().subscribe({
+      next: (response) => {
+        this.progressTodayValue = response.data.sentemailtoday;
+        this.progressTodayMaxValue = response.data.dailylimit;
+        this.progressMonthValue = response.data.sentemailforthemonth;
+        this.progressMonthMaxValue = response.data.monthlylimit;
+        this.progressTextMessageValue = response.data.senttexttoday;
+        this.progressTextMessageMaxValue = response.data.textmessagelimit;
+        this.progressToday = `${this.progressTodayValue} / ${this.progressTodayMaxValue} email messages used today`;
+        this.progressMonth = `${this.progressMonthValue} / ${this.progressMonthMaxValue} email messages used this month`;
+        this.progressTextMessage = `${this.progressTextMessageValue} / ${this.progressTextMessageMaxValue} text messages used this month`;
+      },
+      error: () => {
+        // this.handleLogout();
+        // this.isLoading.set(false);
+      },
+    });
+  }
+  getMessageSummary() {
+    this.isLoading = true;
+    this.dashboardService.getMessageSummary().subscribe({
+      next: (response) => {
+        const flatData = Array.isArray(response.data[0])
+          ? response.data.flat()
+          : response.data;
+
+        this.tableData = flatData.map((item: MessageItem) => ({
+          messageid: item.messageid,
+          sentdate: format(
+            new Date(item.sentdate || new Date()),
+            'yyyy-MM-dd h:mmaaa'
+          ),
+          subject: item.subject,
+          sentTo: item.sentTo || `${item.totalsent || 0}`,
+          action: `<i class="pi pi-chart-bar chart-icon" 
+          style="cursor: pointer;" 
+          data-message-id="${item.messageid}"
+          title="View message details"></i>`,
+          messagetype: item.messagetype,
+          status: item.status,
+          timezone: item.timezone,
+          createdby: item.createdby,
+          totalsent: item.totalsent,
+        }));
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Error fetching message summary:', error);
+      },
+    });
+  }
+
+  onActionClick(event: { messageid: number }) {
+    this.navigateToSentDetails(event.messageid);
+  }
+
+  navigateToSentDetails(messageId: number) {
+    this.router.navigate([`/messages/sent/${messageId}`]);
   }
 }

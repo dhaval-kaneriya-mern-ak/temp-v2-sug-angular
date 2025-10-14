@@ -1,1 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
+@use 'primeicons/primeicons.css'; // required to add this line
+@use 'bootstrap/scss/bootstrap.scss'; // required to add this line
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'); // required to add this line
+
+// you can add any font of your choice and use for your application.
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+html {
+  font-size: 10px; // Base font size, you can set any size but need to set it. required to add this line
+}
+
+body {
+  font-size: 16px !important; // Base font size, , you can set any size but need to set it. required to add this line
+  margin-left: 10% !important; // Adjusted for better alignment
+  margin-right: 10% !important; // Adjusted for better alignment
+  font-family: 'Lato', sans-serif !important; // Using Lato font
+  background-color: #f8f9fa !important; // Light background color for better contrast
+}

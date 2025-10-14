@@ -1,7 +1,11 @@
 <div class="row">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <div class="dashboard-stats col-md-12">
     <div class="account-overview">
-      <h3>Account Overview: <span>August</span></h3>
+      <h3>Account Overview: <span>{{ getCurrentMonthName() }}</span></h3>
     </div>
     <div class="plan">
       <p><strong>Plan:</strong> Basic</p>
@@ -9,58 +13,67 @@
     <div class="d-flex flex-column">
       <div class="progressbar col-sm-5">
         <sug-ui-progress-bar
-          [value]="500"
-          [max]="1000"
+          [value]="progressTodayValue"
+          [max]="progressTodayMaxValue"
           type="default"
           [striped]="false"
           [animated]="false"
           [showLabel]="true"
-          [label]="progressone"
+          [label]="progressToday"
         ></sug-ui-progress-bar>
       </div>
       <div class="progressbar col-sm-5">
         <sug-ui-progress-bar
-          [value]="0"
-          [max]="20"
+          [value]="progressMonthValue"
+          [max]="progressMonthMaxValue"
           type="default"
           [striped]="false"
           [animated]="false"
           [showLabel]="true"
-          [label]="progresstwo"
+          [label]="progressMonth"
         ></sug-ui-progress-bar>
       </div>
       <div class="progressbar col-sm-5">
         <sug-ui-progress-bar
-          [value]="10"
-          [max]="14"
+          [value]="progressTextMessageValue"
+          [max]="progressTextMessageMaxValue"
           type="default"
           [striped]="false"
           [animated]="false"
           [showLabel]="true"
-          [label]="progressthree"
+          [label]="progressTextMessage"
         ></sug-ui-progress-bar>
       </div>
     </div>
     <div class="account-overview">
       <h3>Recently Sent</h3>
     </div>
+    @if(tableData.length > 0) {
     <sug-ui-table
       [data]="tableData"
       [columns]="tableColumns"
       [(selection)]="selectedItems"
-      (selectionChange)="onSelectionChange($event)"
+      (selectionChange)="onSelectionChange()"
       [paginator]="false"
       [responsiveLayout]="'scroll'"
     >
-      <!-- <ng-template pTemplate="footer">
-        <tr>
-          <td [attr.colspan]="tableColumns.length">
-            <div class="flex items-center justify-end p-2">test
-              <sug-ui-button label="View More" />
-            </div>
-          </td>
-        </tr>
-      </ng-template> -->
+      <ng-template
+        #actionTemplate
+        let-rowData
+        let-column="column"
+        let-rowIndex="rowIndex"
+      >
+        <div class="table-action-wrapper">
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+          <i
+            class="pi pi-chart-bar chart-icon"
+            (click)="onActionClick(rowData)"
+            style="cursor: pointer"
+            data-message-id="${rowData.messageid}"
+            title="View message details"
+          ></i>
+        </div>
+      </ng-template>
       <ng-template #footerTemplate>
         <tr>
           <td colspan="4">
@@ -73,12 +86,14 @@
                 styleClass="bg-white rounded-1 text-black"
                 [raised]="false"
                 label="View More"
+                (buttonClick)="onViewMore()"
               />
             </div>
           </td>
         </tr>
       </ng-template>
     </sug-ui-table>
+    }
   </div>
   <!-- <div class="recent-activity">
     <h3>Recent Activity</h3>

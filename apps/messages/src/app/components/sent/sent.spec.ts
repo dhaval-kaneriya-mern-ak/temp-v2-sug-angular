@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Sent } from './sent';
 
 // Mock ResizeObserver for PrimeNG components
@@ -44,6 +46,7 @@ describe('Sent', () => {
         ]),
         MockRouterOutlet,
       ],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 

@@ -1,19 +1,39 @@
 <div class="sent-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <h2>Scheduled Messages</h2>
+  @if(tableData.length > 0) {
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
+    [totalRecords]="totalRecords"
     [paginator]="true"
     [rows]="10"
     [globalFilterFields]="['scheduled', 'subject', 'type']"
-    (sort)="onSort()"
-    (page)="onPage()"
+    (sort)="onSort($event)"
+    (page)="onPage($event)"
   >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="pi pi-chart-bar chart-icon"
+          (click)="onActionClick(rowData)"
+          style="cursor: pointer"
+          data-message-id="${rowData.messageid}"
+          title="View message details"
+        ></i>
+      </div>
+    </ng-template>
   </sug-ui-table>
-</div>
-<h2 class="sent-message-title">Sent Message: Sign Up Invite</h2>
-<div class="sent-tab">
-  <sug-ui-menu-tabs [tabs]="navigationComposeTabs"></sug-ui-menu-tabs>
+  }
 </div>
 <div class="sent-content">
   <router-outlet></router-outlet>

@@ -105,7 +105,7 @@
         <li class="headerMenu">
           <a
             class="headerMenuLink"
-            routerLink="/features"
+            [href]="environment.SITE_URL + '/features'"
             aria-label="Features page"
           >
             Features
@@ -114,7 +114,7 @@
         <li class="headerMenu">
           <a
             class="headerMenuLink"
-            routerLink="/pricing"
+            [href]="environment.SITE_URL + '/pricing'"
             aria-label="Pricing page"
           >
             Pricing
@@ -123,7 +123,7 @@
         <li class="headerMenu show-d">
           <a
             class="headerMenuLink"
-            routerLink="/how-to-use/collect-money"
+            [href]="environment.SITE_URL + '/how-to-use/collect-money'"
             aria-label="Collect Money page"
           >
             Collect Money
@@ -132,7 +132,7 @@
         <li class="headerMenu show-m">
           <a
             class="headerMenuLink"
-            routerLink="/how-to-use/collect-money"
+            [href]="environment.SITE_URL + '/how-to-use/collect-money'"
             aria-label="Collect Money page"
           >
             Collect
@@ -145,18 +145,18 @@
             (click)="showMoreMenu()"
             (keydown.enter)="showMoreMenu()"
             (keydown.space)="showMoreMenu()"
-            [class]="
-              'headerMenuLinkBtn ' + (moreMenu() ? 'menu-show' : 'menu-hide')
-            "
+            class="headerMenuLinkBtn"
+            [class.menu-show]="moreMenu()"
+            [class.menu-hide]="!moreMenu()"
             type="button"
             aria-label="Show more options"
           >
             More
           </button>
           <ul
-            [class]="
-              'extendedMenuWrap ' + (moreMenu() ? 'open-menu' : 'hide-menu')
-            "
+            class="extendedMenuWrap"
+            [class.open-menu]="moreMenu()"
+            [class.hide-menu]="!moreMenu()"
             role="menu"
             [attr.aria-hidden]="!moreMenu()"
           >
@@ -164,7 +164,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                routerLink="/resources"
+                [href]="environment.SITE_URL + '/resources'"
                 aria-label="Resources & Tips"
               >
                 Resources & Tips
@@ -174,7 +174,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                routerLink="/blog"
+                [href]="environment.SITE_URL + '/blog'"
                 aria-label="Blog page"
               >
                 Blog
@@ -184,7 +184,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                routerLink="/enterprise"
+                [href]="environment.SITE_URL + '/enterprise'"
                 aria-label="Enterprise page"
               >
                 Enterprise
@@ -194,7 +194,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                routerLink="/support"
+                [href]="'https://support.signupgenius.com/hc/en-us'"
                 aria-label="Help & Support"
               >
                 Help
@@ -221,155 +221,156 @@
         </a>
 
         <!-- Login/Profile Section -->
-        <ng-container *ngIf="isLoading(); else loginContent">
-          <div class="loading">
-            <!-- Loader Icon -->
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="animate-spin"
-            >
-              <path
-                d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
-                opacity=".25"
-              />
-              <path
-                d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"
-              />
-            </svg>
-          </div>
-        </ng-container>
+        @if (isLoading()) {
+        <div class="loading">
+          <!-- Loader Icon -->
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="animate-spin"
+          >
+            <path
+              d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+              opacity=".25"
+            />
+            <path
+              d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"
+            />
+          </svg>
+        </div>
+        } @else {
+        <!-- Logged In User -->
+        @if (userProfile()) {
+        <div #moreLoginMenuRef class="loginMoreMenuWrap">
+          <button
+            (click)="showLoginMoreMenu()"
+            (keydown.enter)="showLoginMoreMenu()"
+            (keydown.space)="showLoginMoreMenu()"
+            class="headerMenuLinkBtn"
+            [class.menu-show]="moreLoginMenu()"
+            [class.menu-hide]="!moreLoginMenu()"
+            type="button"
+            aria-label="Show more options"
+          >
+            @if (getProfileDisplay()) {
+            <span class="profile-name"> {{ getProfileDisplay() }} </span>
+            } @else { @if (isLoading()) {
+            <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+            <img
+              [src]="getProfileImage()"
+              alt="profile"
+              height="34"
+              width="34"
+              class="profile-img"
+            />
+            } }
+          </button>
 
-        <ng-template #loginContent>
-          <!-- Logged In User -->
-          <ng-container *ngIf="userProfile(); else loggedOut">
-            <div #moreLoginMenuRef class="loginMoreMenuWrap">
-              <button
-                (click)="showLoginMoreMenu()"
-                (keydown.enter)="showLoginMoreMenu()"
-                (keydown.space)="showLoginMoreMenu()"
-                [class]="
-                  'headerMenuLinkBtn ' +
-                  (moreLoginMenu() ? 'menu-show' : 'menu-hide')
-                "
-                type="button"
-                aria-label="Show more options"
+          <!-- User Menu Dropdown -->
+          <ul
+            class="extendedMenuWrap extendedLoginMenuWrap"
+            [class.open-menu]="moreLoginMenu()"
+            [class.hide-menu]="!moreLoginMenu()"
+            role="menu"
+            [attr.aria-hidden]="!moreLoginMenu()"
+          >
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/myaccount'"
+                aria-label="Sign Ups"
               >
-                <span
-                  *ngIf="getProfileDisplay(); else profileImage"
-                  class="profile-name"
-                >
-                  {{ getProfileDisplay() }}
-                </span>
-                <ng-template #profileImage>
-                  <img
-                    [src]="getProfileImage()"
-                    alt="profile"
-                    height="34"
-                    width="34"
-                    class="profile-img"
-                  />
-                </ng-template>
-              </button>
+                Sign Ups
+              </a>
+            </li>
 
-              <!-- User Menu Dropdown -->
-              <ul
-                [class]="
-                  'extendedMenuWrap extendedLoginMenuWrap ' +
-                  (moreLoginMenu() ? 'open-menu' : 'hide-menu')
-                "
-                role="menu"
-                [attr.aria-hidden]="!moreLoginMenu()"
+            @if (hasUserRoles()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/MyAccount/ResetAdminID/1?switch=true'"
+                aria-label="Switch Account"
               >
-                <li class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    routerLink="/myaccount"
-                    aria-label="Sign Ups"
-                  >
-                    Sign Ups
-                  </a>
-                </li>
+                Switch Account
+              </a>
+            </li>
+            }
 
-                <li *ngIf="hasUserRoles()" class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    href="/MyAccount/ResetAdminID/1?switch=true"
-                    aria-label="Switch Account"
-                  >
-                    Switch Account
-                  </a>
-                </li>
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/index.cfm?go=m.editprofile&memberid=166042'"
+                aria-label="Settings"
+              >
+                Settings
+              </a>
+            </li>
 
-                <li class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    href="/index.cfm?go=m.editprofile&memberid=178776"
-                    aria-label="Settings"
-                  >
-                    Settings
-                  </a>
-                </li>
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/index.cfm?go=o.mypurchases'"
+                aria-label="Billing"
+              >
+                Billing
+              </a>
+            </li>
 
-                <li class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    href="/index.cfm?go=o.mypurchases"
-                    aria-label="Billing"
-                  >
-                    Billing
-                  </a>
-                </li>
+            @if (!isUserPro()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/index.cfm?go=o.ProGeniusProducts&showtrial=1'"
+                aria-label="Free Premium Trial"
+              >
+                Free Premium Trial
+              </a>
+            </li>
+            }
 
-                <li *ngIf="!isUserPro()" class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
-                    aria-label="Free Premium Trial"
-                  >
-                    Free Premium Trial
-                  </a>
-                </li>
+            <li class="extendedMenu">
+              <a
+                class="extendedMenuLink"
+                [href]="environment.SITE_URL + '/index.cfm?go=c.logout'"
+                aria-label="Logout"
+                (click)="handleLogout()"
+              >
+                Log Out
+              </a>
+            </li>
 
-                <li class="extendedMenu">
-                  <a
-                    class="extendedMenuLink"
-                    href="/index.cfm?go=c.logout"
-                    aria-label="Logout"
-                    (click)="handleLogout()"
-                  >
-                    Log Out
-                  </a>
-                </li>
-
-                <li *ngIf="isUserAdmin()" class="extendedMenu">
-                  <a
-                    (click)="handleCloseLoginMoreMenu()"
-                    class="extendedMenuLink"
-                    routerLink="/admin"
-                    aria-label="Admin"
-                  >
-                    🔒 Admin
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </ng-container>
-
-          <!-- Logged Out State -->
-          <ng-template #loggedOut>
-            <a class="btn btn-text" href="/register" title="Log In or Register">
-              Log In
-            </a>
-          </ng-template>
-        </ng-template>
+            @if (isUserAdmin()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                routerLink="/admin"
+                aria-label="Admin"
+              >
+                🔒 Admin
+              </a>
+            </li>
+            }
+          </ul>
+        </div>
+        } @else {
+        <!-- Logged Out State -->
+        <a
+          class="btn btn-text"
+          [href]="environment.SITE_URL + '/register'"
+          title="Log In or Register"
+        >
+          Log In
+        </a>
+        } }
 
         <!-- Search Link -->
         <a
@@ -398,7 +399,8 @@
 
         <!-- Mobile Menu Toggle -->
         <button
-          [class]="'toggle-menu ' + (mobileMenu() ? '' : 'collapsed')"
+          class="toggle-menu"
+          [class.collapsed]="!mobileMenu()"
           (click)="openMobileMenu()"
           aria-label="Toggle mobile menu"
           [attr.aria-expanded]="mobileMenu()"
@@ -416,7 +418,9 @@
 
   <!-- Mobile Menu Overlay -->
   <div
-    [class]="'mobileHeaderWrap ' + (mobileMenu() ? 'show-menu' : 'hide-menu')"
+    class="mobileHeaderWrap"
+    [class.show-menu]="mobileMenu()"
+    [class.hide-menu]="!mobileMenu()"
     role="region"
     [attr.aria-hidden]="!mobileMenu()"
   >

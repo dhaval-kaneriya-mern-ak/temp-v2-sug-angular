@@ -11,6 +11,7 @@ import { MessageAnalyticsComponent } from '../components/sent/message_analytics/
 import { ComposeEmailComponent } from '../components/compose/compose_email/compose-email';
 import { ComposeEmailTemplateComponent } from '../components/compose/compose_email_template/compose-email-template';
 import { ComposeTextMessageComponent } from '../components/compose/compose_text_message/compose-text-message';
+import { SentDetails } from '../components/sent/details/sent-details';
 
 export const remoteRoutes: Route[] = [
   {
@@ -32,13 +33,18 @@ export const remoteRoutes: Route[] = [
       },
       { path: 'draft', component: Draft },
       { path: 'schedule', component: Schedule },
+      { path: 'sent', component: Sent },
       {
-        path: 'sent',
-        component: Sent,
+        path: 'sent/:id',
+        component: SentDetails,
         children: [
+          // Define the nested routes for the inner tabs
           { path: '', redirectTo: 'message-details', pathMatch: 'full' },
           { path: 'message-details', component: MessageDetailsComponent },
-          { path: 'message-analytics', component: MessageAnalyticsComponent },
+          {
+            path: 'message-analytics',
+            component: MessageAnalyticsComponent,
+          },
         ],
       },
     ],

@@ -15,6 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@apps/*": ["apps/*"],
+      "@environments/*": ["environments/*"],
+      "@services/*": ["services/*"],
       "messages/Routes": ["apps/messages/src/app/remote-entry/entry.routes.ts"],
       "reports/Routes": ["apps/reports/src/app/remote-entry/entry.routes.ts"]
     }

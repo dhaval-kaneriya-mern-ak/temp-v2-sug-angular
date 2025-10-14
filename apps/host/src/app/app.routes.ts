@@ -1,4 +1,4 @@
-import { HomeComponent } from './components/home.component';
+// import { HomeComponent } from './components/home.component';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
@@ -10,8 +10,13 @@ export const appRoutes: Route[] = [
     path: 'reports',
     loadChildren: () => import('reports/Routes').then((m) => m.remoteRoutes),
   },
+  // {
+  //   path: '',
+  //   component: HomeComponent,
+  // },
   {
     path: '',
-    component: HomeComponent,
+    redirectTo: '/messages/dashboard',
+    pathMatch: 'full',
   },
 ];

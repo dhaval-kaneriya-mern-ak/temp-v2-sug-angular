@@ -1,18 +1,44 @@
 <div class="draft-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <h2>Draft Messages & Templates</h2>
+  @if (tableData.length > 0) {
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
     [paginator]="true"
     [rows]="10"
     [globalFilterFields]="['created', 'subject', 'type']"
-    (sort)="onSort()"
-    (page)="onPage()"
+    (sort)="onSort($event)"
+    (page)="onPage($event)"
   >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="pi pi-pencil btn-action"
+          (click)="editDraft()"
+          title="Edit message"
+          style="cursor: pointer"
+        ></i>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="pi pi-times btn-action"
+          (click)="openDeleteDialog(rowData)"
+          title="Delete message"
+          style="cursor: pointer"
+        ></i>
+      </div>
+    </ng-template>
   </sug-ui-table>
-  <!-- <div class="bottom-note">
-    <span>NOTE: Dates are in mm/dd/yyyy. Times are shown in - EST. To modify, update your</span><a href="https://test.signupgenius.rocks/index.cfm?go=m.otherSettings">settings.</a>
-  </div> -->
+  }
 </div>
 <sug-ui-dialog
   [config]="dialogConf"
@@ -20,7 +46,10 @@
   [showFooter]="true"
 >
   <h2 slot="header">Confirmation</h2>
-  <p>Are you sure you want to delete test Invite draft from the list?</p>
+  <p>
+    Are you sure you want to delete "{{selectedItem?.subject}}" draft from the
+    list?
+  </p>
   <div
     slot="footer"
     class="d-flex justify-content-center align-items-center w-100"

@@ -3,7 +3,7 @@
     <h3>Delivery Stats</h3>
     <div class="row">
       <sug-ui-delivery-stats
-        [deliveryStats]="stats"
+        [deliveryStats]="deliveryStats"
         columnClass="col-xs-12 col-sm-6 col-md-4"
       >
       </sug-ui-delivery-stats>
@@ -13,22 +13,24 @@
     <h3>Response Stats</h3>
     <div class="row">
       <sug-ui-delivery-stats
-        [deliveryStats]="stats"
+        [deliveryStats]="responseStats"
         columnClass="col-xs-12 col-sm-6 col-md-4"
       >
       </sug-ui-delivery-stats>
     </div>
   </div>
   <div class="detail-table">
+    @if (tableData.length) {
     <h3>Delivery Details</h3>
     <sug-ui-table
       [data]="tableData"
       [columns]="tableColumns"
       [paginator]="true"
       [rows]="10"
-      (sort)="onSort()"
-      (page)="onPage()"
+      (sort)="onSort($event)"
+      (page)="onPage($event)"
     >
     </sug-ui-table>
+    }
   </div>
 </div>

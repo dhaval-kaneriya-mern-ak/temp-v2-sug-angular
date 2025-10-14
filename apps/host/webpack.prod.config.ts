@@ -10,7 +10,7 @@ export default withModuleFederation(
   {
     ...config,
     remotes: [
-      ['reports', process.env['REPORTS_URL'] ?? ''],
+      // ['reports', process.env['REPORTS_URL'] ?? ''],
       ['messages', process.env['MESSAGES_URL'] ?? ''],
     ],
     /*

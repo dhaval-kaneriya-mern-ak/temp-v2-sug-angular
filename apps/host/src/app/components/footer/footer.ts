@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { environment } from '@environments/environment';
 
 interface FooterColumn {
   title: string;
@@ -22,30 +23,69 @@ export class FooterComponent implements OnInit {
   isCollapsed = false;
   searchQuery = '';
   currentYear = new Date().getFullYear();
-
+  environment = environment;
   footerData: FooterColumn[] = [
     {
       title: 'Use It For',
       links: [
-        { label: 'School Sign Ups', href: '/how-to-use/schools' },
-        { label: 'Business Schedules', href: '/how-to-use/businesses' },
+        {
+          label: 'School Sign Ups',
+          href: environment.SITE_URL + '/how-to-use/schools',
+        },
+        {
+          label: 'Business Schedules',
+          href: environment.SITE_URL + '/how-to-use/businesses',
+        },
         {
           label: 'Volunteer Sign Ups',
-          href: '/how-to-use/nonprofit-volunteer-management',
+          href:
+            environment.SITE_URL + '/how-to-use/nonprofit-volunteer-management',
         },
-        { label: 'Potluck Invites', href: '/how-to-use/potluck' },
-        { label: 'Fundraising', href: '/how-to-use/collect-money' },
-        { label: 'Sports Events', href: '/how-to-use/sportsteams' },
-        { label: 'Church & Temple', href: '/how-to-use/churches' },
-        { label: 'College Activities', href: '/how-to-use/colleges' },
-        { label: 'Scouting Events', href: '/how-to-use/scouts' },
+        {
+          label: 'Potluck Invites',
+          href: environment.SITE_URL + '/how-to-use/potluck',
+        },
+        {
+          label: 'Fundraising',
+          href: environment.SITE_URL + '/how-to-use/collect-money',
+        },
+        {
+          label: 'Sports Events',
+          href: environment.SITE_URL + '/how-to-use/sportsteams',
+        },
+        {
+          label: 'Church & Temple',
+          href: environment.SITE_URL + '/how-to-use/churches',
+        },
+        {
+          label: 'College Activities',
+          href: environment.SITE_URL + '/how-to-use/colleges',
+        },
+        {
+          label: 'Scouting Events',
+          href: environment.SITE_URL + '/how-to-use/scouts',
+        },
         {
           label: 'School Spirit Wear',
-          href: '/how-to-use/school-spirit-wear-sales-software',
+          href:
+            environment.SITE_URL +
+            '/how-to-use/school-spirit-wear-sales-software',
         },
-        { label: 'Online Auctions', href: '#', target: '_blank' },
-        { label: 'Donations Campaigns', href: '#', target: '_blank' },
-        { label: 'Ticket Management', href: '#', target: '_blank' },
+        {
+          label: 'Online Auctions',
+          href: environment.AUCTION_SITE_URL,
+          target: '_blank',
+        },
+        {
+          label: 'Donations Campaigns',
+          href: environment.DONATIONS_SITE_URL,
+          target: '_blank',
+        },
+        {
+          label: 'Ticket Management',
+          href: environment.TICKETS_SITE_URL,
+          target: '_blank',
+        },
       ],
     },
     {
@@ -53,34 +93,52 @@ export class FooterComponent implements OnInit {
       links: [
         {
           label: 'Event Registrations',
-          href: '/how-to-use/event-registration-software',
+          href:
+            environment.SITE_URL + '/how-to-use/event-registration-software',
         },
         {
           label: 'Lessons & Camp Sign Ups',
-          href: '/how-to-use/lessons-tutoring-registration-software',
+          href:
+            environment.SITE_URL +
+            '/how-to-use/lessons-tutoring-registration-software',
         },
         {
           label: 'Parent Teacher Conferences',
-          href: '/how-to-use/parent-teacher-conferences',
+          href: environment.SITE_URL + '/how-to-use/parent-teacher-conferences',
         },
         {
           label: 'Meal Sign Ups',
-          href: '/how-to-use/online-meal-volunteer-sheets',
+          href:
+            environment.SITE_URL + '/how-to-use/online-meal-volunteer-sheets',
         },
-        { label: 'School Fundraising', href: '/how-to-use/school-payments' },
+        {
+          label: 'School Fundraising',
+          href: environment.SITE_URL + '/how-to-use/school-payments',
+        },
         {
           label: 'Festivals & Carnivals',
-          href: '/how-to-use/event-registration-software',
+          href:
+            environment.SITE_URL + '/how-to-use/event-registration-software',
         },
-        { label: 'Book Fair Volunteers', href: '/how-to-use/bookfair' },
+        {
+          label: 'Book Fair Volunteers',
+          href: environment.SITE_URL + '/how-to-use/bookfair',
+        },
         {
           label: 'Dance Class Registrations',
-          href: '/how-to-use/dance-studio-registration-software',
+          href:
+            environment.SITE_URL +
+            '/how-to-use/dance-studio-registration-software',
         },
-        { label: 'Direct Sales Businesses', href: '/how-to-use/collect-money' },
+        {
+          label: 'Direct Sales Businesses',
+          href: environment.SITE_URL + '/how-to-use/collect-money',
+        },
         {
           label: 'Photography Sessions',
-          href: '/how-to-use/photo-session-registration-software',
+          href:
+            environment.SITE_URL +
+            '/how-to-use/photo-session-registration-software',
         },
       ],
     },
@@ -89,33 +147,60 @@ export class FooterComponent implements OnInit {
       links: [
         {
           label: 'Getting Started with Sign Ups',
-          href: '/how-to-use/starterkit',
+          href: environment.SITE_URL + '/how-to-use/starterkit',
         },
-        { label: 'Features', href: '/how-to-use/features' },
-        { label: 'Pricing', href: '/pricing' },
-        { label: 'Enterprise', href: '/enterprise' },
-        { label: 'Collect Money', href: '/how-to-use/collect-money' },
-        { label: 'Reviews', href: '/case-studies' },
-        { label: 'About Us', href: '/about' },
-        { label: 'Press Releases', href: '/news' },
-        { label: 'Press Kit', href: '/press-kit' },
-        { label: 'Careers', href: '/careers' },
-        { label: 'Advertise with Us', href: '/advertisewithus' },
+        {
+          label: 'Features',
+          href: environment.SITE_URL + '/how-to-use/features',
+        },
+        { label: 'Pricing', href: environment.SITE_URL + '/pricing' },
+        {
+          label: 'Enterprise',
+          href: environment.SITE_URL + '/enterprise',
+        },
+        {
+          label: 'Collect Money',
+          href: environment.SITE_URL + '/how-to-use/collect-money',
+        },
+        { label: 'Reviews', href: environment.SITE_URL + '/case-studies' },
+        { label: 'About Us', href: environment.SITE_URL + '/about' },
+        { label: 'Press Releases', href: environment.SITE_URL + '/news' },
+        { label: 'Press Kit', href: environment.SITE_URL + '/press-kit' },
+        { label: 'Careers', href: environment.SITE_URL + '/careers' },
+        {
+          label: 'Advertise with Us',
+          href: environment.SITE_URL + '/advertisewithus',
+        },
       ],
     },
     {
       title: 'Resources & Tips',
       links: [
-        { label: 'Sign Up Designs', href: '/themes' },
-        { label: 'Planning Ideas', href: '/resources' },
-        { label: 'Blog', href: '/blog' },
-        { label: 'Case Studies', href: '/case-studies' },
-        { label: 'Videos', href: '/videos' },
-        { label: 'Printables', href: '/printables' },
-        { label: 'Giving Back', href: '/how-to-use/giving-back' },
+        {
+          label: 'Sign Up Designs',
+          href: environment.SITE_URL + '/themes',
+        },
+        {
+          label: 'Planning Ideas',
+          href: environment.SITE_URL + '/resources',
+        },
+        { label: 'Blog', href: environment.SITE_URL + '/blog' },
+        {
+          label: 'Case Studies',
+          href: environment.SITE_URL + '/case-studies',
+        },
+        { label: 'Videos', href: environment.SITE_URL + '/videos' },
+        {
+          label: 'Printables',
+          href: environment.SITE_URL + '/printables',
+        },
+        {
+          label: 'Giving Back',
+          href: environment.SITE_URL + '/how-to-use/giving-back',
+        },
         { label: 'API Docs', href: 'https://developer.signupgenius.com/' },
-        { label: 'Help', href: '/support' },
-        { label: 'Contact Us', href: '/help' },
+        { label: 'Help', href: 'https://support.signupgenius.com/' },
+        { label: 'Contact Us', href: environment.SITE_URL + '/help' },
       ],
     },
     {
@@ -124,12 +209,14 @@ export class FooterComponent implements OnInit {
         {
           label: 'Create a Sign Up',
           variant: 'primary',
-          href: '/index.cfm?go=w.Welcome&prior=w.createSignUp&formName=registerForm',
+          href:
+            environment.SITE_URL +
+            'index.cfm?go=w.Welcome&prior=w.createSignUp&formName=registerForm',
         },
         {
           label: 'Find a Sign Up',
           variant: 'primary',
-          href: '/findasignup',
+          href: environment.SITE_URL + 'findasignup',
         },
       ],
       search: { placeholder: 'Search Resources', buttonLabel: 'Search' },
