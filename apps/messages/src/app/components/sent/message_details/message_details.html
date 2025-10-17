@@ -1,10 +1,14 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
 <div class="message-details">
   @if (detailsMessage) {
   <div class="message-content-details">
     <div class="content-info">
       <div class="info">Sent</div>
       <div class="info">
-        <span>{{ formatSentDate() }}</span>
+        <span>{{ detailsMessage.sentdate }}</span>
         <span>{{ detailsMessage.timezone.zone }}</span>
       </div>
     </div>
@@ -27,7 +31,7 @@
     </div>
     <div class="content-info">
       <div class="info">Reply To</div>
-      <div class="info">{{ detailsMessage.createdby.email }}</div>
+      <div class="info">{{ detailsMessage.createdby?.email }}</div>
     </div>
     <div class="content-info">
       <div class="info">Sent To</div>
@@ -65,8 +69,8 @@
     </div> -->
   </div>
   } @else {
-  <div class="no-message-selected">
-    <p>No message selected</p>
+  <div class="justify-content-center d-flex">
+    <p>Message details not found</p>
   </div>
   }
 </div>

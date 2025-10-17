@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
@@ -8,7 +8,7 @@ import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
   templateUrl: './sent-details.html',
   styleUrl: './sent-details.scss',
 })
-export class SentDetails {
+export class SentDetails implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -17,8 +17,56 @@ export class SentDetails {
     { name: 'Message Details', route: 'message-details' },
     { name: 'Message Analytics', route: 'message-analytics' },
   ];
+  messageId = '';
+  currentActiveTab = 'message-details'; // Don't hardcode this!
+  ngOnInit() {
+    // Initialize active tab based on current route
+    this.initializeActiveTab();
+    this.route.params.subscribe((params) => {
+      this.messageId = params['id'] || '';
+    });
+  }
+  initializeActiveTab() {
+    const currentUrl = this.router.url;
 
-  goBack() {
-    this.router.navigate(['/messages/sent']);
+    // Check for specific URL patterns to determine active tab
+    if (currentUrl.includes('/message-details')) {
+      this.currentActiveTab = 'message-details';
+    } else if (currentUrl.includes('/message-analytics')) {
+      this.currentActiveTab = 'message-analytics';
+    } else if (
+      currentUrl === '/messages/sent' ||
+      (currentUrl.includes('/messages/sent') &&
+        !currentUrl.includes('/message-'))
+    ) {
+      this.currentActiveTab = ''; // Back tab or sent list
+    } else {
+      this.currentActiveTab = 'message-details';
+    }
+  }
+
+  handleTabSelection(event: Tabs): void {
+    let selectedTab: Tabs | null = null;
+
+    if (event && typeof event.route === 'string') {
+      selectedTab = event;
+    }
+
+    if (selectedTab && selectedTab.route) {
+      // Handle Back button with absolute navigation
+      if (selectedTab.name === 'Back') {
+        this.router.navigate(['/messages/sent']);
+      }
+      if (selectedTab.route === 'message-details') {
+        this.router.navigate([
+          `/messages/sent/${this.messageId}/message-details`,
+        ]);
+      }
+      if (selectedTab.route === 'message-analytics') {
+        this.router.navigate([
+          `/messages/sent/${this.messageId}/message-analytics`,
+        ]);
+      }
+    }
   }
 }

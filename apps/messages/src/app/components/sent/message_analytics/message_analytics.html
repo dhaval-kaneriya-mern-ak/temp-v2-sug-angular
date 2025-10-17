@@ -1,3 +1,7 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
 <div class="message-analytics-wrapper">
   <div class="stats-wrapper">
     <h3>Delivery Stats</h3>
@@ -25,10 +29,9 @@
     <sug-ui-table
       [data]="tableData"
       [columns]="tableColumns"
-      [paginator]="true"
-      [rows]="10"
+      [paginator]="false"
+      [lazy]="true"
       (sort)="onSort($event)"
-      (page)="onPage($event)"
     >
     </sug-ui-table>
     }

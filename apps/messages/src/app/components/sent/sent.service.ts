@@ -14,7 +14,6 @@ export class SentService {
    * Get message sent with pagination
    */
   getMessageSentWithPagination(
-    messagetype = 0,
     page: number,
     limit: number,
     sortby = 'senddate',

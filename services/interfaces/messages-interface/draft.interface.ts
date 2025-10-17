@@ -10,5 +10,5 @@ export interface DraftMessage {
   subject: string;
   messagetypeid: number;
   messagetype: string;
-  created: string;
+  created?: string;
 }

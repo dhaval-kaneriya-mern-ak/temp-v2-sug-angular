@@ -1,6 +1,10 @@
 <h2 class="sent-message-title">Sent Message: Reminder for Waitlist</h2>
 <div class="sent-tab">
-  <sug-ui-menu-tabs [tabs]="navigationComposeTabs"></sug-ui-menu-tabs>
+  <sug-ui-menu-tabs
+    [tabs]="navigationComposeTabs"
+    [activeTab]="currentActiveTab"
+    (selectionChange)="handleTabSelection($event)"
+  ></sug-ui-menu-tabs>
 </div>
 <div class="sent-content">
   <router-outlet></router-outlet>

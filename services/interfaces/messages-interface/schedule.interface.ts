@@ -5,10 +5,10 @@ export interface Message {
   memberid: number;
   subject: string;
   body: string;
-  datecreated: number;
+  datecreated: string;
   messagetype: string;
   messagetypeid: number;
-  senddate: number;
+  senddate: string;
   timezone: Timezone;
   status?: string;
   createdby: CreatedBy;

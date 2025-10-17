@@ -4,6 +4,6 @@ export interface Timezone {
 }
 
 export interface CreatedBy {
-  memberid: number;
-  email: string;
+  memberid?: number;
+  email?: string;
 }

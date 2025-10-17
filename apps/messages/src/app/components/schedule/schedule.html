@@ -8,11 +8,12 @@
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
+    [totalRecords]="totalRecords"
     [paginator]="true"
-    [rows]="10"
-    (actionClick)="onActionClick($event)"
-    [globalFilterFields]="['scheduled', 'subject', 'type']"
+    [lazy]="true"
+    [rows]="rows"
     (sort)="onSort($event)"
+    [first]="first"
     (page)="onPage($event)"
   >
     <ng-template
@@ -39,9 +40,9 @@
       </div>
     </ng-template>
   </sug-ui-table>
-  } @else if (tableData.length === 0) {
-  <div class="no-scheduled-messages">
-    <p>You have no scheduled messages.</p>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>No scheduled messages.</p>
   </div>
   }
   <!-- <div class="bottom-note">

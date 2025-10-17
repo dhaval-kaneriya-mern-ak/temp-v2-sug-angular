@@ -3,17 +3,19 @@
     [isLoading]="isLoading"
     [isFullPageLoader]="true"
   ></sug-ui-loading-spinner>
-  <h2>Scheduled Messages</h2>
+  <h2>Sent Messages</h2>
   @if(tableData.length > 0) {
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
     [totalRecords]="totalRecords"
     [paginator]="true"
-    [rows]="10"
-    [globalFilterFields]="['scheduled', 'subject', 'type']"
-    (sort)="onSort($event)"
+    [lazy]="true"
+    [rows]="rows"
+    [first]="first"
+    [loading]="isLoading"
     (page)="onPage($event)"
+    (sort)="onSort($event)"
   >
     <ng-template
       #actionTemplate
@@ -33,6 +35,10 @@
       </div>
     </ng-template>
   </sug-ui-table>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>No sent messages.</p>
+  </div>
   }
 </div>
 <div class="sent-content">

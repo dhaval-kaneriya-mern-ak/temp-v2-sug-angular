@@ -134,32 +134,36 @@ export class Dashboard implements OnInit {
     this.isLoading = true;
     this.dashboardService.getMessageSummary().subscribe({
       next: (response) => {
-        const flatData = Array.isArray(response.data[0])
-          ? response.data.flat()
-          : response.data;
-
-        this.tableData = flatData.map((item: MessageItem) => ({
-          messageid: item.messageid,
-          sentdate: format(
-            new Date(item.sentdate || new Date()),
-            'yyyy-MM-dd h:mmaaa'
-          ),
-          subject: item.subject,
-          sentTo: item.sentTo || `${item.totalsent || 0}`,
-          action: `<i class="pi pi-chart-bar chart-icon" 
+        if (response.data) {
+          const flatData = Array.isArray(response.data[0])
+            ? response.data.flat()
+            : response.data;
+          this.tableData = flatData.map((item: MessageItem) => ({
+            messageid: item.messageid,
+            sentdate: item.sentdate
+              ? format(
+                  new Date(Number(item.sentdate) * 1000),
+                  'yyyy-MM-dd h:mmaaa'
+                )
+              : '',
+            subject: item.subject,
+            sentTo: item.sentTo || `${item.totalsent || 0}`,
+            action: `<i class="pi pi-chart-bar chart-icon" 
           style="cursor: pointer;" 
           data-message-id="${item.messageid}"
           title="View message details"></i>`,
-          messagetype: item.messagetype,
-          status: item.status,
-          timezone: item.timezone,
-          createdby: item.createdby,
-          totalsent: item.totalsent,
-        }));
+            messagetype: item.messagetype,
+            status: item.status,
+            timezone: item.timezone,
+            createdby: item.createdby,
+            totalsent: item.totalsent,
+          }));
+        }
         this.isLoading = false;
       },
       error: (error) => {
         this.isLoading = false;
+        this.tableData = [];
         console.error('Error fetching message summary:', error);
       },
     });

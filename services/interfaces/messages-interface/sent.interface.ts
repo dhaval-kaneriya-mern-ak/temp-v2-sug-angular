@@ -43,6 +43,7 @@ export interface MessageDetailsResponse {
 export interface MessageDetailsData {
   messageid: number;
   messagetype: string;
+  sentdate: string;
   status: string;
   subject: string;
   contactname: string;
@@ -81,6 +82,8 @@ export interface MessageStatsData {
 
 export interface SentDetails {
   email: string;
+  mobile: string;
+  units: number;
   memberevents: string;
   memberid: number;
   signedup: string;

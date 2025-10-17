@@ -8,10 +8,7 @@
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
-    [paginator]="true"
-    [rows]="10"
-    [globalFilterFields]="['created', 'subject', 'type']"
-    (sort)="onSort($event)"
+    [paginator]="false"
     (page)="onPage($event)"
   >
     <ng-template
@@ -38,6 +35,10 @@
       </div>
     </ng-template>
   </sug-ui-table>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>No draft messages.</p>
+  </div>
   }
 </div>
 <sug-ui-dialog

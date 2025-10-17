@@ -33,6 +33,7 @@ export class Sent {
   totalRecords = 0;
   page = 1;
   rows = 10;
+  first = 0; // Important for proper pagination tracking
   sortField = 'senddate';
   sortOrder = 'desc';
   tableConfig: ISugTableConfig = {};
@@ -81,7 +82,6 @@ export class Sent {
     this.totalRecords = 0;
     this.sentService
       .getMessageSentWithPagination(
-        0,
         this.page,
         this.rows,
         this.sortField,
@@ -89,58 +89,61 @@ export class Sent {
       )
       .subscribe({
         next: (apiResponse) => {
-          // if (apiResponse.success && apiResponse.data.messages) {
-          this.totalRecords = apiResponse.data.totalcount;
-          this.tableData = apiResponse.data.messages.map(
-            (item: SentMessage) => ({
-              messageid: item.messageid,
-              sent: format(new Date(item.sentdate || 0), 'MM/dd/yyyy h:mmaaa'),
-              subject: `<div class="subject-text">
+          if (apiResponse.data && apiResponse.data.messages) {
+            this.totalRecords = apiResponse.data.totalcount;
+            const mappedData = apiResponse.data.messages.map(
+              (item: SentMessage) => ({
+                messageid: item.messageid,
+                sent: format(
+                  new Date(Number(item.sentdate) * 1000),
+                  'MM/dd/yyyy h:mmaaa'
+                ),
+                subject: `<div class="subject-text">
                         <span class="subject-text">${
                           item.subject || 'No Subject'
                         }</span>
                         <span class="sub-text">${item.messagetype} - ${
-                item.status
-              }</span>
+                  item.status
+                }</span>
                       </div>`,
-              sentTo: `${item.totalsent || 0}`,
-              status: item.status,
-              action: `<i class="pi pi-chart-bar chart-sent-icon" 
+                sentTo: `${item.totalsent || 0}`,
+                status: item.status,
+                action: `<i class="pi pi-chart-bar chart-sent-icon" 
               data-message-id="${item.messageid}" title="View message details"></i>`,
-              // Keep original data for reference
-              originalData: item,
-            })
-          );
+                originalData: item,
+              })
+            );
+            this.tableData = mappedData;
+          }
           this.isLoading = false;
         },
         error: (error) => {
           this.isLoading = false;
           console.error('Error fetching message summary:', error);
+          // Reset data on error
+          this.tableData = [];
         },
       });
   }
 
   onSort(event: { field: string; order: number }) {
-    console.log('Sort event:', event);
     this.sortField = event.field;
     this.sortOrder = event.order === 1 ? 'asc' : 'desc';
     this.page = 1; // Reset to first page when sorting
-    // this.getMessageSummary();
+    this.first = 0; // Reset first index
+    this.getMessageSummary();
   }
 
   onPage(event: { first: number; rows: number }) {
-    console.log('Page event:', event);
-    // this.tableData = [];
-    this.page = event.first / event.rows + 1;
+    // Update pagination state BEFORE making API call
+    this.first = event.first;
+    this.page = Math.floor(event.first / event.rows) + 1; // Convert 0-based to 1-based
     this.rows = event.rows;
+    // Fetch new data for the selected page
     this.getMessageSummary();
   }
 
   onActionClick(event: any) {
-    this.navigateToSentDetails(event.messageid);
-  }
-
-  navigateToSentDetails(messageId: number) {
-    this.router.navigate([`/messages/sent/${messageId}`]);
+    this.router.navigate([`/messages/sent/${event.messageid}`]);
   }
 }

@@ -6,6 +6,7 @@ import {
   SugUiDeliveryStatsComponent,
   DeliveryStatsItem,
   SugUiTableComponent,
+  SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 import { ActivatedRoute } from '@angular/router';
 import { MessageAnalyticsService } from './message-analytics.service';
@@ -13,7 +14,12 @@ import { MessageStatsResponse, SentDetails } from '@services/interfaces';
 
 @Component({
   selector: 'sug-message-analytics',
-  imports: [CommonModule, SugUiDeliveryStatsComponent, SugUiTableComponent],
+  imports: [
+    CommonModule,
+    SugUiDeliveryStatsComponent,
+    SugUiTableComponent,
+    SugUiLoadingSpinnerComponent,
+  ],
   templateUrl: './message_analytics.html',
   styleUrl: './message_analytics.scss',
 })
@@ -31,42 +37,33 @@ export class MessageAnalyticsComponent {
       filterable: false,
     },
     {
+      field: 'mobile',
+      header: 'Mobile',
+      sortable: true,
+      filterable: false,
+    },
+    {
       field: 'status',
       header: 'Status',
       sortable: true,
       filterable: false,
     },
     {
-      field: 'issues',
-      header: 'Issues',
-      sortable: true,
-      filterable: false,
-    },
-    {
-      field: 'signedup',
-      header: 'Signed Up',
-      sortable: true,
-      filterable: false,
-    },
-    {
-      field: 'opened',
-      header: 'Opened',
-      sortable: true,
-      filterable: false,
-    },
-    {
-      field: 'clicked',
-      header: 'Clicked',
+      field: 'units',
+      header: 'UNITS',
       sortable: true,
       filterable: false,
     },
   ];
+
   tableData: SentDetails[] = [];
   page = 1;
   rows = 10;
+  first = 0; // Important for proper pagination tracking
   sortField = 'senddate';
   sortOrder = 'desc';
   messageId = 0;
+  isLoading = false;
   constructor() {
     // Get ID from parent route params
     this.messageId = this.activatedRoute.parent?.snapshot.params['id'];
@@ -78,18 +75,21 @@ export class MessageAnalyticsComponent {
     this.sortField = event.field;
     this.sortOrder = event.order === 1 ? 'asc' : 'desc';
     this.page = 1; // Reset to first page when sorting
+    this.first = 0; // Reset first index
     this.getMessageAnalytics(this.messageId);
   }
 
   onPage(event: { first: number; rows: number }) {
-    // this.tableData = []; // Clear current data to show loading state
-    this.page = event.first / event.rows + 1;
+    // Update pagination state BEFORE making API call
+    this.first = event.first;
+    this.page = Math.floor(event.first / event.rows) + 1; // Convert 0-based to 1-based
     this.rows = event.rows;
+    // Fetch new data for the selected page
     this.getMessageAnalytics(this.messageId);
   }
 
   getMessageAnalytics(messageId: number) {
-    // this.tableData = [];
+    this.isLoading = true;
     this.messageAnalyticsService
       .getMessageAnalytics(
         messageId,
@@ -100,8 +100,6 @@ export class MessageAnalyticsComponent {
       )
       .subscribe({
         next: (response: MessageStatsResponse) => {
-          console.log('Message analytics loaded:', response);
-
           // Map API response to stats array
           if (response.success && response.data) {
             const deliveryStats = response.data.deliverystats;
@@ -152,8 +150,9 @@ export class MessageAnalyticsComponent {
                 badgeColor: 'teal',
               },
             ];
-            this.tableData = sentDetails.map((detail) => ({
+            this.tableData = (sentDetails || []).map((detail) => ({
               email: detail.email,
+              mobile: detail.mobile,
               status: JSON.parse(detail.memberevents).Status,
               issues: detail.issues
                 ? '<span><i class="pi pi-check"></i></span>'
@@ -169,11 +168,14 @@ export class MessageAnalyticsComponent {
                 : '',
               memberevents: detail.memberevents,
               memberid: detail.memberid,
+              units: detail.units,
             }));
           }
+          this.isLoading = false;
         },
         error: (error) => {
           console.error('Error loading message analytics:', error);
+          this.isLoading = false;
         },
       });
   }
