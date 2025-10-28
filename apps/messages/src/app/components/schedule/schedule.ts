@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import {
@@ -28,7 +28,7 @@ import { format } from 'date-fns';
   templateUrl: './schedule.html',
   styleUrl: './schedule.scss',
 })
-export class Schedule {
+export class Schedule implements OnInit {
   scheduleService = inject(ScheduleService);
   private router = inject(Router);
   isLoading = false;
@@ -80,7 +80,7 @@ export class Schedule {
   ];
   tableData: Message[] = [];
 
-  constructor() {
+  ngOnInit() {
     this.getList();
   }
 
@@ -111,15 +111,27 @@ export class Schedule {
     this.getList();
   }
 
-  onActionClick(event: any) {
-    this.openDeleteDialog(event.data);
+  onActionClick(event: { data: Message } | Message | Event): void {
+    // Handle different event structures from table component
+    let message: Message | null = null;
+
+    if ('data' in event && event.data) {
+      message = event.data;
+    } else if ('messageid' in event) {
+      message = event as Message;
+    }
+
+    if (message) {
+      this.openDeleteDialog(message);
+    }
   }
 
-  editMessage(rowData: any) {
+  editMessage(rowData: Message): void {
+    console.log('Editing message:', rowData.messageid);
     this.router.navigate([`/messages/compose/email`]);
   }
 
-  getList() {
+  getList(): void {
     this.isLoading = true;
     this.tableData = [];
     this.totalRecords = 0;
@@ -149,8 +161,8 @@ export class Schedule {
               })
             );
             this.tableData = mappedData;
-            this.isLoading = false;
           }
+          this.isLoading = false;
         },
         error: (error) => {
           this.isLoading = false;
@@ -161,12 +173,12 @@ export class Schedule {
       });
   }
 
-  deleteScheduleMessage() {
+  deleteScheduleMessage(): void {
     if (!this.selectedItem) return;
     this.scheduleService
       .deleteScheduleMessage(this.selectedItem.messageid)
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.closeDeleteDialog();
           this.getList(); // Refresh the list after deletion
         },

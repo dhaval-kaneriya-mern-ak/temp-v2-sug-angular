@@ -41,7 +41,7 @@ describe('Sent', () => {
       imports: [
         Sent,
         RouterTestingModule.withRoutes([
-          { path: 'message-details', component: MockRouterOutlet },
+          { path: 'details', component: MockRouterOutlet },
           { path: 'analytics', component: MockRouterOutlet },
         ]),
         MockRouterOutlet,

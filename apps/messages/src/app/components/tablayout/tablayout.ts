@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { Subject, filter, takeUntil } from 'rxjs';
+import { MemberProfile } from '@services/interfaces';
+import { UserStateService } from '@services/user-state.service';
 
 @Component({
   selector: 'sug-tablayout',
@@ -12,20 +14,24 @@ import { Subject, filter, takeUntil } from 'rxjs';
   styleUrl: './tablayout.scss',
 })
 export class TabLayoutComponent implements OnInit, OnDestroy {
-  navigationTabs: Tabs[] = [
+  private readonly allTabs: Tabs[] = [
     { name: 'Dashboard', route: 'messages/dashboard' },
     { name: 'Compose', route: 'messages/compose' },
     { name: 'Draft', route: 'messages/draft' },
     { name: 'Schedule', route: 'messages/schedule' },
     { name: 'Sent', route: 'messages/sent' },
   ];
-  currentActiveTab = ''; // Don't hardcode this!
 
+  navigationTabs: Tabs[] = [];
+  currentActiveTab = '';
+
+  private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
     this.initializeActiveTab();
+    this.loadUserProfileAndUpdateTabs();
 
     // Listen to router events to update active tab when route changes
     this.router.events
@@ -38,9 +44,43 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadUserProfileAndUpdateTabs(): void {
+    // Simplified: Subscribe to profile changes and update tabs
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.updateNavigationTabs(profile);
+          this.initializeActiveTab();
+        },
+        error: () => {
+          // Show all tabs on error
+          this.navigationTabs = [...this.allTabs];
+          this.initializeActiveTab();
+        },
+      });
+
+    // Load profile if not already loaded
+    if (!this.userStateService.getCurrentProfile()) {
+      this.userStateService
+        .loadUserProfile()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
+    }
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private updateNavigationTabs(profile: MemberProfile | null): void {
+    // Simple tab filtering
+    this.navigationTabs = this.allTabs.filter(
+      (tab) =>
+        tab.route !== 'messages/schedule' ||
+        this.userStateService.shouldShowScheduleTab(profile)
+    );
   }
 
   private initializeActiveTab() {

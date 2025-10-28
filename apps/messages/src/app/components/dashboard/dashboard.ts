@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   SugUiProgressBarComponent,
@@ -8,11 +8,13 @@ import {
 } from '@lumaverse/sug-ui';
 import { ISugTableConfig, ISugTableColumn } from '@lumaverse/sug-ui';
 import { SugApiService } from '@services/sug-api.service';
+import { UserStateService } from '@services/user-state.service';
 import { DashboardService } from './dashboard.service';
 import { environment } from '@environments/environment';
 import { MessageItem } from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
+import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'sug-dashboard',
   imports: [
@@ -25,11 +27,19 @@ import { format } from 'date-fns';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class Dashboard implements OnInit {
-  protected dashboardService = inject(DashboardService);
-  protected sugApiService = inject(SugApiService);
-  protected router = inject(Router);
-  // emailMessagesUsedToday = 'Loading files..';
+export class Dashboard implements OnInit, OnDestroy {
+  protected readonly dashboardService = inject(DashboardService);
+  protected readonly sugApiService = inject(SugApiService);
+  protected readonly userStateService = inject(UserStateService);
+  protected readonly router = inject(Router);
+
+  // Subscription management
+  private readonly destroy$ = new Subject<void>();
+
+  // User plan display
+  planName = 'Loading...';
+
+  // Progress tracking properties
   progressToday = '0 / 10,000 email messages used today';
   progressTodayValue = 0;
   progressTodayMaxValue = 0;
@@ -75,14 +85,40 @@ export class Dashboard implements OnInit {
     },
   ];
 
-  constructor() {
-    // console.log('Table Data Length:', this.tableData.length);
-  }
-
   ngOnInit(): void {
     this.sugApiService.createSugApiClient(environment.apiBaseUrl);
+    this.loadUserProfileData();
     this.getMessageLimit();
     this.getMessageSummary();
+  }
+
+  private loadUserProfileData(): void {
+    // Simplified: Just subscribe to profile changes and update plan name
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.planName = profile
+            ? this.userStateService.getPlanDisplayName(profile)
+            : 'Loading...';
+        },
+        error: () => {
+          this.planName = 'Free';
+        },
+      });
+
+    // Load profile if not already loaded
+    if (!this.userStateService.getCurrentProfile()) {
+      this.userStateService
+        .loadUserProfile()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onSelectionChange(): void {

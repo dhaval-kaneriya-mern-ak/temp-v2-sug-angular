@@ -96,13 +96,15 @@ export class Draft implements OnInit {
     this.isLoading = true;
     this.draftService.getMessageTemplates().subscribe((response) => {
       // Handle the response from the service
-      this.tableData = response.data.map((item) => ({
-        created: item.created,
-        subject: item.subject,
-        messageid: item.messageid,
-        messagetypeid: item.messagetypeid,
-        messagetype: item.messagetype,
-      }));
+      if (response && response.data) {
+        this.tableData = response.data.map((item) => ({
+          created: item.created,
+          subject: item.subject,
+          messageid: item.messageid,
+          messagetypeid: item.messagetypeid,
+          messagetype: item.messagetype,
+        }));
+      }
       this.isLoading = false;
     });
   }

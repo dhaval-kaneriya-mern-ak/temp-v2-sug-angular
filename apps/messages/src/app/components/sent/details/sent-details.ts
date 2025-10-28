@@ -14,11 +14,11 @@ export class SentDetails implements OnInit {
 
   navigationComposeTabs: Tabs[] = [
     { name: 'Back', route: '/messages/sent' },
-    { name: 'Message Details', route: 'message-details' },
-    { name: 'Message Analytics', route: 'message-analytics' },
+    { name: 'Message Details', route: 'details' },
+    { name: 'Message Analytics', route: 'analytics' },
   ];
   messageId = '';
-  currentActiveTab = 'message-details'; // Don't hardcode this!
+  currentActiveTab = 'details'; // Don't hardcode this!
   ngOnInit() {
     // Initialize active tab based on current route
     this.initializeActiveTab();
@@ -30,18 +30,19 @@ export class SentDetails implements OnInit {
     const currentUrl = this.router.url;
 
     // Check for specific URL patterns to determine active tab
-    if (currentUrl.includes('/message-details')) {
-      this.currentActiveTab = 'message-details';
-    } else if (currentUrl.includes('/message-analytics')) {
-      this.currentActiveTab = 'message-analytics';
+    if (currentUrl.includes('/details')) {
+      this.currentActiveTab = 'details';
+    } else if (currentUrl.includes('/analytics')) {
+      this.currentActiveTab = 'analytics';
     } else if (
       currentUrl === '/messages/sent' ||
       (currentUrl.includes('/messages/sent') &&
-        !currentUrl.includes('/message-'))
+        !currentUrl.includes('/analytics') &&
+        !currentUrl.includes('/details'))
     ) {
       this.currentActiveTab = ''; // Back tab or sent list
     } else {
-      this.currentActiveTab = 'message-details';
+      this.currentActiveTab = 'details';
     }
   }
 
@@ -57,15 +58,11 @@ export class SentDetails implements OnInit {
       if (selectedTab.name === 'Back') {
         this.router.navigate(['/messages/sent']);
       }
-      if (selectedTab.route === 'message-details') {
-        this.router.navigate([
-          `/messages/sent/${this.messageId}/message-details`,
-        ]);
+      if (selectedTab.route === 'details') {
+        this.router.navigate([`/messages/sent/${this.messageId}/details`]);
       }
-      if (selectedTab.route === 'message-analytics') {
-        this.router.navigate([
-          `/messages/sent/${this.messageId}/message-analytics`,
-        ]);
+      if (selectedTab.route === 'analytics') {
+        this.router.navigate([`/messages/sent/${this.messageId}/analytics`]);
       }
     }
   }
