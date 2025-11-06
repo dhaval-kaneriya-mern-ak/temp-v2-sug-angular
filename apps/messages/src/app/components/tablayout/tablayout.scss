@@ -24,3 +24,31 @@
     cursor: pointer;
   }
 }
+
+.convert-special-banner {
+  display: block;
+  text-align: center;
+  z-index: 8;
+  overflow: hidden;
+  position: relative;
+  min-height: 28px;
+  background-color: #eae6e1;
+  border-radius: 4px;
+  // margin: 35px 400px 20px 400px;
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  #customText {
+    font-weight: 500;
+    line-height: 2.6rem;
+    padding-top: 12px;
+    margin-bottom: 12px;
+    a {
+      color: #f68b1c;
+      border: 1px solid white;
+      border-radius: 4px;
+      padding: 6px;
+      margin-left: 6px;
+      background-color: white;
+      cursor: pointer;
+    }
+  }
+}

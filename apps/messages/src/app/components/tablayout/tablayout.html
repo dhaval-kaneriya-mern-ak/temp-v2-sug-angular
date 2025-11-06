@@ -1,4 +1,21 @@
 <div class="row message-container">
+  @if (showAnnouncementBar) {
+  <div
+    id="announcementBar-btspromo9204"
+    class="convert-special-banner hidden-xs"
+  >
+    <p id="customText">
+      You are trying the new Messages dashboard. Prefer the classic version?
+      <a
+        id="toggleDashboard"
+        (click)="goBackToClassic($event)"
+        (keyup.enter)="goBackToClassic($event)"
+        tabindex="0"
+        >Go Back</a
+      >
+    </p>
+  </div>
+  }
   <h2 class="tab-title col-md-8">Messages</h2>
   <div class="col-md-12">
     <sug-ui-menu-tabs

@@ -24,10 +24,15 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
 
   navigationTabs: Tabs[] = [];
   currentActiveTab = '';
+  showAnnouncementBar = false;
 
   private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+
+  constructor() {
+    this.checkAnnouncementBarVisibility();
+  }
 
   ngOnInit() {
     this.initializeActiveTab();
@@ -122,5 +127,62 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     if (selectedTab && selectedTab.route) {
       this.router.navigate([selectedTab.route]);
     }
+  }
+
+  /**
+   * Check if the announcement bar should be visible based on the 'sugrcemsgs' cookie
+   */
+  private checkAnnouncementBarVisibility(): void {
+    const cookieValue = this.getCookie('sugrcemsgs');
+    this.showAnnouncementBar = cookieValue === 'true';
+  }
+
+  /**
+   * Get a cookie value by name
+   */
+  private getCookie(name: string): string {
+    const nameEQ = name + '=';
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(nameEQ) === 0) {
+        return c.substring(nameEQ.length, c.length);
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Set a cookie
+   */
+  private setCookie(name: string, value: string, days?: number): void {
+    let expires = '';
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      expires = '; expires=' + date.toUTCString();
+    }
+    document.cookie =
+      name + '=' + value + expires + '; path=/; SameSite=None; Secure';
+  }
+
+  /**
+   * Handle the "Go Back" click - redirect to classic version and set cookie to false
+   */
+  goBackToClassic(event: Event): void {
+    event.preventDefault();
+    this.deleteCookie('sugrcemsgs');
+    window.location.href = '/index.cfm?go=t.messageCenter#/';
+  }
+
+  /**
+   * Delete a cookie
+   */
+  private deleteCookie(name: string): void {
+    document.cookie =
+      name + '=; Path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   }
 }

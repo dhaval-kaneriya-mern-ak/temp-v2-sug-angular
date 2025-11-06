@@ -164,6 +164,9 @@
   }
 }
 .headerMenuLinkBtn {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
   text-decoration: none;
   color: $white-color;
   font-size: 16px;
@@ -172,23 +175,23 @@
   &:hover {
     color: $primary-color-light;
   }
-  &::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    margin-left: -4px;
-    top: auto;
-    bottom: -5px;
-    transition: bottom 0.2s cubic-bezier(0.6, 0, 0.1, 1);
-    display: inline-block;
-    width: 0;
-    height: 0;
-    vertical-align: middle;
-    border-top: 4px dashed;
-    border-top: 4px solid;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-  }
+  // &::before {
+  //   content: '';
+  //   position: absolute;
+  //   left: 50%;
+  //   margin-left: -4px;
+  //   top: auto;
+  //   bottom: -5px;
+  //   transition: bottom 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+  //   display: inline-block;
+  //   width: 0;
+  //   height: 0;
+  //   vertical-align: middle;
+  //   border-top: 4px dashed;
+  //   border-top: 4px solid;
+  //   border-right: 4px solid transparent;
+  //   border-left: 4px solid transparent;
+  // }
   &:after {
     transform-origin: bottom;
     bottom: -5px;

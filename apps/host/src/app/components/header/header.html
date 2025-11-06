@@ -37,7 +37,7 @@
           <div class="explore-giving">
             <a
               class="discoverLogo"
-              [href]="auctionUrl"
+              href="auctionUrl"
               target="_blank"
               aria-label="Explore Auction - Online Auctions"
               id="auction"
@@ -51,7 +51,7 @@
 
             <a
               class="discoverLogo"
-              [href]="donationUrl"
+              href="donationUrl"
               target="_blank"
               aria-label="Explore Giving - Fundraising and donations"
             >
@@ -69,7 +69,7 @@
 
             <a
               class="discoverLogo"
-              [href]="ticketUrl"
+              href="ticketUrl"
               target="_blank"
               aria-label="Tickets - Event ticketing"
             >
@@ -103,27 +103,19 @@
       <!-- Main Navigation Menu -->
       <ul class="headerMenuWrap">
         <li class="headerMenu">
-          <a
-            class="headerMenuLink"
-            [href]="environment.SITE_URL + '/features'"
-            aria-label="Features page"
-          >
+          <a class="headerMenuLink" href="/features" aria-label="Features page">
             Features
           </a>
         </li>
         <li class="headerMenu">
-          <a
-            class="headerMenuLink"
-            [href]="environment.SITE_URL + '/pricing'"
-            aria-label="Pricing page"
-          >
+          <a class="headerMenuLink" href="/pricing" aria-label="Pricing page">
             Pricing
           </a>
         </li>
         <li class="headerMenu show-d">
           <a
             class="headerMenuLink"
-            [href]="environment.SITE_URL + '/how-to-use/collect-money'"
+            href="/how-to-use/collect-money"
             aria-label="Collect Money page"
           >
             Collect Money
@@ -132,7 +124,7 @@
         <li class="headerMenu show-m">
           <a
             class="headerMenuLink"
-            [href]="environment.SITE_URL + '/how-to-use/collect-money'"
+            href="/how-to-use/collect-money"
             aria-label="Collect Money page"
           >
             Collect
@@ -164,7 +156,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/resources'"
+                href="/resources"
                 aria-label="Resources & Tips"
               >
                 Resources & Tips
@@ -174,7 +166,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/blog'"
+                href="/blog"
                 aria-label="Blog page"
               >
                 Blog
@@ -184,7 +176,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/enterprise'"
+                href="/enterprise"
                 aria-label="Enterprise page"
               >
                 Enterprise
@@ -194,7 +186,7 @@
               <a
                 (click)="handleCloseMoreMenu()"
                 class="extendedMenuLink"
-                [href]="'https://support.signupgenius.com/hc/en-us'"
+                href="'https://support.signupgenius.com/hc/en-us'"
                 aria-label="Help & Support"
               >
                 Help
@@ -281,7 +273,7 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/myaccount'"
+                href="/myaccount"
                 aria-label="Sign Ups"
               >
                 Sign Ups
@@ -293,7 +285,7 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/MyAccount/ResetAdminID/1?switch=true'"
+                href="/MyAccount/ResetAdminID/1?switch=true"
                 aria-label="Switch Account"
               >
                 Switch Account
@@ -305,7 +297,7 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/index.cfm?go=m.editprofile&memberid=166042'"
+                href="/index.cfm?go=m.editprofile&memberid=166042"
                 aria-label="Settings"
               >
                 Settings
@@ -316,7 +308,7 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/index.cfm?go=o.mypurchases'"
+                href="/index.cfm?go=o.mypurchases"
                 aria-label="Billing"
               >
                 Billing
@@ -328,7 +320,7 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/index.cfm?go=o.ProGeniusProducts&showtrial=1'"
+                href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
                 aria-label="Free Premium Trial"
               >
                 Free Premium Trial
@@ -339,7 +331,7 @@
             <li class="extendedMenu">
               <a
                 class="extendedMenuLink"
-                [href]="environment.SITE_URL + '/index.cfm?go=c.logout'"
+                href="/index.cfm?go=c.logout"
                 aria-label="Logout"
                 (click)="handleLogout()"
               >
@@ -363,11 +355,7 @@
         </div>
         } @else {
         <!-- Logged Out State -->
-        <a
-          class="btn btn-text"
-          [href]="environment.SITE_URL + '/register'"
-          title="Log In or Register"
-        >
+        <a class="btn btn-text" href="'/register'" title="Log In or Register">
           Log In
         </a>
         } }

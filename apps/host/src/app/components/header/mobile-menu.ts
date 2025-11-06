@@ -1,415 +1,75 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  inject,
+  signal,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { HeaderService } from './header.service';
+import { MemberProfile, UserRole } from '@services/interfaces';
+import { environment } from '@environments/environment';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'sug-mobile-menu',
   standalone: true,
   imports: [CommonModule, RouterModule],
   styleUrls: ['./mobile-menu.scss'],
-  template: `
-    <div class="mobileHeaderMenuWrap">
-      <ul class="mobileHeaderMenuList mobileMenuIconList">
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/index.cfm?go=c.myaccount#/"
-            (click)="onLinkClick()"
-          >
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 512 512"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M408 64H104c-22.091 0-40 17.908-40 40v304c0 22.092 17.909 40 40 40h304c22.092 0 40-17.908 40-40V104c0-22.092-17.908-40-40-40zM304 368H144v-48h160v48zm64-88H144v-48h224v48zm0-88H144v-48h224v48z"
-              ></path>
-            </svg>
-            <span>Sign Ups</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/index.cfm?go=t.mygroups#/">
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 448 512"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M304 128a80 80 0 1 0 -160 0 80 80 0 1 0 160 0zM96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM49.3 464l349.5 0c-8.9-63.3-63.3-112-129-112l-91.4 0c-65.7 0-120.1 48.7-129 112zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3z"
-              ></path>
-            </svg>
-            <span>Groups</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/index.cfm?go=t.messageCenter">
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 24 24"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path fill="none" d="M0 0h24v24H0z"></path>
-              <path
-                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"
-              ></path>
-            </svg>
-            <span>Messages</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/index.cfm?go=t.reports&memberid=182192759"
-          >
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 512 512"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect
-                width="48"
-                height="160"
-                x="64"
-                y="320"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="32"
-                rx="8"
-                ry="8"
-              ></rect>
-              <rect
-                width="48"
-                height="256"
-                x="288"
-                y="224"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="32"
-                rx="8"
-                ry="8"
-              ></rect>
-              <rect
-                width="48"
-                height="368"
-                x="400"
-                y="112"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="32"
-                rx="8"
-                ry="8"
-              ></rect>
-              <rect
-                width="48"
-                height="448"
-                x="176"
-                y="32"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="32"
-                rx="8"
-                ry="8"
-              ></rect>
-            </svg>
-            <span>Reports</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/index.cfm?go=t.protools">
-            <svg
-              stroke="currentColor"
-              fill="none"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-              ></path>
-            </svg>
-            <span>Tools</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/index.cfm?go=o.PGActivation">
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 24 24"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill="none"
-                stroke-width="2"
-                d="M1,5 L23,5 L23,19 L1,19 L1,5 Z M2,9 L2,9 C3.65685425,9 5,7.65685425 5,6 M2,15 L2,15 C3.65685425,15 5,16.3431458 5,18 M22,9 L22,9 C20.3431458,9 19,7.65685425 19,6 M22,15 L22,15 C20.3431458,15 19,16.3431458 19,18 M12,16 C13.6568542,16 15,14.209139 15,12 C15,9.790861 13.6568542,8 12,8 C10.3431458,8 9,9.790861 9,12 C9,14.209139 10.3431458,16 12,16 Z"
-              ></path>
-            </svg>
-            <span>Collect</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/index.cfm?go=o.mypurchases">
-            <svg
-              stroke="currentColor"
-              fill="none"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
-            </svg>
-            <span>Billing</span>
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
-          >
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              stroke-width="0"
-              viewBox="0 0 576 512"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"
-              ></path>
-            </svg>
-            <span>Free Premium Trial</span>
-          </a>
-        </li>
-      </ul>
-
-      <!-- Main Menu Items -->
-      <ul class="mobileHeaderMenuList">
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/features"
-            (click)="onLinkClick()"
-          >
-            Features
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/pricing"
-            (click)="onLinkClick()"
-          >
-            Pricing
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/collect-money"
-            (click)="onLinkClick()"
-          >
-            Collect Money
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/resources"
-            (click)="onLinkClick()"
-          >
-            Resources & Tips
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a class="mobileHeaderMenuLink" href="/blog" (click)="onLinkClick()">
-            Blog
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/enterprise"
-            (click)="onLinkClick()"
-          >
-            Enterprise
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/register"
-            (click)="onLinkClick()"
-          >
-            Log In
-          </a>
-        </li>
-        <li class="mobileHeaderMenu">
-          <a
-            class="mobileHeaderMenuLink"
-            href="/MyAccount/ResetAdminID/1?switch=true"
-            (click)="onLinkClick()"
-          >
-            Switch Account
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Mobile Header Sidebar -->
-    <div class="mobileHeaderSidebar">
-      <button
-        class="closeMenu"
-        (click)="closeMenu()"
-        type="button"
-        aria-label="Close menu"
-      >
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          stroke-width="0"
-          viewBox="0 0 512 512"
-          height="1em"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="m289.94 256 95-95A24 24 0 0 0 351 127l-95 95-95-95a24 24 0 0 0-34 34l95 95-95 95a24 24 0 1 0 34 34l95-95 95 95a24 24 0 0 0 34-34z"
-          ></path>
-        </svg>
-      </button>
-
-      <!-- Profile Picture/Initials - Static version -->
-      <a
-        class="profile-name"
-        href="/index.cfm?go=m.editprofile&memberid=182192759"
-      >
-        JD
-      </a>
-
-      <!-- Button Wrap -->
-      <div class="btnWrap">
-        <!-- Search Button -->
-        <a class="searchLink" href="/findasignup" aria-label="Find a signup">
-          <svg
-            stroke="currentColor"
-            fill="none"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
-        </a>
-
-        <!-- Help Button -->
-        <a class="searchLink" href="/support" aria-label="Get support">
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            stroke-width="0"
-            viewBox="0 0 512 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm-4.3 304c-11.8 0-21.4-9-21.4-20.6 0-11.5 9.6-20.6 21.4-20.6 11.9 0 21.5 9 21.5 20.6 0 11.6-9.5 20.6-21.5 20.6zm40.2-96.9c-17.4 10.1-23.3 17.5-23.3 30.3v7.9h-34.7l-.3-8.6c-1.7-20.6 5.5-33.4 23.6-44 16.9-10.1 24-16.5 24-28.9s-12-21.5-26.9-21.5c-15.1 0-26 9.8-26.8 24.6H192c.7-32.2 24.5-55 64.7-55 37.5 0 63.3 20.8 63.3 50.7 0 19.9-9.6 33.6-28.1 44.5z"
-            ></path>
-          </svg>
-        </a>
-
-        <!-- Logout Button -->
-        <a
-          class="searchLink"
-          href="/index.cfm?go=c.logout"
-          aria-label="Log out"
-          (click)="onLogout()"
-        >
-          <svg
-            stroke="currentColor"
-            fill="none"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"
-            ></path>
-            <path d="M9 12h12l-3 -3"></path>
-            <path d="M18 15l3 -3"></path>
-          </svg>
-        </a>
-
-        <!-- Admin Button -->
-        <a class="searchLink" href="/admin" aria-label="Admin panel">
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            stroke-width="0"
-            viewBox="0 0 448 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"
-            ></path>
-          </svg>
-        </a>
-      </div>
-    </div>
-  `,
+  templateUrl: './mobile-menu.html',
 })
-export class MobileMenuComponent {
+export class MobileMenuComponent implements OnInit, OnDestroy {
   @Output() closeMenuRequested = new EventEmitter<void>();
   @Output() linkClick = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
+
+  private headerService = inject(HeaderService);
+
+  private destroy$ = new Subject<void>();
+
+  isLoading = signal(false);
+  userProfile = signal<MemberProfile | null>(null);
+  userRoles = signal<UserRole[]>([]);
+  environment = environment;
+
+  ngOnInit() {
+    // Initialize user data - replace with actual service calls
+    this.loadUserProfile();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadUserProfile() {
+    this.isLoading.set(true);
+    this.headerService.getUserProfile().subscribe({
+      next: (response) => {
+        this.userProfile.set(response.data);
+        this.isLoading.set(false);
+        if (response.success) {
+          // this.loadUserRole();
+        }
+        console.log('user', this.userProfile);
+      },
+      error: () => {
+        this.handleLogout();
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  handleLogout() {
+    // Implement logout logic
+    console.log('Logging out...');
+    this.userProfile.set(null);
+    this.userRoles.set([]);
+    // Redirect or call logout service
+  }
 
   closeMenu() {
     // Emit event to parent component instead of direct DOM manipulation
@@ -424,5 +84,16 @@ export class MobileMenuComponent {
   onLogout() {
     // Emit event for logout
     this.logout.emit();
+  }
+
+  // Utility methods
+  getProfileDisplay(): string {
+    const profile = this.userProfile();
+    return profile?.profilepicture?.text || '';
+  }
+
+  getProfileImage(): string {
+    const profile = this.userProfile();
+    return profile?.profilepicture?.small || '';
   }
 }
