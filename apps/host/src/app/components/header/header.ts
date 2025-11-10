@@ -9,11 +9,11 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { MobileMenuComponent } from './mobile-menu';
-import { HeaderService } from './header.service';
 import { environment } from '@environments/environment';
 import { MemberProfile, UserRole } from '@services/interfaces';
+import { UserStateService } from '@services/user-state.service';
 
 @Component({
   selector: 'sug-header',
@@ -28,7 +28,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('extendedWrapRef') extendedWrapRef!: ElementRef<HTMLDivElement>;
 
   // Inject services
-  private headerService = inject(HeaderService);
+  private userStateService = inject(UserStateService);
 
   // State signals
   isVisible = signal(false);
@@ -47,8 +47,34 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.setupEventListeners();
-    // Initialize user data - replace with actual service calls
-    this.loadUserProfile();
+    this.initializeUserData();
+  }
+
+  private initializeUserData() {
+    this.isLoading.set(true);
+
+    // Subscribe to profile updates (reactive)
+    this.userStateService.userProfile$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((profile): profile is MemberProfile => profile !== null) // ignore initial null
+      )
+      .subscribe((profile) => {
+        this.userProfile.set(profile);
+      });
+
+    this.userStateService
+      .loadUserProfile()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.handleLogout();
+          this.isLoading.set(false);
+        },
+      });
   }
 
   ngOnDestroy() {
@@ -60,36 +86,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Handle clicks outside menus
     document.addEventListener('mousedown', this.handleClickOutside.bind(this));
     window.addEventListener('beforeunload', this.handlePageReload.bind(this));
-  }
-
-  private loadUserRole() {
-    this.headerService.getUserRole().subscribe({
-      next: (response) => {
-        this.userRoles.set(response.data ? response.data : []);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.handleLogout();
-        this.isLoading.set(false);
-      },
-    });
-  }
-
-  private loadUserProfile() {
-    this.isLoading.set(true);
-    this.headerService.getUserProfile().subscribe({
-      next: (response) => {
-        this.userProfile.set(response.data);
-        this.isLoading.set(false);
-        if (response.success) {
-          // this.loadUserRole();
-        }
-      },
-      error: () => {
-        this.handleLogout();
-        this.isLoading.set(false);
-      },
-    });
   }
 
   private handleClickOutside(event: MouseEvent) {
@@ -163,6 +159,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   handleLogout() {
     // Implement logout logic
     console.log('Logging out...');
+    this.userStateService.clearUserProfile();
     this.userProfile.set(null);
     this.userRoles.set([]);
     // Redirect or call logout service

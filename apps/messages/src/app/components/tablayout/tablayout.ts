@@ -50,7 +50,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
   }
 
   private loadUserProfileAndUpdateTabs(): void {
-    // Simplified: Subscribe to profile changes and update tabs
+    // Subscribe to profile changes - NO API call triggered here
+    // The header component already triggers the API call
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -59,19 +60,10 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
           this.initializeActiveTab();
         },
         error: () => {
-          // Show all tabs on error
           this.navigationTabs = [...this.allTabs];
           this.initializeActiveTab();
         },
       });
-
-    // Load profile if not already loaded
-    if (!this.userStateService.getCurrentProfile()) {
-      this.userStateService
-        .loadUserProfile()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe();
-    }
   }
 
   ngOnDestroy() {

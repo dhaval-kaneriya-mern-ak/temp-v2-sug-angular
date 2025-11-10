@@ -93,7 +93,8 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   private loadUserProfileData(): void {
-    // Simplified: Just subscribe to profile changes and update plan name
+    // NO API call here - just subscribe to shared state from service
+    // The header component already triggers the API call
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -106,14 +107,6 @@ export class Dashboard implements OnInit, OnDestroy {
           this.planName = 'Free';
         },
       });
-
-    // Load profile if not already loaded
-    if (!this.userStateService.getCurrentProfile()) {
-      this.userStateService
-        .loadUserProfile()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe();
-    }
   }
 
   ngOnDestroy(): void {

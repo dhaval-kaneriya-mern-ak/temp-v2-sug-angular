@@ -9,10 +9,10 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HeaderService } from './header.service';
 import { MemberProfile, UserRole } from '@services/interfaces';
 import { environment } from '@environments/environment';
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
+import { UserStateService } from '@services/user-state.service';
 
 @Component({
   selector: 'sug-mobile-menu',
@@ -26,7 +26,7 @@ export class MobileMenuComponent implements OnInit, OnDestroy {
   @Output() linkClick = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
 
-  private headerService = inject(HeaderService);
+  private userStateService = inject(UserStateService);
 
   private destroy$ = new Subject<void>();
 
@@ -36,8 +36,7 @@ export class MobileMenuComponent implements OnInit, OnDestroy {
   environment = environment;
 
   ngOnInit() {
-    // Initialize user data - replace with actual service calls
-    this.loadUserProfile();
+    this.subscribeToUserState();
   }
 
   ngOnDestroy() {
@@ -45,27 +44,21 @@ export class MobileMenuComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadUserProfile() {
-    this.isLoading.set(true);
-    this.headerService.getUserProfile().subscribe({
-      next: (response) => {
-        this.userProfile.set(response.data);
-        this.isLoading.set(false);
-        if (response.success) {
-          // this.loadUserRole();
-        }
-        console.log('user', this.userProfile);
-      },
-      error: () => {
-        this.handleLogout();
-        this.isLoading.set(false);
-      },
-    });
+  private subscribeToUserState() {
+    // Only subscribe to reactive updates - NO API call triggered
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((profile) => {
+        this.userProfile.set(profile);
+        // Update loading state based on whether we have data
+        this.isLoading.set(!profile);
+      });
   }
 
   handleLogout() {
     // Implement logout logic
     console.log('Logging out...');
+    this.userStateService.clearUserProfile();
     this.userProfile.set(null);
     this.userRoles.set([]);
     // Redirect or call logout service

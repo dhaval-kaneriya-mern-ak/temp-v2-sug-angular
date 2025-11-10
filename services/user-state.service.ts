@@ -73,6 +73,13 @@ export class UserStateService implements OnDestroy {
   }
 
   /**
+   * Check if profile is already loaded
+   */
+  isProfileLoaded(): boolean {
+    return this._isProfileLoaded && this._userProfile() !== null;
+  }
+
+  /**
    * Get the current user profile value
    */
   getCurrentProfile(): MemberProfile | null {
@@ -93,6 +100,8 @@ export class UserStateService implements OnDestroy {
   clearUserProfile(): void {
     this._userProfile.set(null);
     this._userProfile$.next(null);
+    this._isProfileLoaded = false;
+    this._loadingObservable = null;
   }
 
   /**
