@@ -12,6 +12,7 @@ import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { DraftService } from './draft.service';
 import { DraftMessage } from '@services/interfaces';
 import { Router } from '@angular/router';
+import { format } from 'date-fns';
 
 @Component({
   selector: 'sug-draft',
@@ -51,7 +52,7 @@ export class Draft implements OnInit {
   sortOrder = 'desc';
   tableColumns: ISugTableColumn[] = [
     {
-      field: 'created',
+      field: 'datecreated',
       header: 'Created',
       sortable: true,
       filterable: false,
@@ -98,7 +99,12 @@ export class Draft implements OnInit {
       // Handle the response from the service
       if (response && response.data) {
         this.tableData = response.data.map((item) => ({
-          created: item.created,
+          datecreated: item.datecreated
+            ? format(
+                new Date(Number(item.datecreated) * 1000),
+                'yyyy-MM-dd h:mmaaa'
+              )
+            : '',
           subject: item.subject,
           messageid: item.messageid,
           messagetypeid: item.messagetypeid,

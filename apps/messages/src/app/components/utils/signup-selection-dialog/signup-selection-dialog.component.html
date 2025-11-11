@@ -1,0 +1,94 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  (hide)="closeDialog(true)"
+  [showFooter]="true"
+>
+  <h2 slot="header">Sign Up Links</h2>
+  <p>Select which sign ups should be sent as links in the message.</p>
+  <div class="dialog-content">
+    <form [formGroup]="signUpDialogForm">
+      <sug-ui-radio-checkbox-button
+        type="radio"
+        name="dialogRadio"
+        formControlName="selectedSignupValue"
+        [options]="dialogRadioOptions"
+        (valueChange)="getSignupLinkRadioValue($event)"
+      >
+      </sug-ui-radio-checkbox-button>
+
+      @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkSpecificSignup') {
+      <div class="signup-radio-content">
+        <sug-ui-multi-select-dropdown
+          [options]="signUpOptions"
+          [optionGroupLabel]="'label'"
+          [optionGroupChildren]="'items'"
+          [group]="true"
+          [placeholder]="'Select Sign Up(s)'"
+          panelStyleClass="custom-dropdown"
+          appendTo="parent"
+          (valueChanged)="onSignUpSelectionChange($event)"
+          formControlName="selectedSignups"
+        >
+          <ng-template #group let-group>
+            <div class="flex items-center">
+              <span>{{ group.label }}</span>
+            </div>
+          </ng-template>
+        </sug-ui-multi-select-dropdown>
+      </div>
+      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkMainAccount') {
+      <div class="signup-tooltip-content">
+        <a class="link-button"
+          >Sign Up Index Page
+          <sug-ui-tooltip
+            [text]="
+              'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'
+            "
+            [position]="'bottom'"
+            [tooltipClass]="'custom-tooltip'"
+            [tooltipOptions]="{
+              showDelay: 200,
+              autoHide: true,
+              tooltipEvent: 'hover'
+            }"
+          >
+            <button class="info-button">
+              <i class="pi pi-question-circle"></i>
+            </button>
+          </sug-ui-tooltip>
+        </a>
+      </div>
+      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkSpecifixTabGroup') {
+      <div class="signup-radio-content">
+        <sug-ui-multi-select-dropdown
+          [placeholder]="'Select Tab Group(s)'"
+          [options]="tabGroupsData"
+          formControlName="selectedTabGroups"
+          (valueChanged)="onTabGroupSelectionChange($event)"
+        >
+        </sug-ui-multi-select-dropdown>
+      </div>
+      }
+    </form>
+  </div>
+
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Okay"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeDialog(false)"
+    >
+    </sug-ui-button>
+  </div>
+</sug-ui-dialog>

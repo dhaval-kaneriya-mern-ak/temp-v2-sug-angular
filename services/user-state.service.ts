@@ -1,8 +1,9 @@
 import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { SugApiService } from './sug-api.service';
 import { ApiResponse, MemberProfile } from './interfaces';
-import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
+import { USER_PROFILE_SUBJECT } from './user-profile-token';
 
 @Injectable({
   providedIn: 'root',
@@ -10,13 +11,11 @@ import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 export class UserStateService implements OnDestroy {
   private readonly sugApiService = inject(SugApiService);
 
+  // Inject the shared BehaviorSubject (works across module federation)
+  private readonly _userProfile$ = inject(USER_PROFILE_SUBJECT);
+
   // Signal for reactive state
   private readonly _userProfile = signal<MemberProfile | null>(null);
-
-  // BehaviorSubject for components that prefer observables
-  private readonly _userProfile$ = new BehaviorSubject<MemberProfile | null>(
-    null
-  );
 
   // Public readonly signals and observables
   readonly userProfile = this._userProfile.asReadonly();
@@ -57,7 +56,6 @@ export class UserStateService implements OnDestroy {
           }
         }),
         catchError((error: Error) => {
-          console.error('Failed to load user profile:', error);
           this._userProfile.set(null);
           this._userProfile$.next(null);
           return throwError(() => error);
@@ -163,6 +161,19 @@ export class UserStateService implements OnDestroy {
       ),
       catchError(() => of(false))
     );
+  }
+
+  /**
+   * Validate email format using RFC 5322 standard regex pattern
+   * @param email - The email address to validate
+   * @returns true if valid email format, false otherwise
+   */
+  isValidEmail(email: string): boolean {
+    if (!email || typeof email !== 'string') return false;
+
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    return emailRegex.test(email.trim());
   }
 
   /**

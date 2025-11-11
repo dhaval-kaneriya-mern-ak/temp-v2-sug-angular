@@ -1,0 +1,61 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  (hide)="closeDialog(true)"
+  [showFooter]="true"
+>
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+
+  <h2 slot="header">Custom Select People from Sign Up</h2>
+
+  <div class="dialog-content">
+    <!-- Loading Spinner -->
+    @if (isLoading) {
+    <div class="loading-container">
+      <p>Loading date slots...</p>
+    </div>
+    }
+
+    <!-- Table -->
+    @if (!isLoading) {
+    <sug-ui-table
+      [data]="tableData"
+      [columns]="tableColumns"
+      [paginator]="false"
+      [config]="tableConfig"
+      [selection]="selectedDisplaySlots"
+      (selectionChange)="onSelectionChange($event)"
+      (sort)="onSort()"
+    >
+    </sug-ui-table>
+    }
+
+    <!-- Slot Selection Counter -->
+    <div class="slot-counter">
+      <div class="counter-badge">
+        {{ selectedDisplaySlots.length }}
+      </div>
+      <span
+        >Slot{{ selectedDisplaySlots.length !== 1 ? 's' : '' }} selected</span
+      >
+    </div>
+  </div>
+
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="OK"
+      [size]="'large'"
+      severity="success"
+      [outlined]="false"
+      [disabled]="selectedSlots.length === 0"
+      (buttonClick)="closeDialog(false)"
+    >
+    </sug-ui-button>
+  </div>
+</sug-ui-dialog>

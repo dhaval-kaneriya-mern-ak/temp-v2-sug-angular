@@ -1,11 +1,15 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
 <div class="compose-container">
   @if (showRadioButtons) {
   <div class="radio-selection">
     <sug-ui-radio-checkbox-button
       type="radio"
-      name="size"
+      name="emailOption"
       [options]="radioOptions"
-      inputId="size-selection"
+      inputId="email-option-selection"
       [(value)]="selectedValue"
       (changeEvent)="handleSelection($event)"
     ></sug-ui-radio-checkbox-button>
@@ -27,34 +31,83 @@
           </p-button>
         </sug-ui-tooltip>
       </h3>
-      <form>
+      <form [formGroup]="emailFormOne">
         <div class="form-wrapper">
           <label for="signup-links">Sign Up Link(s)</label>
+          @if (selectedSignups.length === 0 && selectedTabGroups.length === 0 &&
+          !isSignUpIndexPageSelected) {
           <sug-ui-button
             type="button"
             class="add-link-btn"
             icon=""
             label="Select Sign Ups"
-            (buttonClick)="openDialog()"
+            (buttonClick)="openSignUpsDialog()"
           ></sug-ui-button>
+          } @if (selectedSignups.length > 0 || selectedTabGroups.length > 0 ||
+          isSignUpIndexPageSelected) {
+          <div class="signup-chips-container">
+            <div class="chips-container">
+              @for (item of selectedSignups; track item.signupid || $index; let
+              i = $index) {
+              <span [ngClass]="{'': selectedSignups.length > 1 && i >= 1 }">
+                <p-chip
+                  class="gap-2"
+                  [label]="getSignupTitle(item)"
+                  [removable]="true"
+                  (onRemove)="removeSignup(i)"
+                />
+              </span>
+              } @for (item of selectedTabGroups; track item.value || $index; let
+              i = $index) {
+              <span [ngClass]="{'': (selectedSignups.length > 0 || i >= 1) }">
+                <p-chip
+                  class="gap-2"
+                  [label]="item.label"
+                  [removable]="true"
+                  (onRemove)="removeTabGroup(i)"
+                />
+              </span>
+              } @if (isSignUpIndexPageSelected) {
+              <span>
+                <p-chip
+                  class="gap-2"
+                  label="Sign Up Index Page"
+                  [removable]="true"
+                  (onRemove)="removeSignUpIndexPage()"
+                />
+              </span>
+              }
+            </div>
+            <button
+              type="button"
+              class="edit-signup-btn"
+              (click)="openSignUpsDialog()"
+              aria-label="Edit selected sign ups"
+            >
+              <i class="pi pi-pencil"></i>
+            </button>
+          </div>
+          }
         </div>
         <div class="form-wrapper">
-          <label for="from-email">From</label>
-          <input
-            type="email"
-            placeholder="Enter sender email address"
-            id="from-email"
-          />
+          <label for="from-name">From</label>
+          <input type="text" formControlName="fromName" />
+          @if (emailFormOne.get('fromName')?.invalid &&
+          emailFormOne.get('fromName')?.touched) {
+          <small class="error-message">Name is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="reply-to">Reply To</label>
           <sug-ui-multi-select-dropdown
             id="reply-to"
-            [options]="selectOptions"
+            [options]="subAdminsData"
+            formControlName="replyTo"
           ></sug-ui-multi-select-dropdown>
         </div>
         <div class="form-wrapper">
           <label for="to-people">To</label>
+          @if (selectedGroups.length === 0) {
           <sug-ui-button
             type="button"
             class="add-link-btn"
@@ -62,6 +115,33 @@
             label="Select People"
             (buttonClick)="openPeopleDialog()"
           ></sug-ui-button>
+          } @if (selectedGroups.length > 0) {
+          <div class="recipient-info-container">
+            @for (item of selectedGroups; track item.value || $index; let i =
+            $index) {
+            <div class="recipient-text">
+              <span class="recipient-label">{{item.label}}</span>
+            </div>
+            }
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openPeopleDialog()"
+                aria-label="Edit recipient selection"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails()"
+            >
+              {{ recipientCount }} Recipient Details
+            </button>
+          </div>
+          }
         </div>
         <div class="form-wrapper">
           <label for="from-subject">Subject</label>
@@ -69,14 +149,24 @@
             type="text"
             placeholder="Enter email subject"
             id="from-subject"
+            formControlName="subject"
           />
+          @if (emailFormOne.get('subject')?.invalid &&
+          emailFormOne.get('subject')?.touched) {
+          <small class="error-message">Subject is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="from-message">Message</label>
           <textarea
             id="from-message"
             placeholder="Type your message here..."
+            formControlName="message"
           ></textarea>
+          @if (emailFormOne.get('message')?.invalid &&
+          emailFormOne.get('message')?.touched) {
+          <small class="error-message">Message is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="attachments">Attachments</label>
@@ -88,6 +178,7 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
@@ -95,12 +186,14 @@
             class="send-btn"
             icon=""
             label="Preview & Send"
+            (buttonClick)="onPreviewAndSend('formOne')"
           ></sug-ui-button>
           <sug-ui-button
             severity="secondary"
             class="draft-btn"
             icon=""
             label="Save Draft"
+            (buttonClick)="onSaveDraft('formOne')"
           ></sug-ui-button>
         </div>
       </form>
@@ -120,34 +213,83 @@
           </p-button>
         </sug-ui-tooltip>
       </h3>
-      <form>
+      <form [formGroup]="emailFormTwo">
         <div class="form-wrapper">
           <label for="signup-links">Sign Up Link(s)</label>
+          @if (selectedSignups.length === 0 && selectedTabGroups.length === 0 &&
+          !isSignUpIndexPageSelected) {
           <sug-ui-button
             type="button"
             class="add-link-btn"
             icon=""
             label="Select Sign Ups"
-            (buttonClick)="openDialog()"
+            (buttonClick)="openSignUpsDialog()"
           ></sug-ui-button>
+          } @if (selectedSignups.length > 0 || selectedTabGroups.length > 0 ||
+          isSignUpIndexPageSelected) {
+          <div class="signup-chips-container">
+            @for (item of selectedSignups; track item.signupid || $index; let i
+            = $index) {
+            <span [ngClass]="{'ms-3': selectedSignups.length > 1 && i >= 1 }">
+              <p-chip
+                class="gap-2"
+                [label]="getSignupTitle(item)"
+                [removable]="true"
+                (onRemove)="removeSignup(i)"
+              />
+            </span>
+            } @for (item of selectedTabGroups; track item.value || $index; let i
+            = $index) {
+            <span [ngClass]="{'ms-3': (selectedSignups.length > 0 || i >= 1) }">
+              <p-chip
+                class="gap-2"
+                [label]="item.label"
+                [removable]="true"
+                (onRemove)="removeTabGroup(i)"
+              />
+            </span>
+            } @if (isSignUpIndexPageSelected) {
+            <span
+              [ngClass]="{'ms-3': (selectedSignups.length > 0 || selectedTabGroups.length > 0) }"
+            >
+              <p-chip
+                class="gap-2"
+                label="Sign Up Index Page"
+                [removable]="true"
+                (onRemove)="removeSignUpIndexPage()"
+              />
+            </span>
+            }
+            <button
+              type="button"
+              class="ms-3 edit-signup-btn"
+              (click)="openSignUpsDialog()"
+              aria-label="Edit selected sign ups"
+            >
+              <i class="pi pi-pencil" style="color: slateblue"></i>
+            </button>
+          </div>
+          }
         </div>
         <div class="form-wrapper">
-          <label for="from-email">From</label>
-          <input
-            type="email"
-            placeholder="Enter sender email address"
-            id="from-email"
-          />
+          <label for="from-name">From</label>
+          <input type="text" formControlName="fromName" />
+          @if (emailFormTwo.get('fromName')?.invalid &&
+          emailFormTwo.get('fromName')?.touched) {
+          <small class="error-message">Name is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="reply-to">Reply To</label>
           <sug-ui-multi-select-dropdown
             id="reply-to"
-            [options]="selectOptions"
+            [options]="subAdminsData"
+            formControlName="replyTo"
           ></sug-ui-multi-select-dropdown>
         </div>
         <div class="form-wrapper">
           <label for="to-people">To</label>
+          @if (selectedGroups.length === 0) {
           <sug-ui-button
             type="button"
             class="add-link-btn"
@@ -155,6 +297,33 @@
             label="Select People"
             (buttonClick)="openPeopleSendMessageDialog()"
           ></sug-ui-button>
+          } @if (selectedGroups.length > 0) {
+          <div class="recipient-info-container">
+            @for (item of selectedGroups; track item.value || $index; let i =
+            $index) {
+            <div class="recipient-text">
+              <span class="recipient-label">{{item.label}}</span>
+            </div>
+            }
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openPeopleSendMessageDialog()"
+                aria-label="Edit recipient selection"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails()"
+            >
+              {{ recipientCount }} Recipient Details
+            </button>
+          </div>
+          }
         </div>
         <div class="form-wrapper">
           <label for="from-subject">Subject</label>
@@ -162,14 +331,24 @@
             type="text"
             placeholder="Enter email subject"
             id="from-subject"
+            formControlName="subject"
           />
+          @if (emailFormTwo.get('subject')?.invalid &&
+          emailFormTwo.get('subject')?.touched) {
+          <small class="error-message">Subject is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="from-message">Message</label>
           <textarea
             id="from-message"
             placeholder="Type your message here..."
+            formControlName="message"
           ></textarea>
+          @if (emailFormTwo.get('message')?.invalid &&
+          emailFormTwo.get('message')?.touched) {
+          <small class="error-message">Message is required</small>
+          }
         </div>
         <div class="form-wrapper">
           <label for="attachments">Attachments</label>
@@ -181,6 +360,13 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+
+        <!-- <div class="btn-wrapper">
+          <sug-ui-button severity="success" [outlined]="false" class="send-btn" icon="" label="Preview & Send"
+            [disabled]="emailFormTwo.invalid" (buttonClick)="onPreviewAndSend('formTwo')"></sug-ui-button>
+          <sug-ui-button severity="secondary" class="draft-btn" icon="" label="Save Draft"
+            (buttonClick)="onSaveDraft('formTwo')"></sug-ui-button>
+        </div> -->
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
@@ -188,12 +374,14 @@
             class="send-btn"
             icon=""
             label="Preview & Send"
+            (buttonClick)="onPreviewAndSend('formTwo')"
           ></sug-ui-button>
           <sug-ui-button
             severity="secondary"
             class="draft-btn"
             icon=""
             label="Save Draft"
+            (buttonClick)="onSaveDraft('formTwo')"
           ></sug-ui-button>
         </div>
       </form>
@@ -230,11 +418,9 @@
     <p>
       Nope. We make it easy and include that link for you in the email right
       underneath the message that you compose. To select which sign up the email
-      links to, click the "Select Sign Ups" button in the form. If you've
-      already selected a sign up, you can change it by clicking the orange
-      pencil icon next to the name of the sign up.
+      <span>DID YOU KNOW...</span>
     </p>
-    <span>DID YOU KNOW...</span>
+
     <p>
       SignUpGenius Pro customers can send one email to invite users to multiple
       sign ups at once or invite them to a group of tabbed sign ups. Learn more
@@ -290,56 +476,80 @@
 </sug-ui-dialog>
 <!-- Signup Links -->
 <sug-ui-dialog
-  [config]="dialogConf"
-  [(visible)]="isVisible"
+  [config]="signUpDialogConfig"
+  (hide)="closeSignupDialog(true)"
+  [(visible)]="signUpModelShow"
   [showFooter]="true"
 >
   <h2 slot="header">Sign Up Links</h2>
   <p>Select which sign ups should be sent as links in the message.</p>
   <div class="dialog-content">
-    <sug-ui-radio-checkbox-button
-      type="radio"
-      name="dialogRadio"
-      [(value)]="dialogSelectedValue"
-      [options]="[{ label: 'Link to specific sign up(s)', value: 'dialogemailoptionone' }]"
-    >
-    </sug-ui-radio-checkbox-button>
-
-    @if (dialogSelectedValue === 'dialogemailoptionone') {
-    <div class="signup-radio-content">
-      <sug-ui-multi-select-dropdown
-        id="signup-select"
-        [options]="signUpOptions"
+    <form [formGroup]="signUpDialogForm">
+      <sug-ui-radio-checkbox-button
+        type="radio"
+        name="dialogRadio"
+        formControlName="selectedSignupValue"
+        [options]="dialogRadioOptions"
+        (valueChange)="getSignupLinkRadioValue($event)"
       >
-      </sug-ui-multi-select-dropdown>
-    </div>
-    }
+      </sug-ui-radio-checkbox-button>
 
-    <sug-ui-radio-checkbox-button
-      type="radio"
-      name="dialogRadio"
-      [(value)]="dialogSelectedValue"
-      [options]="[{ label: 'Link to my main account', value: 'dialogemailoptiontwo' }]"
-    >
-    </sug-ui-radio-checkbox-button>
-
-    @if (dialogSelectedValue === 'dialogemailoptiontwo') {
-    <div class="signup-tooltip-content">
-      <a data-ng-click="previewAcctIndex()" class="link-button"
-        >Sign Up Index Page
-        <sug-ui-tooltip
-          [text]="'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'"
-          [position]="'bottom'"
-          [tooltipClass]="'custom-tooltip'"
-          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+      @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkSpecificSignup') {
+      <div class="signup-radio-content">
+        <sug-ui-multi-select-dropdown
+          [options]="signUpOptions"
+          [optionGroupLabel]="'label'"
+          [optionGroupChildren]="'items'"
+          [group]="true"
+          [placeholder]="'Select Sign Up(s)'"
+          panelStyleClass="custom-dropdown"
+          appendTo="parent"
+          (valueChanged)="onSignUpSelectionChange($event)"
+          formControlName="selectedSignups"
         >
-          <button class="info-button">
-            <i class="pi pi-question-circle"></i>
-          </button>
-        </sug-ui-tooltip>
-      </a>
-    </div>
-    }
+          <ng-template #group let-group>
+            <div class="flex items-center">
+              <span>{{ group.label }}</span>
+            </div>
+          </ng-template>
+        </sug-ui-multi-select-dropdown>
+      </div>
+      }
+      <!-- <sug-ui-radio-checkbox-button type="radio" name="dialogRadio" formControlName="selectedSignupValue"
+        [options]="[{ label: 'Link to my main account', value: 'LinkMainAccount' }]">
+      </sug-ui-radio-checkbox-button> -->
+
+      @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkMainAccount') {
+      <div class="signup-tooltip-content">
+        <a data-ng-click="previewAcctIndex()" class="link-button"
+          >Sign Up Index Page
+          <sug-ui-tooltip
+            [text]="'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'"
+            [position]="'bottom'"
+            [tooltipClass]="'custom-tooltip'"
+            [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+          >
+            <button class="info-button">
+              <i class="pi pi-question-circle"></i>
+            </button>
+          </sug-ui-tooltip>
+        </a>
+      </div>
+      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkSpecifixTabGroup') {
+      <div class="signup-radio-content">
+        <sug-ui-multi-select-dropdown
+          [placeholder]="'Select Tab Group(s)'"
+          [options]="tabGroupsData"
+          formControlName="selectedTabGroups"
+          (valueChanged)="onTabGroupSelectionChange($event)"
+        >
+        </sug-ui-multi-select-dropdown>
+      </div>
+      }
+    </form>
   </div>
 
   <div
@@ -353,112 +563,156 @@
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
-      (buttonClick)="closeDialog()"
+      (buttonClick)="closeSignupDialog(false)"
     ></sug-ui-button>
   </div>
 </sug-ui-dialog>
 <!-- Select People first -->
 <sug-ui-dialog
   [config]="peopleDialogConf"
+  (hide)="closePeopleDialog(true)"
   [(visible)]="isPeopleDialogVisible"
   [showFooter]="true"
 >
   <h2 slot="header">Send this message to...</h2>
   <div class="dialog-content">
-    @for (option of sendMessageRadioOptions; track option.value) {
-    <div class="radio-option-wrapper">
-      <sug-ui-radio-checkbox-button
-        type="radio"
-        name="sendMessageRadioGroup"
-        [(value)]="peopleSendMessageSelectedValue"
-        [options]="[{ label: option.label, value: option.value }]"
-      >
-      </sug-ui-radio-checkbox-button>
+    <form [formGroup]="peopleDialogForm">
+      <div class="radio-option-wrapper">
+        <sug-ui-radio-checkbox-button
+          type="radio"
+          name="sendMessageRadioGroup"
+          formControlName="peopleSendMessageSelectedValue"
+          [options]="sendMessageRadioOptions"
+          (valueChange)="onPeopleSendMessageRadioChange($event)"
+        >
+        </sug-ui-radio-checkbox-button>
 
-      @if (peopleSendMessageSelectedValue === option.value) {
-      <div class="radio-content-panel">
-        @switch (option.value) { @case ('sendMessageRadioOne') {
-        <div class="signup-radio-content send-msg-dialog-content">
-          <sug-ui-multi-select-dropdown
-            id="signup-select"
-            [options]="sendMessageSelectOne"
-          >
-          </sug-ui-multi-select-dropdown>
-          <sug-ui-radio-checkbox-button
-            type="checkbox"
-            inputId="group-checkbox"
-            [(value)]="includeNonGroupMembers"
-          >
-            Also include people that signed up but are not in the group(s)
-          </sug-ui-radio-checkbox-button>
-        </div>
-        } @case ('sendMessageRadioTwo') {
-        <div class="signup-radio-content send-msg-dialog-content">
-          <div class="form-wrapper">
-            <label for="group-alias">Assign the email entries to</label>
+        <div class="radio-content-panel">
+          @if (peopleDialogForm.get('peopleSendMessageSelectedValue')?.value ===
+          'peopleingroups') {
+          <div class="signup-radio-content send-msg-dialog-content">
             <sug-ui-multi-select-dropdown
-              id="signup-select"
-              [maxSelection]="1"
-              [options]="sendMessageSelectTwo"
+              [options]="sendMessageSelectOne"
+              formControlName="selectedGroups"
+              (valueChanged)="groupSelectionValueChange($event, 'formOne')"
             >
             </sug-ui-multi-select-dropdown>
+            @for (item of nonGroupMemeberOption; track item) {
+            <div class="d-flex gap-2">
+              <sug-ui-radio-checkbox-button
+                [formControlName]="'includeNonGroupMembers'"
+                [binary]="true"
+                [inputId]="item.value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <label [for]="item.value"> {{ item.label }} </label>
+            </div>
+            }
           </div>
-          <div class="form-wrapper">
-            <label for="group-alias"
-              >Enter emails separated by commas or line breaks.</label
+          } @if (peopleDialogForm.get('peopleSendMessageSelectedValue')?.value
+          === 'ManuallyEnterEmail') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+            'LinkMainAccount') {
+            <div class="form-wrapper">
+              <label for="group-alias">Assign the email entries to</label>
+              <sug-ui-multi-select-dropdown
+                [options]="sendMessageSelectOne"
+                formControlName="manualEmailsGroup"
+              >
+              </sug-ui-multi-select-dropdown>
+            </div>
+            }
+            <div class="form-wrapper">
+              <label for="group-alias"
+                >Enter emails separated by commas or line breaks.</label
+              >
+              <textarea
+                placeholder="example@signupgenius.com, example@signupgenius.com"
+                formControlName="manualEmails"
+              ></textarea>
+            </div>
+            @for (item of groupAliasCheckboxOption; track item) {
+            <div class="d-flex gap-2">
+              <sug-ui-radio-checkbox-button
+                (valueChange)="peopleDialogForm.get('groupEmailAlias')?.reset()"
+                [formControlName]="'useGroupAlias'"
+                [binary]="true"
+                [inputId]="item.value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <label [for]="item.value"> {{ item.label }} </label>
+            </div>
+            } @if (peopleDialogForm.get('useGroupAlias')?.value) {
+            <label for="use-group-alias"
+              >If possible, enter individual user's emails in the box above to
+              get the most functionality from our system. If you have a group
+              email alias that sends to multiple people, enter it here:</label
             >
-            <textarea
-              placeholder="example@signupgenius.com, example@signupgenius.com"
-            ></textarea>
+            <input
+              name="use-group-alias"
+              placeholder="group@signupgenius.com"
+              fluid
+              type="text"
+              pInputText
+              formControlName="groupEmailAlias"
+            />
+            }
           </div>
-          <sug-ui-radio-checkbox-button
-            type="checkbox"
-            inputId="email-checkbox"
-            [(value)]="useGroupAlias"
-          >
-            I need to enter a group email alias
-          </sug-ui-radio-checkbox-button>
-        </div>
-        } @case ('sendMessageRadioThree') {
-        <div class="signup-radio-content send-msg-dialog-content">
-          <div class="social-btn-wrapper">
-            <sug-ui-button
-              type="button"
-              class="social-btn"
-              icon="pi pi-envelope"
-            ></sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="social-btn"
-              icon="pi pi-cloud"
-            ></sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="social-btn"
-              icon="pi pi-microsoft"
-            ></sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="social-btn email"
-              icon="pi pi-envelope"
-            ></sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="social-btn email"
-              icon="pi pi-envelope"
-            ></sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="social-btn email"
-              icon="pi pi-file"
-            ></sug-ui-button>
+          } @if (peopleDialogForm.get('peopleSendMessageSelectedValue')?.value
+          === 'ImportEmailFromProvider') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div class="social-btn-wrapper">
+              @for (item of cloudSpongeServicesData; track $index) { @if (item
+              === 'gmail') {
+              <sug-ui-button
+                type="button"
+                [label]="'Gmail'"
+                class="social-btn"
+                icon="pi pi-envelope"
+              ></sug-ui-button>
+              } @if (item === 'icloud') {
+              <sug-ui-button
+                type="button"
+                [label]="'iCloud'"
+                class="social-btn"
+                icon="pi pi-cloud"
+              ></sug-ui-button>
+              } @if (item === 'windowslive') {
+              <sug-ui-button
+                type="button"
+                [label]="'Windows Live'"
+                class="social-btn"
+                icon="pi pi-microsoft"
+              ></sug-ui-button>
+              } @if (item === 'yahoo') {
+              <sug-ui-button
+                type="button"
+                [label]="'Yahoo'"
+                class="social-btn email"
+                icon="pi pi-envelope"
+              ></sug-ui-button>
+              } @if (item === 'aol') {
+              <sug-ui-button
+                type="button"
+                [label]="'AOL'"
+                class="social-btn email"
+                icon="pi pi-envelope"
+              ></sug-ui-button>
+              } @if (item === 'csv') {
+              <sug-ui-button
+                type="button"
+                [label]="'CSV'"
+                class="social-btn email"
+                icon="pi pi-file"
+              ></sug-ui-button>
+              } }
+            </div>
           </div>
+          }
         </div>
-        } }
       </div>
-      }
-    </div>
-    }
+    </form>
   </div>
   <div
     slot="footer"
@@ -471,74 +725,137 @@
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
-      (buttonClick)="closePeopleDialog()"
+      (buttonClick)="closePeopleDialog(false)"
     ></sug-ui-button>
   </div>
 </sug-ui-dialog>
 <!-- Select People Send message -->
 <sug-ui-dialog
   [config]="peopleSendMessageDialogConf"
+  (hide)="closePeopleSendMessageDialog(true)"
   [(visible)]="isPeopleSendMessageDialogVisible"
   [showFooter]="true"
 >
   <h2 slot="header">Send this message to...</h2>
   <div class="dialog-content">
-    @for (option of sendMessagePeopleRadioOptions; track option.value) {
-    <div class="radio-option-wrapper">
-      <sug-ui-radio-checkbox-button
-        type="radio"
-        name="peopleSendMessageRadioGroup"
-        [(value)]="peopleSendMessageSelectedValue"
-        [options]="[{ label: option.label, value: option.value }]"
-      >
-      </sug-ui-radio-checkbox-button>
+    <form [formGroup]="peopleSendMessageDialogForm">
+      <!-- @for (option of sendMessagePeopleRadioOptions; track option.value) { -->
+      <div class="radio-option-wrapper">
+        <sug-ui-radio-checkbox-button
+          type="radio"
+          name="peopleSendMessageRadioGroup"
+          formControlName="peopleSendMessageSelectedValue"
+          [options]="sendMessagePeopleRadioOptions"
+        >
+        </sug-ui-radio-checkbox-button>
 
-      @if (peopleSendMessageSelectedValue === option.value) {
-      <div class="radio-content-panel">
-        @switch (option.value) { @case ('sendMessagePeopleRadioThree') {
-        <div class="signup-radio-content send-msg-dialog-content">
-          <div class="form-wrapper">
-            <sug-ui-multi-select-dropdown
-              id="signup-select"
-              [maxSelection]="1"
-              [options]="sendMessageSelectTwo"
-            >
-            </sug-ui-multi-select-dropdown>
-            <sug-ui-radio-checkbox-button
-              type="checkbox"
-              inputId="send-checkbox"
-              [(value)]="includeNonGroupMembersForPeople"
-            >
-              Also include people that signed up but are not in the group(s)
-            </sug-ui-radio-checkbox-button>
+        <div class="radio-content-panel">
+          @if
+          (peopleSendMessageDialogForm.get('peopleSendMessageSelectedValue')?.value
+          === 'specificRsvpResponse') {
+          <!-- RSVP Response Selection -->
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div class="rsvp-checkbox-group">
+              @for (item of rsvpResponseOptions; track item.value) {
+              <div class="d-flex gap-2">
+                <sug-ui-radio-checkbox-button
+                  type="checkbox"
+                  [formControlName]="'rsvpResponse' + item.value"
+                  [binary]="true"
+                  [inputId]="item.value"
+                >
+                </sug-ui-radio-checkbox-button>
+                <label [for]="item.value"> {{ item.label }} </label>
+              </div>
+              }
+            </div>
           </div>
-        </div>
-        } @case ('sendMessagePeopleRadioFour') {
-        <div class="signup-radio-content send-msg-dialog-content">
-          <div class="btn-wrapper">
-            <sug-ui-button
-              type="button"
-              class="add-link-btn"
-              icon=""
-              label="From my groups"
-              (buttonClick)="openFromMyGroupsDialog()"
-            >
-            </sug-ui-button>
-            <sug-ui-button
-              type="button"
-              class="add-link-btn"
-              icon=""
-              label="From this sign up"
-              (buttonClick)="openFromThisSignUpDialog()"
-            >
-            </sug-ui-button>
+          } @if
+          (peopleSendMessageDialogForm.get('peopleSendMessageSelectedValue')?.value
+          === 'sendMessagePeopleRadio') {
+          <!-- People in specific groups -->
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div class="form-wrapper">
+              <sug-ui-multi-select-dropdown
+                [options]="sendMessageSelectOne"
+                formControlName="selectedGroups"
+                (valueChanged)="groupSelectionValueChange($event, 'formTwo')"
+              >
+              </sug-ui-multi-select-dropdown>
+              @for (item of nonGroupMemeberOption; track item) {
+              <div class="d-flex gap-2 mt-4">
+                <sug-ui-radio-checkbox-button
+                  [formControlName]="'includeNonGroupMembersForPeople'"
+                  [binary]="true"
+                  [inputId]="item.value"
+                >
+                </sug-ui-radio-checkbox-button>
+                <label [for]="item.value"> {{ item.label }} </label>
+              </div>
+              }
+            </div>
           </div>
+          } @if
+          (peopleSendMessageDialogForm.get('peopleSendMessageSelectedValue')?.value
+          === 'sendMessagePeopleIselect') {
+          <!-- People I will select -->
+          <div class="signup-radio-content send-msg-dialog-content">
+            <!-- Show selected slots as chips if any -->
+            @if (selectedDateSlots.length > 0) {
+            <div class="selected-slots-chips" style="margin-bottom: 15px">
+              @for (slot of selectedDateSlots; track slot.slotitemid; let i =
+              $index) {
+              <p-chip
+                [label]="slot.starttime + ' - ' + slot.item"
+                [removable]="true"
+                (onRemove)="removeSelectedSlot(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="'Edit ' + recipientCount + ' recipient' + (recipientCount !== 1 ? 's' : '')"
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editSelectedSlots()"
+              >
+              </sug-ui-button>
+            </div>
+            }
+            <!-- Buttons to select slots -->
+            @if (selectedDateSlots.length === 0) {
+            <div class="btn-wrapper">
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From my groups"
+                (buttonClick)="openFromMyGroupsDialog()"
+              >
+              </sug-ui-button>
+              @if ( signUpDialogForm.get('selectedSignupValue')?.value !==
+              'LinkMainAccount' ) {
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From this sign up"
+                (buttonClick)="openFromThisSignUpDialog()"
+              >
+              </sug-ui-button>
+              }
+            </div>
+            }
+          </div>
+          }
         </div>
-        } }
       </div>
-      }
-    </div>
-    }
+      <!-- } -->
+    </form>
   </div>
   <div
     slot="footer"
@@ -551,7 +868,7 @@
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
-      (buttonClick)="closePeopleSendMessageDialog()"
+      (buttonClick)="closePeopleSendMessageDialog(false)"
     ></sug-ui-button>
   </div>
 </sug-ui-dialog>
@@ -572,7 +889,7 @@
         name="dialogRadio"
         [options]="selectFileRadioOptions"
         inputId="dialog-radio-selection"
-        [(value)]="dialogSelectedValue"
+        [(value)]="selectedSignupValue"
         (changeEvent)="handleDialogSelection($event)"
       ></sug-ui-radio-checkbox-button>
       <div class="btn-wrapper">
@@ -630,13 +947,168 @@
 >
   <h2 slot="header">Custom Select People from Sign Up</h2>
   <div class="dialog-content">
+    <!-- Loading Spinner -->
+    @if (dateSlotsLoading) {
+    <div style="display: flex; justify-content: center; padding: 40px">
+      <sug-ui-loading-spinner
+        [isLoading]="dateSlotsLoading"
+      ></sug-ui-loading-spinner>
+    </div>
+    }
+
+    <!-- Table -->
+    @if (!dateSlotsLoading) {
     <sug-ui-table
       [data]="tableSignUpData"
       [columns]="tableSignUpColumns"
+      [paginator]="false"
+      [config]="tableSignUpConfig"
+      [(selection)]="selectedDateSlots"
+      (selectionChange)="onDateSlotSelectionChange($event)"
+      (sort)="onSort($event)"
+    >
+    </sug-ui-table>
+    }
+
+    <!-- Slot Selection Counter -->
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #f5f5f5;
+        border-radius: 20px;
+        margin-top: 20px;
+        width: fit-content;
+      "
+    >
+      <div
+        style="
+          width: 24px;
+          height: 24px;
+          background: #a8b832;
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 14px;
+          margin-right: 8px;
+        "
+      >
+        {{ selectedDateSlots.length }}
+      </div>
+      <span style="font-size: 14px; color: #333">Slot selected</span>
+    </div>
+  </div>
+
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      [label]="'OK'"
+      [size]="'large'"
+      [severity]="'success'"
+      [disabled]="selectedDateSlots.length === 0"
+      (buttonClick)="closeFromThisSignUpDialogWithSelection(false)"
+    >
+    </sug-ui-button>
+  </div>
+</sug-ui-dialog>
+<!-- Preview Email Dialog -->
+<sug-ui-dialog
+  [config]="preViewEmailDialogConfig"
+  [(visible)]="isPreViewEmailDialogVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Message Preview</h2>
+  <div class="dialog-content preview-email-content">
+    <!-- Email HTML Preview -->
+    <div class="email-preview-wrapper">
+      <div class="email-preview-container" [innerHTML]="emailHtmlPreview"></div>
+    </div>
+  </div>
+
+  <!-- Footer with Theme Selection and Send Buttons -->
+  <div slot="footer" class="preview-dialog-footer">
+    <!-- Choose Theme - Horizontal Row on Top -->
+    <div class="theme-section-footer">
+      <span class="theme-label">Choose Theme:</span>
+      <div class="theme-icons">
+        <div class="theme-icon-item">
+          <img
+            src="https://test.signupgenius.rocks/images/icons/icon-sug-bulb-color.svg"
+            alt="Theme option 1"
+          />
+        </div>
+        <div class="theme-icon-item">
+          <img
+            src="https://test.signupgenius.rocks/images/theme/545.jpg"
+            alt="Theme option 2"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Send Buttons - Below Theme Section -->
+    <div class="button-group">
+      @if (!scheduledDate) {
+      <button class="send-now-btn" (click)="sendEmailNow()">Send Now</button>
+      } @if (scheduledDate) {
+      <button
+        class="send-now-btn"
+        [disabled]="!isScheduledDateValid()"
+        (click)="sendEmailNow()"
+      >
+        Schedule
+      </button>
+      }
+
+      <!-- Date & Time Picker -->
+      <sug-ui-date-picker
+        [(value)]="scheduledDate"
+        (valueChange)="isScheduledDateValid()"
+        [minDate]="minDate"
+        [showIcon]="true"
+        [icon]="'pi pi-chevron-down'"
+        [placeholder]="'Schedule Send'"
+        [showButtonBar]="true"
+        [dateFormat]="'mm/dd/yy'"
+        [appendTo]="'body'"
+        [tabindex]="-1"
+      >
+      </sug-ui-date-picker>
+
+      <!-- Time Only Picker -->
+      @if (scheduledDate) {
+      <sug-ui-date-picker
+        [(value)]="scheduledTime"
+        (valueChange)="isScheduledDateValid()"
+        [timeOnly]="true"
+        [hourFormat]="'12'"
+        [appendTo]="'body'"
+        [tabindex]="-1"
+      >
+      </sug-ui-date-picker>
+      }
+    </div>
+  </div>
+</sug-ui-dialog>
+<!-- Show Recipient Dialog -->
+<sug-ui-dialog
+  [config]="recipientDialogConf"
+  [(visible)]="isRecipientDialogVisible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Recipient Details</h2>
+  <div class="dialog-content">
+    <sug-ui-table
+      [data]="recipient"
+      [columns]="recipientColumns"
       [paginator]="true"
       [rows]="10"
-      selectionMode="multiple"
-      [globalFilterFields]="['date', 'slots', 'signup']"
       (sort)="onSort()"
       (page)="onPage()"
     >
@@ -647,13 +1119,13 @@
     class="d-flex justify-content-center align-items-center w-100"
   >
     <sug-ui-button
-      label="Ok"
+      [label]="'Ok'"
       icon=""
       [rounded]="false"
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
-      (buttonClick)="closeFromThisSignUpDialog()"
+      (buttonClick)="isRecipientDialogVisible = false;"
     ></sug-ui-button>
   </div>
 </sug-ui-dialog>

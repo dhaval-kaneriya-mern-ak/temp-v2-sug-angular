@@ -1,0 +1,33 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  [showFooter]="false"
+>
+  <h2 slot="header">Select File</h2>
+  <div class="dialog-content">
+    <div class="file-selection-wrap">
+      <span
+        ><i class="pi pi-folder-open" aria-hidden="true"></i> GeniusDrive</span
+      >
+      <sug-ui-radio-checkbox-button
+        type="radio"
+        name="fileSelectionRadio"
+        [options]="selectFileRadioOptions"
+        inputId="file-selection-radio"
+        [(value)]="selectedValue"
+        (changeEvent)="handleSelection($event)"
+      >
+      </sug-ui-radio-checkbox-button>
+      <div class="btn-wrapper">
+        <sug-ui-button
+          severity="success"
+          [outlined]="false"
+          class="send-btn"
+          icon=""
+          label="Select"
+          (buttonClick)="selectFile()"
+        ></sug-ui-button>
+      </div>
+    </div>
+  </div>
+</sug-ui-dialog>

@@ -107,7 +107,11 @@
     </p>
   </div>
   <div class="compose-tab">
-    <sug-ui-menu-tabs [tabs]="navigationComposeTabs"></sug-ui-menu-tabs>
+    <sug-ui-menu-tabs
+      [tabs]="navigationComposeTabs"
+      [activeTab]="currentActiveTab"
+      (selectionChange)="handleTabSelection($event)"
+    ></sug-ui-menu-tabs>
   </div>
   <div class="compose-content">
     <!-- This outlet renders the content FOR THE INNER TABS -->

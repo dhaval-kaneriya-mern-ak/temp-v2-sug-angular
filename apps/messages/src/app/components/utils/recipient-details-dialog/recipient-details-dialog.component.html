@@ -1,0 +1,32 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Recipient Details</h2>
+  <div class="dialog-content">
+    <sug-ui-table
+      [data]="recipients"
+      [columns]="recipientColumns"
+      [paginator]="true"
+      [rows]="10"
+      (sort)="onSort()"
+      (page)="onPage()"
+    >
+    </sug-ui-table>
+  </div>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      [label]="'Ok'"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>

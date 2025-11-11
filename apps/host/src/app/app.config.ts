@@ -10,6 +10,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
 import { SUGTheme, SugApiClient } from '@lumaverse/sug-ui';
 import { environment } from '@environments/environment';
+import { provideToastr } from 'ngx-toastr';
 
 // Factory function to create configured SugApiClient
 export function createSugApiClient(): SugApiClient {
@@ -42,6 +43,13 @@ export const appConfig: ApplicationConfig = {
           darkModeSelector: '.p-dark',
         },
       },
+    }),
+    provideToastr({
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+      closeButton: true,
+      progressBar: true,
     }),
   ],
 };

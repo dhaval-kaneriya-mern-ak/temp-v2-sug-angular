@@ -1,0 +1,238 @@
+<div class="email-form-section">
+  <h3 class="d-flex mb-4">
+    {{ title }}
+    <sug-ui-tooltip
+      [text]="'Click to learn more about composing messages.'"
+      [position]="'bottom'"
+      [tooltipClass]="'custom-tooltip'"
+      [tooltipOptions]="{
+        showDelay: 200,
+        autoHide: true,
+        tooltipEvent: 'hover'
+      }"
+    >
+      <p-button variant="text" size="small" (click)="onOpenHelpDialog()"
+        ><i class="pi pi-question-circle info-icon fs-6 ms-2"></i>
+      </p-button>
+    </sug-ui-tooltip>
+  </h3>
+
+  <form [formGroup]="emailForm">
+    <!-- Sign Up Links -->
+    <div class="form-wrapper">
+      <label for="signup-links">Sign Up Link(s)</label>
+      @if (!hasSignupSelection) {
+      <sug-ui-button
+        type="button"
+        class="add-link-btn"
+        icon=""
+        label="Select Sign Ups"
+        (buttonClick)="onOpenSignUpsDialog()"
+      >
+      </sug-ui-button>
+      } @if (hasSignupSelection) {
+      <div class="signup-chips-container">
+        <div class="chips-container">
+          @for (item of selectedSignups; track item.signupid || $index; let i =
+          $index) {
+          <span [ngClass]="{ '': selectedSignups.length > 1 && i >= 1 }">
+            <p-chip
+              class="gap-2"
+              [label]="getSignupTitle(item)"
+              [removable]="true"
+              (onRemove)="removeSignup(i)"
+            />
+          </span>
+          } @for (item of selectedTabGroups; track item.value || $index; let i =
+          $index) {
+          <span [ngClass]="{ '': selectedSignups.length > 0 || i >= 1 }">
+            <p-chip
+              class="gap-2"
+              [label]="item.label"
+              [removable]="true"
+              (onRemove)="removeTabGroup(i)"
+            />
+          </span>
+          } @if (isSignUpIndexPageSelected) {
+          <span>
+            <p-chip
+              class="gap-2"
+              label="Sign Up Index Page"
+              [removable]="true"
+              (onRemove)="removeSignUpIndexPage()"
+            />
+          </span>
+          }
+        </div>
+        <button
+          type="button"
+          class="edit-signup-btn"
+          (click)="onOpenSignUpsDialog()"
+          aria-label="Edit selected sign ups"
+        >
+          <i class="pi pi-pencil"></i>
+        </button>
+      </div>
+      }
+    </div>
+
+    <!-- From Name -->
+    <div class="form-wrapper">
+      <label for="from-name">From</label>
+      <input type="text" formControlName="fromName" />
+      @if (emailForm.get('fromName')?.invalid &&
+      emailForm.get('fromName')?.touched) {
+      <small class="error-message">Name is required</small>
+      }
+    </div>
+
+    <!-- Reply To -->
+    <div class="form-wrapper">
+      <label for="reply-to">Reply To</label>
+      <sug-ui-multi-select-dropdown
+        id="reply-to"
+        [options]="subAdminsData"
+        formControlName="replyTo"
+      >
+      </sug-ui-multi-select-dropdown>
+    </div>
+
+    <!-- To (People Selection) -->
+    <div class="form-wrapper">
+      <label for="to-people">To</label>
+      @if (!hasPeopleSelection) {
+      <sug-ui-button
+        type="button"
+        class="add-link-btn"
+        icon=""
+        label="Select People"
+        [disabled]="!hasSignupSelection"
+        (buttonClick)="onOpenPeopleDialog()"
+      >
+      </sug-ui-button>
+      } @if (hasPeopleSelection && selectedDateSlots.length === 0) {
+      <div class="recipient-info-container">
+        @for (item of selectedGroups; track item.value || $index; let i =
+        $index) {
+        <div class="recipient-text">
+          <span class="recipient-label">{{ item.label }}</span>
+        </div>
+        }
+        <div class="recipient-text">
+          <button
+            type="button"
+            class="edit-icon-btn"
+            (click)="onOpenPeopleDialog()"
+            aria-label="Edit recipient selection"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+        </div>
+        <button
+          type="button"
+          class="recipient-details-btn"
+          (click)="onShowRecipientDetails()"
+        >
+          {{ recipientCount }} Recipient Details
+        </button>
+      </div>
+      } @if (selectedDateSlots.length > 0) {
+      <div class="recipient-info-container">
+        <div class="recipient-text">
+          <span class="recipient-label">Selected Dates/Slots</span>
+        </div>
+        <div class="recipient-text">
+          <button
+            type="button"
+            class="edit-icon-btn"
+            (click)="onEditSelectedSlots()"
+            aria-label="Edit selected slots"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Subject -->
+    <div class="form-wrapper">
+      <label for="from-subject">Subject</label>
+      <input
+        type="text"
+        placeholder="Enter email subject"
+        id="from-subject"
+        formControlName="subject"
+      />
+      @if (emailForm.get('subject')?.invalid &&
+      emailForm.get('subject')?.touched) {
+      <small class="error-message">Subject is required</small>
+      }
+    </div>
+
+    <!-- Message -->
+    <div class="form-wrapper">
+      <label for="from-message">Message</label>
+      <textarea
+        id="from-message"
+        placeholder="Type your message here..."
+        formControlName="message"
+      >
+      </textarea>
+      @if (emailForm.get('message')?.invalid &&
+      emailForm.get('message')?.touched) {
+      <small class="error-message">Message is required</small>
+      }
+    </div>
+
+    <!-- Attachments -->
+    <div class="form-wrapper">
+      <label for="attachments">Attachments</label>
+      <sug-ui-button
+        type="button"
+        class="add-link-btn"
+        icon="pi pi-paperclip"
+        label="Add Attachments"
+        [disabled]="!hasSignupSelection"
+        (buttonClick)="onOpenSelectFileDialog()"
+      >
+      </sug-ui-button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-wrapper">
+      <!-- FormOne: Button is NOT disabled (no [disabled] attribute) -->
+      <!-- FormTwo: Button IS disabled when form is invalid -->
+      @if (formType === 'emailParticipants') {
+      <sug-ui-button
+        severity="success"
+        [outlined]="false"
+        class="send-btn"
+        icon=""
+        label="Preview & Send"
+        [disabled]="emailForm.invalid"
+        (buttonClick)="onPreviewAndSend()"
+      >
+      </sug-ui-button>
+      } @else {
+      <sug-ui-button
+        severity="success"
+        [outlined]="false"
+        class="send-btn"
+        icon=""
+        label="Preview & Send"
+        (buttonClick)="onPreviewAndSend()"
+      >
+      </sug-ui-button>
+      }
+      <sug-ui-button
+        severity="secondary"
+        class="draft-btn"
+        icon=""
+        label="Save Draft"
+        (buttonClick)="onSaveDraft()"
+      >
+      </sug-ui-button>
+    </div>
+  </form>
+</div>

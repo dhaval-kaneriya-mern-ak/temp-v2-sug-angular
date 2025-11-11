@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   SugUiRadioCheckboxButtonComponent,
   RadioCheckboxChangeEvent,
-  SugUiSelectBoxComponent,
   SugUiDialogComponent,
   SugUiButtonComponent,
   SugUiTooltipComponent,
@@ -14,6 +13,7 @@ import { ISelectOption } from '@lumaverse/sug-ui';
 import { HttpClientModule } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
+import { ComposeService } from '../compose.service';
 
 @Component({
   selector: 'sug-compose-email-template',
@@ -21,7 +21,6 @@ import { BadgeModule } from 'primeng/badge';
   imports: [
     CommonModule,
     SugUiRadioCheckboxButtonComponent,
-    SugUiSelectBoxComponent,
     SugUiButtonComponent,
     SugUiTooltipComponent,
     ButtonModule,
@@ -34,7 +33,11 @@ import { BadgeModule } from 'primeng/badge';
   styleUrls: ['./compose-email-template.scss'],
 })
 export class ComposeEmailTemplateComponent {
+  composeService = inject(ComposeService);
+
   constructor() {
+    this.getSubAdmins();
+    this.getSignUpList();
     // Initialization logic if needed
   }
   selectFileDialogConf: DialogConfig = {
@@ -76,18 +79,10 @@ export class ComposeEmailTemplateComponent {
     this.isHelpDialogVisible = false;
   }
 
-  selectOptions: ISelectOption[] = [
-    {
-      label: 'Option 1',
-      value: 'option1',
-    },
-    {
-      label: 'Option 2',
-      value: 'option2',
-    },
-  ];
+  subAdminsData: ISelectOption[] = [];
+  assignToData: ISelectOption[] = [];
 
-  defaultOption: ISelectOption = this.selectOptions[0];
+  defaultOption: ISelectOption = this.subAdminsData[0];
 
   // Options for the dialog select box when first radio option is selected
   signUpOptions: ISelectOption[] = [
@@ -234,7 +229,39 @@ export class ComposeEmailTemplateComponent {
 
   sendEmail() {
     // In a real app, you would gather form data and send it.
+    // alert('Email sent! (Check the console)');
+  }
 
-    alert('Email sent! (Check the console)');
+  getSignUpList() {
+    this.composeService.getSignUpListEmailTemplate().subscribe({
+      next: (apiResponse) => {
+        if (apiResponse && apiResponse.success) {
+          // Separate RSVP and Regular sign-ups
+          this.signUpOptions = apiResponse.data.map((signup) => ({
+            label: signup.title,
+            value: signup.id.toString(),
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching signup list:', error);
+      },
+    });
+  }
+
+  getSubAdmins() {
+    this.composeService.getSubAdmins().subscribe({
+      next: (apiResponse) => {
+        if (apiResponse && apiResponse.success) {
+          this.subAdminsData = apiResponse.data.map((admin) => ({
+            label: `${admin.lastname} (${admin.email})`,
+            value: admin.id.toString(),
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching sub admins:', error);
+      },
+    });
   }
 }

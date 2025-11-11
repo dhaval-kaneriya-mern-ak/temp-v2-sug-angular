@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   SugUiTooltipComponent,
@@ -7,11 +7,12 @@ import {
   SugUiMenuTabsComponent,
   SugUiButtonComponent,
   Tabs,
-  // SugUiRadioCheckboxButtonComponent,
 } from '@lumaverse/sug-ui';
 
 import { ButtonModule } from 'primeng/button';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
+import { ComposeService } from './compose.service';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'sug-compose',
@@ -28,21 +29,67 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './compose.html',
   styleUrl: './compose.scss',
 })
-export class Compose {
+export class Compose implements OnInit, OnDestroy {
+  composeService = inject(ComposeService);
+  private router = inject(Router);
+  private destroy$ = new Subject<void>();
+
+  // Navigation tabs
   navigationComposeTabs: Tabs[] = [
-    { name: 'Email', route: 'email' },
-    { name: 'Email Template', route: 'template' },
-    { name: 'Text Message', route: 'text' },
+    { name: 'Email', route: 'messages/compose/email' },
+    { name: 'Email Template', route: 'messages/compose/template' },
+    { name: 'Text Message', route: 'messages/compose/text' },
   ];
+
+  // Component properties
   badgeUrl = 'assets/images/pro.webp';
   activeTabRoute: string = this.navigationComposeTabs[0].route;
-  onTabChange(selectedTab: Tabs) {
-    // Check if the selected tab and its route exist
+
+  currentActiveTab = ''; // Don't hardcode this!
+
+  ngOnInit() {
+    // Initialize active tab based on current route
+    this.initializeActiveTab();
+  }
+
+  ngOnDestroy() {
+    // Cleanup all subscriptions
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeActiveTab() {
+    const currentUrl = this.router.url;
+
+    // Find matching tab based on current URL
+    const matchingTab = this.navigationComposeTabs.find((tab) => {
+      return (
+        currentUrl === `/${tab.route}` ||
+        currentUrl.includes(`/${tab.route}`) ||
+        currentUrl.endsWith(tab.route) ||
+        currentUrl.includes(tab.route)
+      );
+    });
+
+    this.currentActiveTab = matchingTab ? matchingTab.route : 'email';
+  }
+
+  setActiveTab(tabRoute: string) {
+    this.currentActiveTab = tabRoute;
+  }
+
+  handleTabSelection(event: any): void {
+    let selectedTab: Tabs | null = null;
+
+    if (event && typeof event.route === 'string') {
+      selectedTab = event;
+    }
+
     if (selectedTab && selectedTab.route) {
-      this.activeTabRoute = selectedTab.route;
-      console.log('Active tab route:', this.activeTabRoute);
+      this.router.navigate([selectedTab.route]);
     }
   }
+
   dialogConf: DialogConfig = {
     modal: true,
     draggable: true,
@@ -55,8 +102,6 @@ export class Compose {
     appendTo: 'null',
     width: '70vw',
   };
+
   isVisible = false;
-  save() {
-    // this.isVisible = false;
-  }
 }

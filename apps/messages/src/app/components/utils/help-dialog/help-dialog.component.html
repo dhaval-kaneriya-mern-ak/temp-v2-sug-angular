@@ -1,0 +1,24 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  [showFooter]="true"
+>
+  <h2 slot="header">{{ title }}</h2>
+  <div class="help-dialog-content">
+    <ng-content></ng-content>
+  </div>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Okay"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>

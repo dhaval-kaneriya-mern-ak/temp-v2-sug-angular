@@ -20,12 +20,77 @@
     }
   }
 }
+
+.edit-signup-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #f68b1c;
+  flex: 0 0 26px;
+  margin-left: 0;
+
+  &:hover {
+    background-color: rgba(106, 90, 205, 0.1);
+  }
+
+  &:focus {
+    outline: 2px solid slateblue;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  i {
+    font-size: 16px;
+  }
+  .pi {
+    font-size: 16px;
+  }
+}
+
+.signup-chips-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 70%;
+  @media (max-width: 767px) {
+    width: 100%;
+  }
+  ::ng-deep .p-chip {
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    .p-chip-remove-icon {
+      color: #f68b1c;
+      cursor: pointer;
+    }
+  }
+}
+.chips-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .email-form-section {
   max-width: 800px;
   .form-wrapper {
     display: flex;
     margin-bottom: 20px;
     align-items: center;
+    flex-wrap: wrap;
     @media (max-width: 767px) {
       flex-direction: column;
       align-items: flex-start;
@@ -48,13 +113,25 @@
         }
       }
     }
+    .error-message {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 4px;
+      width: 100%;
+      margin-left: 30%;
+      @media (max-width: 767px) {
+        margin-left: 0;
+      }
+    }
+
     ::ng-deep {
       .pi {
-        font-size: 20px;
+        font-size: 16px;
       }
       .p-icon {
-        height: 20px;
-        width: 20px;
+        height: 16px;
+        width: 16px;
+        flex: 0 0 16px;
       }
       sug-ui-select-box {
         width: 60%;
@@ -86,6 +163,15 @@
 ::ng-deep {
   sug-ui-multi-select-dropdown {
     width: 70%;
+    .p-overlay {
+      top: 100%;
+      left: 0;
+    }
+    .custom-dropdown {
+      .p-multiselect-option {
+        white-space: normal;
+      }
+    }
     @media (max-width: 767px) {
       width: 100%;
     }
@@ -187,6 +273,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      gap: 15px;
       .form-wrapper {
         display: flex;
         flex-direction: column;
@@ -236,5 +323,257 @@
     margin-top: 20px;
     display: flex;
     justify-content: center;
+  }
+}
+
+// Recipient info container styles
+.recipient-info-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 70%;
+
+  @media (max-width: 767px) {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .recipient-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    align-items: center;
+
+    .recipient-label {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 400;
+    }
+
+    .edit-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      margin-left: 4px;
+
+      &:hover {
+        background-color: rgba(99, 102, 241, 0.08);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      i {
+        color: #f68b1c;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .recipient-details-btn {
+    background-color: #ff6b35;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: #ff5722;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus {
+      outline: 2px solid #ff6b35;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Preview Email Dialog Styles
+.preview-email-content {
+  padding: 0;
+  max-height: calc(90vh - 250px);
+
+  .email-preview-wrapper {
+    margin-bottom: 0; // Remove bottom margin
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    max-height: calc(90vh - 250px);
+
+    .email-preview-container {
+      background-color: #ffffff;
+      padding: 20px;
+
+      // Ensure email content scales properly
+      ::ng-deep {
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+
+        table {
+          max-width: 100%;
+          margin: 0 auto;
+        }
+      }
+    }
+  }
+}
+
+.preview-dialog-footer {
+  display: flex;
+  flex-direction: column; // Stack vertically
+  gap: 20px; // Space between theme section and buttons
+  width: 100%;
+  padding: 20px;
+  background-color: #ffffff;
+  border-top: none; // No border
+
+  // Theme Section - Horizontal Row (Label + Icons)
+  .theme-section-footer {
+    display: flex;
+    align-items: center;
+    gap: 20px; // Gap between "Choose Theme:" text and icons
+    justify-content: space-between;
+
+    .theme-label {
+      font-size: 15px;
+      font-weight: 400; // Normal weight
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .theme-icons {
+      display: flex;
+      gap: 12px; // Spacing between the two circular icons
+      align-items: center;
+
+      .theme-icon-item {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #e0e0e0; // Lighter border
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+
+        &:hover {
+          border-color: #a8c939;
+          transform: scale(1.05);
+        }
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+
+  // Button Group - Below Theme Section
+  .button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    .send-now-btn {
+      background-color: #a8c939;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background-color: #96b532;
+      }
+
+      &:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      &:disabled {
+        background-color: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 767px) {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+
+    .theme-section-footer {
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .button-group {
+      flex-direction: column;
+      width: 100%;
+
+      .send-now-btn,
+      .schedule-send-wrapper {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Date Slots Selection Dialog Styles
+.slot-counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 0;
+  margin-top: 15px;
+  border-top: 1px solid #e5e7eb;
+
+  .counter-badge {
+    background-color: #86bc24;
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  span {
+    font-size: 14px;
+    color: #374151;
   }
 }

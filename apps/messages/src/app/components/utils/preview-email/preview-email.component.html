@@ -1,0 +1,83 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  [showFooter]="true"
+>
+  <h2 slot="header">Message Preview</h2>
+
+  <div class="dialog-content preview-email-content">
+    <!-- Email HTML Preview -->
+    <div class="email-preview-wrapper">
+      <div class="email-preview-container" [innerHTML]="emailHtmlPreview"></div>
+    </div>
+  </div>
+
+  <!-- Footer with Theme Selection and Send Buttons -->
+  <div slot="footer" class="preview-dialog-footer">
+    <!-- Choose Theme - Horizontal Row on Top -->
+    @if (availableThemes.length > 0) {
+    <div class="theme-section-footer">
+      <span class="theme-label">Choose Theme:</span>
+      <div class="theme-icons">
+        @for (theme of availableThemes; track theme.id) {
+        <div
+          class="theme-icon-item"
+          [class.selected]="selectedThemeId === theme.id"
+          (click)="selectTheme(theme.id)"
+          (keydown.enter)="selectTheme(theme.id)"
+          (keydown.space)="selectTheme(theme.id)"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Select theme: ' + theme.name"
+        >
+          <img [src]="theme.image" [alt]="theme.name" />
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Send Buttons - Below Theme Section -->
+    <div class="button-group">
+      @if (!scheduledDate) {
+      <button class="send-now-btn" (click)="onSendNow()">Send Now</button>
+      } @if (scheduledDate) {
+      <button
+        class="send-now-btn"
+        [disabled]="!isScheduledDateValid()"
+        (click)="onScheduleSend()"
+      >
+        Schedule
+      </button>
+      }
+
+      <!-- Date & Time Picker -->
+      <sug-ui-date-picker
+        [(value)]="scheduledDate"
+        (valueChange)="isScheduledDateValid()"
+        [minDate]="minDate"
+        [showIcon]="true"
+        [icon]="'pi pi-chevron-down'"
+        [placeholder]="'Schedule Send'"
+        [showButtonBar]="true"
+        [dateFormat]="'mm/dd/yy'"
+        [appendTo]="'body'"
+        [tabindex]="-1"
+      >
+      </sug-ui-date-picker>
+
+      <!-- Time Only Picker -->
+      @if (scheduledDate) {
+      <sug-ui-date-picker
+        [(value)]="scheduledTime"
+        (valueChange)="isScheduledDateValid()"
+        [timeOnly]="true"
+        [hourFormat]="'12'"
+        [appendTo]="'body'"
+        [tabindex]="-1"
+      >
+      </sug-ui-date-picker>
+      }
+    </div>
+  </div>
+</sug-ui-dialog>

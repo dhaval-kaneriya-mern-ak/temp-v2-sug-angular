@@ -8,7 +8,7 @@ import { Schedule } from '../components/schedule/schedule';
 import { Sent } from '../components/sent/sent';
 import { MessageDetailsComponent } from '../components/sent/message_details/message_details';
 import { MessageAnalyticsComponent } from '../components/sent/message_analytics/message_analytics';
-import { ComposeEmailComponent } from '../components/compose/compose_email/compose-email';
+import { ComposeEmailComponent } from '../components/compose/compose_email/compose-email-refactored';
 import { ComposeEmailTemplateComponent } from '../components/compose/compose_email_template/compose-email-template';
 import { ComposeTextMessageComponent } from '../components/compose/compose_text_message/compose-text-message';
 import { SentDetails } from '../components/sent/details/sent-details';

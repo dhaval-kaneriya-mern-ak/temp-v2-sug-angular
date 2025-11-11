@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { SugApiClient } from '@lumaverse/sug-ui';
 import { ApiRequestOptions, PaginatedResponse } from './interfaces';
 import { environment } from '@environments/environment';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -127,4 +128,49 @@ export class SugApiService {
   ): Observable<R> {
     return this.sugApiClient.handleResponse(response, transformer);
   }
+
+  private readonly HTTP_ERRORS: { [statusCode: number]: { details: string } } =
+    {
+      401: {
+        details: 'You are no longer logged in. Please log in and try again.',
+      },
+      403: {
+        details:
+          'Your permissions do not allow this request. Please ensure you are logged in to the correct account.',
+      },
+      404: {
+        details: 'The requested resource could not be found.',
+      },
+      429: {
+        details:
+          'You have exceeded the allowed rate limit. Please wait a few moments and try again.',
+      },
+      500: {
+        details:
+          "Something went wrong on our end. Please try again or <a href='/help' target='_blank'><strong>contact support</strong></a>.",
+      },
+    };
+
+  setErrorMessage(error: HttpErrorResponse): string | undefined {
+    if (!error) {
+      return;
+    }
+    if (error.error instanceof ErrorEvent) {
+      return `An error occurred: ${error.error.message}`;
+    }
+    if (error.status) {
+      return this.HTTP_ERRORS[error?.status].details;
+    }
+    return `An error occurred: ${error.message}`;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errorToSUGClientSignal = (error: any) => {
+    return of({
+      error: this.setErrorMessage(error),
+      value: undefined,
+      isLoading: false,
+      pagination: undefined,
+    });
+  };
 }

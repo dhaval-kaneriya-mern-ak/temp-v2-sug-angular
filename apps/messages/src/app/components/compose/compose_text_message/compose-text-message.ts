@@ -21,7 +21,6 @@ import { BadgeModule } from 'primeng/badge';
   imports: [
     CommonModule,
     SugUiRadioCheckboxButtonComponent,
-    SugUiSelectBoxComponent,
     SugUiButtonComponent,
     SugUiTooltipComponent,
     ButtonModule,
