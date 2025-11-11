@@ -12,7 +12,14 @@ export class DraftService {
   /**
    * Get message templates
    */
-  getMessageTemplates(): Observable<DraftMessagesResponse> {
-    return this.sugApiClient.get(`/messages/templates`);
+  getMessageTemplates(
+    page: number,
+    limit: number,
+    sortby = 'created',
+    sort = 'desc'
+  ): Observable<DraftMessagesResponse> {
+    return this.sugApiClient.get(
+      `/messages/templates?page=${page}&limit=${limit}&sortby=${sortby}&sort=${sort}`
+    );
   }
 }

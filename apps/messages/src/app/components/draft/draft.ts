@@ -6,13 +6,16 @@ import {
   SugUiDialogComponent,
   DialogConfig,
   SugUiLoadingSpinnerComponent,
+  ISugTableConfig,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { DraftService } from './draft.service';
-import { DraftMessage } from '@services/interfaces';
+import { DraftMessage, MemberProfile } from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
+import { UserStateService } from '@services/user-state.service';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'sug-draft',
@@ -28,7 +31,7 @@ import { format } from 'date-fns';
   templateUrl: './draft.html',
   styleUrl: './draft.scss',
 })
-export class Draft implements OnInit {
+export class Draft {
   dialogConf: DialogConfig = {
     modal: true,
     draggable: true,
@@ -49,7 +52,11 @@ export class Draft implements OnInit {
   page = 1;
   rows = 10;
   sortField = 'created';
-  sortOrder = 'desc';
+  sortOrder: 'asc' | 'desc' = 'desc';
+  tableConfig: ISugTableConfig = {
+    sortField: 'created',
+    sortOrder: -1,
+  };
   tableColumns: ISugTableColumn[] = [
     {
       field: 'datecreated',
@@ -76,11 +83,22 @@ export class Draft implements OnInit {
       filterable: false,
     },
   ];
-
+  totalRecords = 0;
+  first = 0; // Important for proper pagination tracking
   tableData: DraftMessage[] = [];
+  private userStateService = inject(UserStateService);
+  userData: MemberProfile | null = null;
 
-  ngOnInit(): void {
-    this.getMessageTemplates();
+  constructor() {
+    this.userStateService.userProfile$
+      .pipe(
+        filter((profile) => !!profile),
+        take(1)
+      )
+      .subscribe((profile) => {
+        this.userData = profile;
+        this.getMessageTemplates();
+      });
   }
 
   openDeleteDialog(item: DraftMessage) {
@@ -95,28 +113,46 @@ export class Draft implements OnInit {
 
   getMessageTemplates() {
     this.isLoading = true;
-    this.draftService.getMessageTemplates().subscribe((response) => {
-      // Handle the response from the service
-      if (response && response.data) {
-        this.tableData = response.data.map((item) => ({
-          datecreated: item.datecreated
-            ? format(
-                new Date(Number(item.datecreated) * 1000),
-                'yyyy-MM-dd h:mmaaa'
-              )
-            : '',
-          subject: item.subject,
-          messageid: item.messageid,
-          messagetypeid: item.messagetypeid,
-          messagetype: item.messagetype,
-        }));
-      }
-      this.isLoading = false;
-    });
+    this.totalRecords = 0;
+    this.tableData = [];
+    this.draftService
+      .getMessageTemplates(this.page, this.rows, this.sortField, this.sortOrder)
+      .subscribe((response) => {
+        // Handle the response from the service
+        if (response && response?.data?.length > 0) {
+          this.totalRecords = response?.data?.length;
+          this.tableData = response?.data.map((item) => ({
+            datecreated: new Date(
+              item.datecreated || new Date()
+            ).toLocaleString(),
+            subject: item.subject,
+            messageid: item.messageid,
+            messagetypeid: item.messagetypeid,
+            messagetype: item.messagetype,
+          }));
+        }
+        this.isLoading = false;
+      });
   }
 
-  onActionClick(event: any) {
+  onActionClick(event: { data: DraftMessage }) {
     this.openDeleteDialog(event.data);
+  }
+
+  onSort(event: { field: string; order: number }) {
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+
+    // Update table config to reflect current sort state
+    this.tableConfig = {
+      ...this.tableConfig,
+      sortField: this.sortField,
+      sortOrder: event.order,
+    };
+
+    this.page = 1; // Reset to first page when sorting
+    this.first = 0; // Reset first index
+    this.getMessageTemplates();
   }
 
   editDraft() {
@@ -135,8 +171,8 @@ export class Draft implements OnInit {
   }
 
   onPage(event: { first: number; rows: number }) {
-    this.tableData = [];
-    this.page = event.first / event.rows + 1;
+    this.first = event.first;
+    this.page = Math.floor(event.first / event.rows) + 1;
     this.rows = event.rows;
     this.getMessageTemplates();
   }

@@ -6,13 +6,16 @@ import {
   SugUiDialogComponent,
   DialogConfig,
   SugUiLoadingSpinnerComponent,
+  ISugTableConfig,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { ScheduleService } from './schedule.servvice';
-import { Message } from '@services/interfaces';
+import { MemberProfile, Message } from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
+import { UserStateService } from '@services/user-state.service';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'sug-schedule',
@@ -28,7 +31,7 @@ import { format } from 'date-fns';
   templateUrl: './schedule.html',
   styleUrl: './schedule.scss',
 })
-export class Schedule implements OnInit {
+export class Schedule {
   scheduleService = inject(ScheduleService);
   private router = inject(Router);
   isLoading = false;
@@ -51,10 +54,14 @@ export class Schedule implements OnInit {
   rows = 10;
   first = 0; // Important for proper pagination tracking
   sortField = 'datecreated';
-  sortOrder = 'desc';
+  sortOrder: 'asc' | 'desc' = 'desc';
+  tableConfig: ISugTableConfig = {
+    sortField: 'datecreated',
+    sortOrder: -1, // -1 for desc, 1 for asc
+  };
   tableColumns: ISugTableColumn[] = [
     {
-      field: 'senddate',
+      field: 'datecreated',
       header: 'Scheduled For',
       sortable: true,
       filterable: false,
@@ -80,8 +87,19 @@ export class Schedule implements OnInit {
   ];
   tableData: Message[] = [];
 
-  ngOnInit() {
-    this.getList();
+  userData: MemberProfile | null = null;
+  private userStateService = inject(UserStateService);
+
+  constructor() {
+    this.userStateService.userProfile$
+      .pipe(
+        filter((profile) => !!profile),
+        take(1)
+      )
+      .subscribe((profile) => {
+        this.userData = profile;
+        this.getList();
+      });
   }
 
   openDeleteDialog(item: Message) {
@@ -97,6 +115,11 @@ export class Schedule implements OnInit {
   onSort(event: { field: string; order: number }) {
     this.sortField = event.field;
     this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.tableConfig = {
+      ...this.tableConfig,
+      sortField: this.sortField,
+      sortOrder: event.order,
+    };
     this.page = 1; // Reset to first page when sorting
     this.first = 0; // Reset first index
     this.getList();
@@ -127,7 +150,6 @@ export class Schedule implements OnInit {
   }
 
   editMessage(rowData: Message): void {
-    console.log('Editing message:', rowData.messageid);
     this.router.navigate([`/messages/compose/email`]);
   }
 
@@ -146,6 +168,7 @@ export class Schedule implements OnInit {
       .subscribe({
         next: (apiResponse) => {
           if (apiResponse.data && apiResponse.data.messages) {
+            this.isLoading = false;
             this.totalRecords = apiResponse.data.totalcount;
             const mappedData = apiResponse.data.messages.map(
               (item: Message) => ({
@@ -154,10 +177,10 @@ export class Schedule implements OnInit {
                   new Date(Number(item.datecreated) * 1000),
                   'yyyy-MM-dd h:mmaaa'
                 ),
-                senddate: format(
-                  new Date(Number(item.senddate) * 1000),
-                  'yyyy-MM-dd h:mmaaa'
-                ),
+                // senddate: format(
+                //   new Date(Number(item.senddate) * 1000),
+                //   'yyyy-MM-dd h:mmaaa'
+                // ),
               })
             );
             this.tableData = mappedData;

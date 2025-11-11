@@ -37,3 +37,16 @@
 .sent-message-title {
   margin-bottom: 25px;
 }
+
+::ng-deep .chart-icon {
+  cursor: pointer;
+  color: #f68b1c;
+  font-size: 16px;
+  padding: 4px;
+
+  &:hover {
+    color: #f68b1c;
+    background-color: rgba(0, 123, 255, 0.1);
+    border-radius: 3px;
+  }
+}

@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Subject, filter, take, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
 import { UserStateService } from '@services/user-state.service';
 
@@ -53,7 +53,10 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     // Subscribe to profile changes - NO API call triggered here
     // The header component already triggers the API call
     this.userStateService.userProfile$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        filter((profile) => !!profile),
+        take(1)
+      )
       .subscribe({
         next: (profile) => {
           this.updateNavigationTabs(profile);

@@ -8,8 +8,15 @@
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
-    [paginator]="false"
+    [totalRecords]="totalRecords"
+    [paginator]="true"
+    [config]="tableConfig"
+    [lazy]="true"
+    [rows]="rows"
+    [first]="first"
+    [loading]="isLoading"
     (page)="onPage($event)"
+    (sort)="onSort($event)"
   >
     <ng-template
       #actionTemplate

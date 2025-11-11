@@ -4,6 +4,7 @@ import { ApiResponse, MemberProfile } from './interfaces';
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
+import { format } from 'date-fns';
 
 @Injectable({
   providedIn: 'root',
@@ -50,6 +51,7 @@ export class UserStateService implements OnDestroy {
       .pipe(
         tap((response: ApiResponse<MemberProfile>) => {
           if (response.success && response.data) {
+            this.setUserProfile(response.data);
             this._userProfile.set(response.data);
             this._userProfile$.next(response.data);
             this._isProfileLoaded = true;

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import {
@@ -12,6 +12,9 @@ import { RouterOutlet, Router } from '@angular/router';
 import { SentService } from './sent.service';
 import { SentMessage } from '@services/interfaces/messages-interface/sent.interface';
 import { format } from 'date-fns';
+import { UserStateService } from '@services/user-state.service';
+import { MemberProfile } from '@services/interfaces';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'sug-sent',
@@ -29,17 +32,22 @@ import { format } from 'date-fns';
 export class Sent {
   private router = inject(Router);
   private sentService = inject(SentService);
+  private userStateService = inject(UserStateService);
+  userProfile = signal<MemberProfile | null>(null);
   isLoading = false;
   totalRecords = 0;
   page = 1;
   rows = 10;
   first = 0; // Important for proper pagination tracking
   sortField = 'senddate';
-  sortOrder = 'desc';
-  tableConfig: ISugTableConfig = {};
+  sortOrder: 'asc' | 'desc' = 'desc';
+  tableConfig: ISugTableConfig = {
+    sortField: 'senddate',
+    sortOrder: -1, // -1 for desc, 1 for asc
+  };
   tableColumns: ISugTableColumn[] = [
     {
-      field: 'sent',
+      field: 'senddate',
       header: 'Sent',
       sortable: true,
       filterable: false,
@@ -51,7 +59,7 @@ export class Sent {
       filterable: false,
     },
     {
-      field: 'sentTo',
+      field: 'totalsent',
       header: 'Sent To',
       sortable: true,
       filterable: false,
@@ -71,9 +79,18 @@ export class Sent {
   ];
 
   tableData: SentMessage[] = [];
+  userData: MemberProfile | null = null;
 
   constructor() {
-    this.getMessageSummary();
+    this.userStateService.userProfile$
+      .pipe(
+        filter((profile) => !!profile),
+        take(1)
+      )
+      .subscribe((profile) => {
+        this.userData = profile;
+        this.getMessageSummary();
+      });
   }
 
   getMessageSummary() {
@@ -94,10 +111,9 @@ export class Sent {
             const mappedData = apiResponse.data.messages.map(
               (item: SentMessage) => ({
                 messageid: item.messageid,
-                sent: format(
-                  new Date(Number(item.sentdate) * 1000),
-                  'MM/dd/yyyy h:mmaaa'
-                ),
+                senddate: new Date(
+                  Number(item?.sentdate || 0) * 1000
+                ).toLocaleString(),
                 subject: `<div class="subject-text">
                         <span class="subject-text">${
                           item.subject || 'No Subject'
@@ -106,9 +122,9 @@ export class Sent {
                   item.status
                 }</span>
                       </div>`,
-                sentTo: `${item.totalsent || 0}`,
+                totalsent: item.totalsent || 0,
                 status: item.status,
-                action: `<i class="pi pi-chart-bar chart-sent-icon" 
+                action: `<i class="pi pi-chart-bar chart-icon" 
               data-message-id="${item.messageid}" title="View message details"></i>`,
                 originalData: item,
               })
@@ -129,6 +145,11 @@ export class Sent {
   onSort(event: { field: string; order: number }) {
     this.sortField = event.field;
     this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.tableConfig = {
+      ...this.tableConfig,
+      sortField: this.sortField,
+      sortOrder: event.order,
+    };
     this.page = 1; // Reset to first page when sorting
     this.first = 0; // Reset first index
     this.getMessageSummary();
@@ -143,7 +164,7 @@ export class Sent {
     this.getMessageSummary();
   }
 
-  onActionClick(event: any) {
+  onActionClick(event: { messageid: number }) {
     this.router.navigate([`/messages/sent/${event.messageid}`]);
   }
 }
