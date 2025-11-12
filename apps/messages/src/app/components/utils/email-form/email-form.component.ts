@@ -18,6 +18,8 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
+import { NgxCaptchaModule } from 'ngx-captcha';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'sug-email-form',
@@ -30,6 +32,7 @@ import { ISignUpItem } from '@services/interfaces/messages-interface/compose.int
     ButtonModule,
     SugUiMultiSelectDropdownComponent,
     ChipModule,
+    NgxCaptchaModule,
   ],
   templateUrl: './email-form.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
@@ -38,7 +41,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Input() emailForm!: FormGroup;
   @Input() formType: 'inviteToSignUp' | 'emailParticipants' = 'inviteToSignUp';
   @Input() title = 'Invite People to Sign Up';
-
+  @Input() readonly siteKey: string = environment.siteKey;
   // Data inputs - replacing service dependencies
   @Input() selectedSignups: ISignUpItem[] = [];
   @Input() selectedTabGroups: ISelectOption[] = [];
@@ -88,6 +91,9 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
     // Set initial disabled state based on signup selection
     this.updateFormControlsState();
+
+    // Initialize form with current input values
+    this.syncFormWithInputs();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -99,6 +105,44 @@ export class EmailFormComponent implements OnInit, OnChanges {
     ) {
       this.updateFormControlsState();
     }
+
+    // Sync form controls with input property changes
+    if (changes['selectedSignups'] && this.emailForm) {
+      this.emailForm.patchValue({ selectedSignups: this.selectedSignups });
+    }
+
+    if (changes['selectedGroups'] && this.emailForm) {
+      this.emailForm.patchValue({ toPeople: this.selectedGroups });
+    }
+
+    if (changes['selectedDateSlots'] && this.emailForm) {
+      // Update toPeople with selected date slots if applicable
+      if (this.selectedDateSlots.length > 0) {
+        this.emailForm.patchValue({ toPeople: this.selectedDateSlots });
+      }
+    }
+  }
+
+  private syncFormWithInputs(): void {
+    if (!this.emailForm) return;
+
+    // Sync form controls with current input values
+    const updateData: { [key: string]: unknown } = {};
+
+    if (this.selectedSignups) {
+      updateData['selectedSignups'] = this.selectedSignups;
+    }
+
+    if (this.selectedGroups) {
+      updateData['toPeople'] = this.selectedGroups;
+    }
+
+    if (this.selectedDateSlots && this.selectedDateSlots.length > 0) {
+      updateData['toPeople'] = this.selectedDateSlots;
+    }
+
+    // Update form with new values
+    this.emailForm.patchValue(updateData);
   }
 
   private updateFormControlsState(): void {
@@ -174,5 +218,17 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   removeSignUpIndexPage(): void {
     this.removeSignUpIndexPageItem.emit();
+  }
+
+  handleReset(): void {
+    this.emailForm.get('token')?.reset();
+  }
+
+  handleExpire(): void {
+    this.emailForm.get('token')?.setValue(null);
+  }
+
+  handleSuccess(token: string): void {
+    this.emailForm.get('token')?.setValue(token);
   }
 }

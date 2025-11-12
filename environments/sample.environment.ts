@@ -6,4 +6,5 @@ export const environment = {
     'https://auctions.signupgenius.rocks/getting_started/index.html',
   DONATIONS_SITE_URL: 'https://donations.signupgenius.rocks',
   TICKETS_SITE_URL: 'https://tickets.signupgenius.rocks/#/welcome',
+  siteKey: '',
 };

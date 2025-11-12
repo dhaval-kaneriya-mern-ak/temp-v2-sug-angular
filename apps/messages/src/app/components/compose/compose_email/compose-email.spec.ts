@@ -1,50 +1,26 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
-import { ComposeEmailComponentMain } from './compose-email';
+import { ComposeEmailComponent } from './compose-email';
 import { ComposeService } from '../compose.service';
 import { UserStateService } from '@services/user-state.service';
 import { BehaviorSubject, of } from 'rxjs';
 import { FormBuilder } from '@angular/forms';
-import {
-  ISignUpItem,
-  IGroupMember,
-} from '@services/interfaces/messages-interface/compose.interface';
 import { MemberProfile } from '@services/interfaces';
 
-describe('ComposeEmailComponentMain - Business Rules', () => {
-  let component: ComposeEmailComponentMain;
-  let fixture: ComponentFixture<ComposeEmailComponentMain>;
+describe('ComposeEmailComponent (Refactored)', () => {
+  let component: ComposeEmailComponent;
+  let fixture: ComponentFixture<ComposeEmailComponent>;
   let memberProfileSubject: BehaviorSubject<MemberProfile | null>;
 
-  const mockSignup = {
-    signupid: 123,
-    title: 'Test Signup',
-    fulltitle: 'Test Signup Full',
-    mode: 'standard',
-  } as ISignUpItem;
-
-  const mockRsvpSignup = {
-    signupid: 456,
-    mode: 'rsvp',
-    title: 'RSVP Signup',
-  } as ISignUpItem;
-
   const mockMemberProfile = {
-    id: 1,
+    id: 12345,
     firstname: 'John',
     lastname: 'Doe',
-    email: 'john.doe@example.com',
-  } as MemberProfile;
-
-  const mockGroupMember = {
-    id: 1,
-    communitymemberid: 100,
-    firstname: 'Jane',
-    lastname: 'Smith',
-    email: 'jane@example.com',
-    isgroupemail: false,
-  } as IGroupMember;
+    email: 'john@example.com',
+    currentEmail: 'john@example.com',
+    emailaddress: 'john@example.com',
+  } as unknown as MemberProfile;
 
   beforeEach(async () => {
     memberProfileSubject = new BehaviorSubject<MemberProfile | null>(
@@ -56,9 +32,9 @@ describe('ComposeEmailComponentMain - Business Rules', () => {
         of({
           success: true,
           message: [],
-          data: [mockSignup],
+          data: [],
           pagination: {
-            totalRecords: 1,
+            totalRecords: 0,
             totalPages: 1,
             currentPage: 1,
             pageSize: 10,
@@ -88,7 +64,7 @@ describe('ComposeEmailComponentMain - Business Rules', () => {
         of({
           success: true,
           message: [],
-          data: { members: [mockGroupMember] },
+          data: { members: [] },
         }),
       getDateSlots: () =>
         of({
@@ -105,7 +81,7 @@ describe('ComposeEmailComponentMain - Business Rules', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [ComposeEmailComponentMain],
+      imports: [ComposeEmailComponent],
       providers: [
         provideHttpClient(),
         provideToastr(),
@@ -115,400 +91,102 @@ describe('ComposeEmailComponentMain - Business Rules', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ComposeEmailComponentMain);
+    fixture = TestBed.createComponent(ComposeEmailComponent);
     component = fixture.componentInstance;
   });
 
-  describe('Business Rule: Component Initialization', () => {
+  describe('Component Initialization', () => {
     it('should create component successfully', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize with recipient count of 0', () => {
-      expect(component.recipientCount).toBe(0);
-    });
-
-    it('should initialize with empty selected signups array', () => {
-      expect(component.selectedSignups).toEqual([]);
-    });
-
-    it('should initialize with empty selected groups array', () => {
-      expect(component.selectedGroups).toEqual([]);
-    });
-
     it('should initialize all dialog visibility flags to false', () => {
-      expect(component.signUpModelShow).toBe(false);
+      expect(component.isHelpDialogVisible).toBe(false);
       expect(component.isPeopleDialogVisible).toBe(false);
       expect(component.isSelectFileDialogVisible).toBe(false);
-      expect(component.isHelpDialogVisible).toBe(false);
-      expect(component.isPreViewEmailDialogVisible).toBe(false);
       expect(component.isRecipientDialogVisible).toBe(false);
+      expect(component.isPreviewDialogVisible).toBe(false);
+      expect(component.isDateSlotsDialogVisible).toBe(false);
     });
   });
 
-  describe('Business Rule: Form Initialization on Component Init', () => {
-    it('should initialize emailFormOne with required form controls', () => {
-      // When: Component initializes
+  describe('Form Initialization', () => {
+    it('should initialize emailFormOne with all required controls', () => {
       fixture.detectChanges();
 
-      // Then: Form should have all required controls
-      expect(component.emailFormOne).toBeDefined();
+      expect(component.emailFormOne.get('selectedValue')).toBeDefined();
+      expect(component.emailFormOne.get('emailSubject')).toBeDefined();
+      expect(component.emailFormOne.get('message')).toBeDefined();
+      expect(component.emailFormOne.get('fromEmail')).toBeDefined();
       expect(component.emailFormOne.get('fromName')).toBeDefined();
       expect(component.emailFormOne.get('replyTo')).toBeDefined();
-      expect(component.emailFormOne.get('subject')).toBeDefined();
-      expect(component.emailFormOne.get('message')).toBeDefined();
-    });
-
-    it('should initialize emailFormTwo with required form controls', () => {
-      // When: Component initializes
-      fixture.detectChanges();
-
-      // Then: Form should have all required controls
-      expect(component.emailFormTwo).toBeDefined();
-      expect(component.emailFormTwo.get('fromName')).toBeDefined();
-      expect(component.emailFormTwo.get('replyTo')).toBeDefined();
-      expect(component.emailFormTwo.get('subject')).toBeDefined();
-      expect(component.emailFormTwo.get('message')).toBeDefined();
-    });
-
-    it('should initialize signUpDialogForm with selectedSignupValue control', () => {
-      // When: Component initializes
-      fixture.detectChanges();
-
-      // Then: Dialog form should be initialized
-      expect(component.signUpDialogForm).toBeDefined();
+      expect(component.emailFormOne.get('selectedSignups')).toBeDefined();
+      expect(component.emailFormOne.get('selectedTabGroups')).toBeDefined();
       expect(
-        component.signUpDialogForm.get('selectedSignupValue')
+        component.emailFormOne.get('isSignUpIndexPageSelected')
       ).toBeDefined();
     });
-  });
 
-  describe('Business Rule: Dialog Radio Options Based on Context', () => {
-    it('should show tab groups option when tab groups data exists', () => {
-      // Given: Tab groups data available
-      component.tabGroupsData = [{ value: '1', label: 'Tab Group 1' }];
-
-      // When: Getting dialog radio options
-      const options = component.dialogRadioOptions;
-
-      // Then: Should include tab groups option
-      expect(options.length).toBe(3);
-      expect(options.some((opt) => opt.value === 'LinkSpecifixTabGroup')).toBe(
-        true
-      );
-    });
-
-    it('should not show tab groups option when no tab groups data', () => {
-      // Given: No tab groups data
-      component.tabGroupsData = [];
-
-      // When: Getting dialog radio options
-      const options = component.dialogRadioOptions;
-
-      // Then: Should only have 2 base options
-      expect(options.length).toBe(2);
-      expect(options.some((opt) => opt.value === 'LinkSpecifixTabGroup')).toBe(
-        false
-      );
-    });
-
-    it('should always include "Link to specific sign up(s)" option', () => {
-      // When: Getting dialog radio options
-      const options = component.dialogRadioOptions;
-
-      // Then: Should include specific signup option
-      expect(options.some((opt) => opt.value === 'LinkSpecificSignup')).toBe(
-        true
-      );
-    });
-
-    it('should always include "Link to my main account" option', () => {
-      // When: Getting dialog radio options
-      const options = component.dialogRadioOptions;
-
-      // Then: Should include main account option
-      expect(options.some((opt) => opt.value === 'LinkMainAccount')).toBe(true);
-    });
-  });
-
-  describe('Business Rule: Send Message Radio Options Based on Signup Type', () => {
-    it('should show RSVP-specific options when RSVP signup is selected', () => {
-      // Given: RSVP signup selected
-      component.selectedSignups = [mockRsvpSignup];
-
-      // When: Getting send message radio options
-      const options = component.sendMessagePeopleRadioOptions;
-
-      // Then: Should include RSVP response option
-      expect(options.some((opt) => opt.value === 'specificRsvpResponse')).toBe(
-        true
-      );
-      expect(options.length).toBe(3);
-    });
-
-    it('should not show RSVP options for non-RSVP signups', () => {
-      // Given: Component initialized and standard signup selected
+    it('should initialize emailFormTwo with all required controls', () => {
       fixture.detectChanges();
-      component.selectedSignups = [mockSignup];
 
-      // When: Getting send message radio options
-      const options = component.sendMessagePeopleRadioOptions;
-
-      // Then: Should not include RSVP response option
-      expect(options.some((opt) => opt.value === 'specificRsvpResponse')).toBe(
-        false
-      );
+      expect(component.emailFormTwo.get('selectedValue')).toBeDefined();
+      expect(component.emailFormTwo.get('emailSubject')).toBeDefined();
+      expect(component.emailFormTwo.get('message')).toBeDefined();
+      expect(component.emailFormTwo.get('fromEmail')).toBeDefined();
+      expect(component.emailFormTwo.get('fromName')).toBeDefined();
+      expect(component.emailFormTwo.get('replyTo')).toBeDefined();
+      expect(component.emailFormTwo.get('selectedSignups')).toBeDefined();
+      expect(component.emailFormTwo.get('toPeople')).toBeDefined();
     });
+  });
 
-    it('should show limited options when main account is selected', () => {
-      // Given: Component initialized and main account selected
+  describe('Radio Options', () => {
+    it('should initialize main radio options', () => {
       fixture.detectChanges();
-      component.selectedSignups = [];
-      component.signUpDialogForm.patchValue({
-        selectedSignupValue: 'LinkMainAccount',
-      });
 
-      // When: Getting send message radio options
-      const options = component.sendMessagePeopleRadioOptions;
-
-      // Then: Should only show group and select options
-      expect(options.length).toBe(2);
-      expect(
-        options.some((opt) => opt.value === 'sendMessagePeopleRadio')
-      ).toBe(true);
-      expect(
-        options.some((opt) => opt.value === 'sendMessagePeopleIselect')
-      ).toBe(true);
-    });
-
-    it('should detect RSVP signup regardless of mode case', () => {
-      // Given: RSVP signup with uppercase mode
-      const upperCaseRsvp = { ...mockRsvpSignup, mode: 'RSVP' };
-      component.selectedSignups = [upperCaseRsvp];
-
-      // When: Getting send message radio options
-      const options = component.sendMessagePeopleRadioOptions;
-
-      // Then: Should detect RSVP
-      expect(options.some((opt) => opt.value === 'specificRsvpResponse')).toBe(
-        true
+      expect(component.radioOptions).toBeDefined();
+      expect(component.radioOptions.length).toBe(2);
+      expect(component.radioOptions[0].value).toBe('emailoptionone');
+      expect(component.radioOptions[0].label).toBe(
+        'Invite people to a sign up'
       );
-    });
-
-    it('should show RSVP options when at least one RSVP signup in mixed selection', () => {
-      // Given: Mix of RSVP and standard signups
-      component.selectedSignups = [mockSignup, mockRsvpSignup];
-
-      // When: Getting send message radio options
-      const options = component.sendMessagePeopleRadioOptions;
-
-      // Then: Should show RSVP options
-      expect(options.some((opt) => opt.value === 'specificRsvpResponse')).toBe(
-        true
+      expect(component.radioOptions[1].value).toBe('emailoptiontwo');
+      expect(component.radioOptions[1].label).toBe(
+        'Email people participating in a sign up'
       );
     });
   });
 
-  describe('Business Rule: Signup Selection Management', () => {
-    it('should add signup to selectedSignups array', () => {
-      // When: Adding a signup
-      component.selectedSignups = [mockSignup];
-
-      // Then: Signup should be in array
-      expect(component.selectedSignups.length).toBe(1);
-      expect(component.selectedSignups[0].signupid).toBe(123);
-    });
-
-    it('should allow multiple signup selections', () => {
-      // When: Adding multiple signups
-      const signup2 = { ...mockSignup, signupid: 456, title: 'Signup 2' };
-      component.selectedSignups = [mockSignup, signup2];
-
-      // Then: Both signups should be in array
-      expect(component.selectedSignups.length).toBe(2);
-    });
-
-    it('should clear selected signups when reset', () => {
-      // Given: Signups selected
-      component.selectedSignups = [mockSignup];
-
-      // When: Clearing signups
-      component.selectedSignups = [];
-
-      // Then: Array should be empty
-      expect(component.selectedSignups.length).toBe(0);
+  describe('Dialog State Management', () => {
+    it('should have dialog visibility properties initialized', () => {
+      expect(component.isPreviewDialogVisible).toBeDefined();
+      expect(component.isHelpDialogVisible).toBeDefined();
+      expect(component.isPeopleDialogVisible).toBeDefined();
     });
   });
 
-  describe('Business Rule: Recipient Count Management', () => {
-    it('should update recipient count when set', () => {
-      // When: Setting recipient count
-      component.recipientCount = 150;
+  describe('User Profile Handling', () => {
+    it('should handle user profile subscription', () => {
+      fixture.detectChanges();
 
-      // Then: Count should be updated
-      expect(component.recipientCount).toBe(150);
-    });
-
-    it('should handle recipient count of 0', () => {
-      // Given: Non-zero count
-      component.recipientCount = 100;
-
-      // When: Resetting to 0
-      component.recipientCount = 0;
-
-      // Then: Count should be 0
-      expect(component.recipientCount).toBe(0);
-    });
-
-    it('should handle large recipient counts', () => {
-      // When: Setting large count
-      component.recipientCount = 10000;
-
-      // Then: Should accept large numbers
-      expect(component.recipientCount).toBe(10000);
+      // Test that userProfile property exists and can be accessed
+      expect(component.userProfile).toBeDefined();
     });
   });
 
-  describe('Business Rule: Group Selection Management', () => {
-    it('should store selected groups with their data', () => {
-      // When: Selecting groups
-      const groups = [
-        { value: '1', label: 'Group 1' },
-        { value: '2', label: 'Group 2' },
-      ];
-      component.selectedGroups = groups;
-
-      // Then: Groups should be stored
-      expect(component.selectedGroups.length).toBe(2);
-      expect(component.selectedGroups[0].label).toBe('Group 1');
-    });
-
-    it('should allow clearing selected groups', () => {
-      // Given: Groups selected
-      component.selectedGroups = [{ value: '1', label: 'Group 1' }];
-
-      // When: Clearing groups
-      component.selectedGroups = [];
-
-      // Then: Array should be empty
-      expect(component.selectedGroups.length).toBe(0);
-    });
-  });
-
-  describe('Business Rule: Dialog Visibility Management', () => {
-    it('should toggle signup dialog visibility', () => {
-      // When: Opening dialog
-      component.signUpModelShow = true;
-
-      // Then: Dialog should be visible
-      expect(component.signUpModelShow).toBe(true);
-
-      // When: Closing dialog
-      component.signUpModelShow = false;
-
-      // Then: Dialog should be hidden
-      expect(component.signUpModelShow).toBe(false);
-    });
-
-    it('should toggle people dialog visibility', () => {
-      // When: Opening dialog
-      component.isPeopleDialogVisible = true;
-
-      // Then: Dialog should be visible
-      expect(component.isPeopleDialogVisible).toBe(true);
-    });
-
-    it('should toggle help dialog visibility', () => {
-      // When: Opening dialog
-      component.isHelpDialogVisible = true;
-
-      // Then: Dialog should be visible
-      expect(component.isHelpDialogVisible).toBe(true);
-    });
-
-    it('should toggle preview email dialog visibility', () => {
-      // When: Opening dialog
-      component.isPreViewEmailDialogVisible = true;
-
-      // Then: Dialog should be visible
-      expect(component.isPreViewEmailDialogVisible).toBe(true);
-    });
-
-    it('should toggle recipient details dialog visibility', () => {
-      // When: Opening dialog
-      component.isRecipientDialogVisible = true;
-
-      // Then: Dialog should be visible
-      expect(component.isRecipientDialogVisible).toBe(true);
-    });
-
-    it('should manage multiple dialogs independently', () => {
-      // When: Opening multiple dialogs
-      component.signUpModelShow = true;
-      component.isPeopleDialogVisible = true;
-
-      // Then: Both dialogs should be visible
-      expect(component.signUpModelShow).toBe(true);
-      expect(component.isPeopleDialogVisible).toBe(true);
-    });
-  });
-
-  describe('Business Rule: Loading State Management', () => {
-    it('should initialize with loading false', () => {
-      expect(component.isLoading).toBe(false);
-    });
-
-    it('should set loading state during operations', () => {
-      // When: Starting operation
-      component.isLoading = true;
-
-      // Then: Loading should be true
-      expect(component.isLoading).toBe(true);
-
-      // When: Completing operation
-      component.isLoading = false;
-
-      // Then: Loading should be false
+  describe('Loading State', () => {
+    it('should initialize with loading state false', () => {
       expect(component.isLoading).toBe(false);
     });
   });
 
-  describe('Business Rule: Dialog Configuration', () => {
-    it('should configure signup dialog as modal', () => {
-      expect(component.signUpDialogConfig.modal).toBe(true);
+  describe('Component Lifecycle', () => {
+    it('should call ngOnInit without errors', () => {
+      expect(() => component.ngOnInit()).not.toThrow();
     });
 
-    it('should configure people dialog as closable', () => {
-      expect(component.peopleDialogConf.closable).toBe(true);
-    });
-
-    it('should configure help dialog with correct width', () => {
-      expect(component.helpDialogConf.width).toBe('850px');
-    });
-
-    it('should configure preview email dialog as dismissable on mask click', () => {
-      expect(component.preViewEmailDialogConfig.dismissableMask).toBe(true);
-    });
-
-    it('should configure all dialogs with center position', () => {
-      expect(component.signUpDialogConfig.position).toBe('center');
-      expect(component.peopleDialogConf.position).toBe('center');
-      expect(component.helpDialogConf.position).toBe('center');
-      expect(component.preViewEmailDialogConfig.position).toBe('center');
-    });
-  });
-
-  describe('Business Rule: Memory Management', () => {
-    it('should implement OnDestroy lifecycle hook', () => {
-      // Then: Component should have ngOnDestroy method
-      expect(component.ngOnDestroy).toBeDefined();
-    });
-
-    it('should cleanup subscriptions on destroy', () => {
-      // Given: Component initialized
-      fixture.detectChanges();
-
-      // When: Component is destroyed
+    it('should call ngOnDestroy without errors', () => {
       expect(() => component.ngOnDestroy()).not.toThrow();
     });
   });

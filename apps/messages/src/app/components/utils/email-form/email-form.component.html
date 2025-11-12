@@ -199,11 +199,24 @@
       </sug-ui-button>
     </div>
 
+    <!-- Captcha -->
+    <div class="form-wrapper">
+      <label for="captcha"></label>
+      <ngx-recaptcha2
+        #captchaElem
+        [siteKey]="siteKey"
+        (reset)="handleReset()"
+        (expire)="handleExpire()"
+        (success)="handleSuccess($event)"
+        [useGlobalDomain]="false"
+        formControlName="token"
+      >
+      </ngx-recaptcha2>
+    </div>
+
     <!-- Action Buttons -->
     <div class="btn-wrapper">
-      <!-- FormOne: Button is NOT disabled (no [disabled] attribute) -->
-      <!-- FormTwo: Button IS disabled when form is invalid -->
-      @if (formType === 'emailParticipants') {
+      <!-- Both forms: Button is disabled when form is invalid for consistent behavior -->
       <sug-ui-button
         severity="success"
         [outlined]="false"
@@ -214,22 +227,12 @@
         (buttonClick)="onPreviewAndSend()"
       >
       </sug-ui-button>
-      } @else {
-      <sug-ui-button
-        severity="success"
-        [outlined]="false"
-        class="send-btn"
-        icon=""
-        label="Preview & Send"
-        (buttonClick)="onPreviewAndSend()"
-      >
-      </sug-ui-button>
-      }
       <sug-ui-button
         severity="secondary"
         class="draft-btn"
         icon=""
         label="Save Draft"
+        [disabled]="emailForm.invalid"
         (buttonClick)="onSaveDraft()"
       >
       </sug-ui-button>
