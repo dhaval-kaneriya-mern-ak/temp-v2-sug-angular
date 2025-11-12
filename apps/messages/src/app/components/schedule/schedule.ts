@@ -45,7 +45,7 @@ export class Schedule {
     focusOnShow: true,
     position: 'center',
     appendTo: 'body',
-    width: '40vw',
+    width: '30vw',
   };
   isVisible = false;
   selectedItem: Message | null = null;
@@ -174,7 +174,7 @@ export class Schedule {
               (item: Message) => ({
                 ...item,
                 datecreated: format(
-                  new Date(Number(item.datecreated) * 1000),
+                  new Date(Number(item.senddate) * 1000),
                   'yyyy-MM-dd h:mmaaa'
                 ),
                 // senddate: format(

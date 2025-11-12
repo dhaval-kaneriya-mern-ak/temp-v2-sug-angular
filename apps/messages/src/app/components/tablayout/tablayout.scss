@@ -12,6 +12,13 @@
     margin-bottom: 24px;
     font-style: normal;
   }
+
+  // Remove left padding from first tab
+  sug-ui-menu-tabs {
+    ::ng-deep .p-tabs .p-tablist .p-tab:first-child {
+      padding-left: 0 !important;
+    }
+  }
 }
 .link-text {
   color: var(--p-surface-500);

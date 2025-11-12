@@ -219,7 +219,7 @@
                   ©{{ currentYear }} SignUpGenius, Inc. All Rights Reserved.
                 </p>
               </div>
-              <div class="d-flex links gap-3">
+              <div class="d-flex links gap-4 align-items-center">
                 <a href="/privacy" aria-label="Privacy Policy" target="_blank">
                   Privacy Policy
                 </a>
@@ -236,6 +236,9 @@
                   style="visibility: visible; cursor: pointer"
                   >Do Not Sell or Share My Personal Information</a
                 >
+                @if(isRocksEnvironment) {
+                <span class="fs-5"><strong>SUG-ANGULAR</strong></span>
+                }
               </div>
             </div>
           </div>

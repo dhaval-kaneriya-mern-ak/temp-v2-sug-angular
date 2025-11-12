@@ -24,6 +24,7 @@ export class FooterComponent implements OnInit {
   searchQuery = '';
   currentYear = new Date().getFullYear();
   environment = environment;
+  isRocksEnvironment = false;
   footerData: FooterColumn[] = [
     {
       title: 'Use It For',
@@ -225,6 +226,7 @@ export class FooterComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkScreenSize();
+    this.isRocksEnvironment = window.location.hostname.includes('.rocks');
   }
 
   @HostListener('window:resize')

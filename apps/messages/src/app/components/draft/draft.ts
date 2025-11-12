@@ -42,7 +42,7 @@ export class Draft {
     focusOnShow: true,
     position: 'center',
     appendTo: 'body',
-    width: '40vw',
+    width: '30vw',
   };
   isVisible = false;
   selectedItem: DraftMessage | null = null;
@@ -175,5 +175,13 @@ export class Draft {
     this.page = Math.floor(event.first / event.rows) + 1;
     this.rows = event.rows;
     this.getMessageTemplates();
+  }
+
+  navigateToDraft() {
+    this.router.navigate([`/messages/compose/email`]);
+  }
+
+  navigateToTemplate() {
+    this.router.navigate([`/messages/compose/template`]);
   }
 }

@@ -40,13 +40,13 @@ export class Dashboard implements OnInit, OnDestroy {
   planName = 'Loading...';
 
   // Progress tracking properties
-  progressToday = '0 / 10,000 email messages used today';
+  progressToday = '0 of 10,000 email messages sent today';
   progressTodayValue = 0;
   progressTodayMaxValue = 0;
-  progressMonth = '0 / 20 email messages used this month';
+  progressMonth = '0 of 20 email messages sent this month';
   progressMonthValue = 0;
   progressMonthMaxValue = 0;
-  progressTextMessage = '0 / 14 text messages used this month';
+  progressTextMessage = '0 of 14 text messages sent this month';
   progressTextMessageValue = 0;
   progressTextMessageMaxValue = 0;
 
@@ -149,9 +149,9 @@ export class Dashboard implements OnInit, OnDestroy {
         this.progressMonthMaxValue = response.data.monthlylimit;
         this.progressTextMessageValue = response.data.senttexttoday;
         this.progressTextMessageMaxValue = response.data.textmessagelimit;
-        this.progressToday = `${this.progressTodayValue} / ${this.progressTodayMaxValue} email messages used today`;
-        this.progressMonth = `${this.progressMonthValue} / ${this.progressMonthMaxValue} email messages used this month`;
-        this.progressTextMessage = `${this.progressTextMessageValue} / ${this.progressTextMessageMaxValue} text messages used this month`;
+        this.progressToday = `${this.progressTodayValue} of ${this.progressTodayMaxValue} email messages sent today`;
+        this.progressMonth = `${this.progressMonthValue} of ${this.progressMonthMaxValue} email messages sent this month`;
+        this.progressTextMessage = `${this.progressTextMessageValue} of ${this.progressTextMessageMaxValue} text messages sent this month`;
       },
       error: () => {
         // this.handleLogout();

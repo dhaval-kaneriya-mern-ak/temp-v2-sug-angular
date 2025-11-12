@@ -54,12 +54,15 @@
 <sug-ui-dialog
   [config]="dialogConf"
   [(visible)]="isVisible"
+  [showHeader]="true"
   [showFooter]="true"
 >
-  <h2 slot="header">Confirmation</h2>
-  <p>
-    Are you sure you want to delete "{{ selectedItem?.subject }}" draft from the
-    list?
+  <div slot="header" class="flex align-items-center">
+    <span class="font-bold">Confirmation</span>
+  </div>
+  <p class="fs-4">
+    Are you sure you want to remove "{{ selectedItem?.subject }}" message from
+    the list?
   </p>
   <div
     slot="footer"
@@ -72,6 +75,7 @@
       [size]="'large'"
       [severity]="'success'"
       [outlined]="false"
+      styleClass="confirmation-btn"
       (buttonClick)="deleteScheduleMessage()"
     ></sug-ui-button>
   </div>

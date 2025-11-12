@@ -17,8 +17,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
   private readonly allTabs: Tabs[] = [
     { name: 'Dashboard', route: 'messages/dashboard' },
     { name: 'Compose', route: 'messages/compose' },
-    { name: 'Draft', route: 'messages/draft' },
-    { name: 'Schedule', route: 'messages/schedule' },
+    { name: 'Drafts & Templates', route: 'messages/draft' },
+    { name: 'Scheduled', route: 'messages/schedule' },
     { name: 'Sent', route: 'messages/sent' },
   ];
 
