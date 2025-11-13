@@ -117,9 +117,9 @@
       }
     }
   }
-  .sug-ui-radio-checkbox-button-container {
-    padding-bottom: 10px;
-  }
+  // .sug-ui-radio-checkbox-button-container {
+  //   padding-bottom: 10px;
+  // }
   .p-multiselect-header {
     .p-icon {
       height: 20px;
@@ -261,4 +261,111 @@
     display: flex;
     justify-content: center;
   }
+}
+.recipient-info-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 70%;
+
+  @media (max-width: 767px) {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .recipient-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    align-items: center;
+
+    .recipient-label {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 400;
+    }
+
+    .edit-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      margin-left: 4px;
+
+      &:hover {
+        background-color: rgba(99, 102, 241, 0.08);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      i {
+        color: #f68b1c;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .recipient-details-btn {
+    background-color: #ff6b35;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: #ff5722;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus {
+      outline: 2px solid #ff6b35;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.check-option-forms-wrapper .optionthree-label {
+  position: absolute;
+  top: 75px;
+  right: 170px;
+  color: #f68b1c;
+  cursor: pointer;
+}
+.check-option-forms-wrapper {
+  .optionone-label {
+    position: absolute;
+    top: 10px;
+    left: 170px;
+    color: #f68b1c;
+    cursor: pointer;
+  }
+}
+.check-option-forms-wrapper .optionone-label:hover {
+  color: #f68b1c;
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
 }

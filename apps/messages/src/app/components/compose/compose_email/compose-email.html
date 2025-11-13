@@ -25,6 +25,7 @@
     <!-- Email Form Component (Reusable for both form types) -->
     <sug-email-form
       [emailForm]="currentForm"
+      [showAttachments]="userProfile?.ispro ? true : false"
       [formType]="currentFormType"
       [title]="currentFormTitle"
       [selectedSignups]="stateService.selectedSignups"
@@ -182,4 +183,4 @@
 </sug-file-selection-dialog>
 
 <!-- Preview Email Dialog -->
-<sug-preview-email [(visible)]="isPreviewDialogVisible"> </sug-preview-email>
+<sug-preview-email [(visible)]="isPreviewDialogVisible"></sug-preview-email>

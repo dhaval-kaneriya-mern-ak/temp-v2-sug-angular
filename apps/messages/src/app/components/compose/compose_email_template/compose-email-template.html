@@ -1,7 +1,6 @@
 <div class="compose-container">
   @if (showRadioButtons) {
   <div class="radio-selection">
-    <!-- <h2>Choose Email Type</h2> -->
     <sug-ui-radio-checkbox-button
       type="radio"
       name="size"
@@ -28,19 +27,16 @@
           </p-button>
         </sug-ui-tooltip>
       </h3>
-      <form>
+      <form [formGroup]="reminderEmailForm">
         <div class="form-wrapper">
           <label for="signup-links">From</label>
-          <input
-            type="text"
-            placeholder="Enter sender email address"
-            id="from-email"
-          />
+          <input type="text" formControlName="fromName" id="from-email" />
         </div>
         <div class="form-wrapper">
           <label for="reply-to">Reply To</label>
           <sug-ui-multi-select-dropdown
             id="reply-to"
+            formControlName="replyTo"
             [options]="subAdminsData"
           ></sug-ui-multi-select-dropdown>
         </div>
@@ -49,6 +45,7 @@
           <input
             type="text"
             placeholder="Enter email subject"
+            formControlName="subject"
             id="from-subject"
           />
         </div>
@@ -57,8 +54,10 @@
           <textarea
             id="from-message"
             placeholder="Type your message here..."
+            formControlName="message"
           ></textarea>
         </div>
+        @if (userProfile?.ispro) {
         <div class="form-wrapper">
           <label for="attachments">Attachments</label>
           <sug-ui-button
@@ -69,16 +68,35 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+        }
         <div class="form-wrapper">
-          <label for="reply-to">Assign To</label>
+          <label for="assign-to">Assign To</label>
           <sug-ui-multi-select-dropdown
-            id="reply-to"
+            id="assign-to"
+            formControlName="assignTo"
             [options]="signUpOptions"
+            [placeholder]="'Select a Sign Up'"
+            appendTo="parent"
+            panelStyleClass="custom-dropdown"
+            [selectionLimit]="1"
           ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
         </div>
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
+            [disabled]="reminderEmailForm.invalid"
             [outlined]="false"
             class="send-btn"
             icon=""
@@ -102,19 +120,16 @@
           </p-button>
         </sug-ui-tooltip>
       </h3>
-      <form>
+      <form [formGroup]="confirmationEmailForm">
         <div class="form-wrapper">
           <label for="from-email">From</label>
-          <input
-            type="email"
-            placeholder="Enter sender email address"
-            id="from-email"
-          />
+          <input type="text" formControlName="fromName" id="from-email" />
         </div>
         <div class="form-wrapper">
           <label for="reply-to">Reply To</label>
           <sug-ui-multi-select-dropdown
             id="reply-to"
+            formControlName="replyTo"
             [options]="subAdminsData"
           ></sug-ui-multi-select-dropdown>
         </div>
@@ -123,6 +138,7 @@
           <input
             type="text"
             placeholder="Enter email subject"
+            formControlName="subject"
             id="from-subject"
           />
         </div>
@@ -131,8 +147,10 @@
           <textarea
             id="from-message"
             placeholder="Type your message here..."
+            formControlName="message"
           ></textarea>
         </div>
+        @if (userProfile?.ispro) {
         <div class="form-wrapper">
           <label for="attachments">Attachments</label>
           <sug-ui-button
@@ -143,16 +161,34 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+        }
         <div class="form-wrapper">
           <label for="assign-to">Assign To</label>
           <sug-ui-multi-select-dropdown
             id="assign-to"
+            appendTo="parent"
+            panelStyleClass="custom-dropdown"
+            formControlName="assignTo"
             [options]="signUpOptions"
+            [placeholder]="'Select a Sign Up'"
           ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
         </div>
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
+            [disabled]="confirmationEmailForm.invalid"
             [outlined]="false"
             class="send-btn"
             icon=""
@@ -168,93 +204,46 @@
   </div>
   }
 </div>
-<sug-ui-dialog
-  [config]="helpDialogConf"
+
+<sug-help-dialog
   [(visible)]="isHelpDialogVisible"
-  [showFooter]="true"
+  [title]="this.selectedValue === 'emailoptionone' ? 'Help:  Create a reminder email template ' : 'Help: Create a Confirmation Email Template'"
 >
-  <h2 slot="header">Help: Create a Reminder Email Template</h2>
-  <div class="help-dialog-content">
-    <p>
-      A custom reminder email is a powerful way to communicate important details
-      about your upcoming event to the participants. You can include additional
-      text and attachments by creating a custom reminder email template that
-      replaces the standard reminder.
-    </p>
-    <h4>How do I assign my custom reminder email to my sign up(s)?</h4>
-    <p>
-      There are two ways to assign a custom reminder email to a sign up. First,
-      when you create or edit your reminder template, the “Assign To” dropdown
-      allows you to choose one or more sign ups. Additionally, when you are
-      building or editing a specific sign up, you can select a reminder template
-      under “Custom Confirmation Emails & Reminders” in the "Notifications" area
-      of the "Settings" tab.
-    </p>
-    <h4>When will the custom reminder be sent?</h4>
-    <p>
-      The custom reminder uses the same settings as a standard reminder and can
-      be scheduled to go out 1 to 14 days in advance. You can view and edit the
-      reminder email setting under “Notifications” in the "Settings" tab for
-      that particular sign up.
-    </p>
-    <h4>What is the "Reply-to" field?</h4>
-    <p>
-      The reply-to field determines who will receive the message if the
-      recipient replies to the reminder email. Typically, the reply goes to the
-      sign up creator, but you can also choose to have the reply sent to one or
-      more admins who are involved in the sign up. To set up your account
-      admins, visit the "Tools" area of your account page.
-    </p>
-    <h4>How do I edit an existing template?</h4>
-    <p>
-      After you create and save your reminder template, it will be available in
-      the "Drafts & Templates" tab.
-    </p>
-  </div>
-  <div
-    slot="footer"
-    class="d-flex justify-content-center align-items-center w-100"
-  >
-    <sug-ui-button
-      label="Okay"
-      icon=""
-      [rounded]="false"
-      [size]="'large'"
-      [severity]="'success'"
-      [outlined]="false"
-      (buttonClick)="closeHelpDialog()"
-    ></sug-ui-button>
-  </div>
-</sug-ui-dialog>
-<sug-ui-dialog
-  [config]="selectFileDialogConf"
-  [(visible)]="isSelectFileDialogVisible"
-  [showFooter]="true"
->
-  <h2 slot="header">Select File</h2>
-  <div class="dialog-content">
-    <div class="file-selection-wrap">
-      <span
-        ><i class="pi pi-folder-open" aria-hidden="true"></i> GeniusDrive</span
-      >
-      <sug-ui-radio-checkbox-button
-        type="radio"
-        name="dialogRadio"
-        [options]="selectFileRadioOptions"
-        inputId="dialog-radio-selection"
-        [(value)]="dialogSelectedValue"
-        (changeEvent)="handleDialogSelection($event)"
-      ></sug-ui-radio-checkbox-button>
-      <div class="btn-wrapper">
-        <sug-ui-button
-          severity="success"
-          [outlined]="false"
-          class="send-btn"
-          icon=""
-          label="Select"
-          (buttonClick)="closeSelectFileDialog()"
-        ></sug-ui-button>
-      </div>
-    </div>
-  </div>
-</sug-ui-dialog>
+  <p>
+    A custom reminder email is a powerful way to communicate important details
+    about your upcoming event to the participants. You can include additional
+    text and attachments by creating a custom reminder email template that
+    replaces the standard reminder.
+  </p>
+  <h4>How do I assign my custom reminder email to my sign up(s)?</h4>
+  <p>
+    There are two ways to assign a custom reminder email to a sign up. First,
+    when you create or edit your reminder template, the “Assign To” dropdown
+    allows you to choose one or more sign ups. Additionally, when you are
+    building or editing a specific sign up, you can select a reminder template
+    under “Custom Confirmation Emails & Reminders” in the "Notifications" area
+    of the "Settings" tab.
+  </p>
+  <h4>When will the custom reminder be sent?</h4>
+  <p>
+    The custom reminder uses the same settings as a standard reminder and can be
+    scheduled to go out 1 to 14 days in advance. You can view and edit the
+    reminder email setting under “Notifications” in the "Settings" tab for that
+    particular sign up.
+  </p>
+  <h4>What is the "Reply-to" field?</h4>
+  <p>
+    The reply-to field determines who will receive the message if the recipient
+    replies to the reminder email. Typically, the reply goes to the sign up
+    creator, but you can also choose to have the reply sent to one or more
+    admins who are involved in the sign up. To set up your account admins, visit
+    the "Tools" area of your account page.
+  </p>
+  <h4>How do I edit an existing template?</h4>
+  <p>
+    After you create and save your reminder template, it will be available in
+    the "Drafts & Templates" tab.
+  </p>
+</sug-help-dialog>
+<sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
+</sug-file-selection-dialog>

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ComposeEmailTemplateComponent } from './compose-email-template';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('ComposeEmailTemplateComponent', () => {
   let component: ComposeEmailTemplateComponent;
@@ -7,7 +8,7 @@ describe('ComposeEmailTemplateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ComposeEmailTemplateComponent],
+      imports: [ComposeEmailTemplateComponent, HttpClientTestingModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ComposeEmailTemplateComponent);

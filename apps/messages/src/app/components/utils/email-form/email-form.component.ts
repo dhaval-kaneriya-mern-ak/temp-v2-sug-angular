@@ -46,6 +46,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Input() selectedSignups: ISignUpItem[] = [];
   @Input() selectedTabGroups: ISelectOption[] = [];
   @Input() isSignUpIndexPageSelected = false;
+  @Input() showAttachments = false;
   @Input() selectedGroups: ISelectOption[] = [];
   @Input() recipientCount = 0;
   @Input() selectedDateSlots: Array<{

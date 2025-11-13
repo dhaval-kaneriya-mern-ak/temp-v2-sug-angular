@@ -1,19 +1,34 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import {
   SugUiRadioCheckboxButtonComponent,
   RadioCheckboxChangeEvent,
-  SugUiSelectBoxComponent,
-  SugUiDialogComponent,
   SugUiButtonComponent,
   SugUiTooltipComponent,
   SugUiMultiSelectDropdownComponent,
   DialogConfig,
 } from '@lumaverse/sug-ui';
 import { ISelectOption } from '@lumaverse/sug-ui';
-import { HttpClientModule } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { ComposeService } from '../compose.service';
+import { Subject, takeUntil } from 'rxjs';
+import { UserStateService } from '@services/user-state.service';
+import { MemberProfile, ISignUpItem } from '@services/interfaces';
+import { NgxCaptchaModule } from 'ngx-captcha';
+import { environment } from '@environments/environment';
+import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
+import { ComposeEmailStateService } from '../../utils/services/compose-email-state.service';
+import { PeopleSelectionDialogComponent } from '../../utils/people-selection-dialog/people-selection-dialog.component';
+import { DateSlotsSelectionComponent } from '../../utils/date-slots-selection/date-slots-selection.component';
+import { RecipientDetailsDialogComponent } from '../../utils/recipient-details-dialog/recipient-details-dialog.component';
+import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -26,235 +41,44 @@ import { BadgeModule } from 'primeng/badge';
     ButtonModule,
     BadgeModule,
     SugUiMultiSelectDropdownComponent,
-    HttpClientModule,
-    SugUiDialogComponent,
+    ReactiveFormsModule,
+    NgxCaptchaModule,
+    HelpDialogComponent,
+    PeopleSelectionDialogComponent,
+    DateSlotsSelectionComponent,
+    RecipientDetailsDialogComponent,
+    FileSelectionDialogComponent,
   ],
+  providers: [ComposeEmailStateService],
   templateUrl: './compose-text-message.html',
   styleUrls: ['./compose-text-message.scss'],
 })
-export class ComposeTextMessageComponent {
-  constructor() {
-    // Initialization logic if needed
-  }
-  peopleDialogConf: DialogConfig = {
-    modal: true,
-    closable: true,
-    closeOnEscape: true,
-    dismissableMask: true,
-    position: 'center',
-    width: '600px',
-  };
+export class ComposeTextMessageComponent implements OnInit, OnDestroy {
+  composeService = inject(ComposeService);
+  protected readonly userStateService = inject(UserStateService);
+  private fb = inject(FormBuilder);
+  stateService = inject(ComposeEmailStateService);
+  inviteTextForm!: FormGroup;
+  sendTextEmailForm!: FormGroup;
+  isDateSlotsDialogVisible = false;
+  isRecipientDialogVisible = false;
+  isLoading = false;
+  showProfile = false;
+  showEmail = false;
+  userProfile: MemberProfile | null = null;
+  @Input() readonly siteKey: string = environment.siteKey;
+  private readonly destroy$ = new Subject<void>();
   isPeopleDialogVisible = false;
   includeNonGroupMembersForGroups = false;
-
-  // Methods for "Select People" dialog
-  openPeopleDialog() {
-    this.isPeopleDialogVisible = true;
-  }
-
-  closePeopleDialog() {
-    this.isPeopleDialogVisible = false;
-  }
-
-  selectFileDialogConf: DialogConfig = {
-    modal: true,
-    closable: true,
-    closeOnEscape: true,
-    dismissableMask: true,
-    position: 'center',
-    width: '500px',
-  };
   isSelectFileDialogVisible = false;
-  openSelectFileDialog() {
-    this.isSelectFileDialogVisible = true;
-  }
-
-  closeSelectFileDialog() {
-    this.isSelectFileDialogVisible = false;
-  }
-
-  helpDialogConf: DialogConfig = {
-    modal: true,
-    closable: true,
-    closeOnEscape: true,
-    dismissableMask: true,
-    position: 'center',
-    width: '850px',
-  };
   isHelpDialogVisible = false;
-
-  // Methods for help dialog
-  openHelpDialog() {
-    this.isHelpDialogVisible = true;
-  }
-
-  closeHelpDialog() {
-    this.isHelpDialogVisible = false;
-  }
-
-  selectOptions: ISelectOption[] = [
-    {
-      label: 'Option 1',
-      value: 'option1',
-    },
-    {
-      label: 'Option 2',
-      value: 'option2',
-    },
-  ];
-
-  defaultOption: ISelectOption = this.selectOptions[0];
-
-  // Options for the dialog select box when first radio option is selected
-  signUpOptions: ISelectOption[] = [
-    {
-      label: 'Select Sign Up(s)',
-      value: 'Select-Sign',
-    },
-    {
-      label: 'Test',
-      value: 'test',
-    },
-    {
-      label: 'Venmo',
-      value: 'venmo',
-    },
-  ];
-
-  defaultSignUpOption: ISelectOption = this.signUpOptions[0];
-
+  subAdminsData: ISelectOption[] = [];
+  groupData: ISelectOption[] = [];
+  signupOptions: ISelectOption[] = [];
+  signupOptionsData: ISignUpItem[] = [];
+  defaultOption: ISelectOption = this.subAdminsData[0];
   showRadioButtons = true;
-
-  checkboxOptions = [
-    { label: 'Include reply-to info', value: 'dialogemailoptionone' },
-    {
-      label: 'Include sign up link',
-      value: 'dialogemailoptiontwo',
-    },
-    {
-      label: 'Send message via email when text is not available',
-      value: 'dialogemailoptionthree',
-    },
-  ];
-  sendMessageRadioOptions = [
-    {
-      label: 'People who have signed up',
-      value: 'sendMessageRadioOne',
-      hasCustomContent: true,
-    },
-    {
-      label: 'People who have NOT signed up',
-      value: 'sendMessageRadioTwo',
-      hasCustomContent: true,
-    },
-    {
-      label: 'People in specific group(s)',
-      value: 'sendMessageRadioThree',
-      hasCustomContent: true,
-    },
-    {
-      label: 'People I will select',
-      value: 'sendMessageRadioFour',
-      hasCustomContent: true,
-    },
-  ];
-
-  // Options for sendMessageRadioOne
-  sendMessageSelectOne = [
-    {
-      label: '1216',
-      value: '1216',
-    },
-    {
-      label: 'Aly 12/9',
-      value: 'Aly12/9',
-    },
-    {
-      label: 'Test Group',
-      value: 'testgroup',
-    },
-  ];
-
-  // Options for sendMessageRadioTwo
-  sendMessageSelectTwo = [
-    {
-      label: 'Default Group',
-      value: 'defaultgroup',
-    },
-    {
-      label: 'Custom Group',
-      value: 'customgroup',
-    },
-  ];
-
-  // Options for sendMessageRadioThree
-  sendMessageSelectThree = [
-    {
-      label: 'Import Group 1',
-      value: 'importgroup1',
-    },
-    {
-      label: 'Import Group 2',
-      value: 'importgroup2',
-    },
-  ];
-
-  // Options for selectFileDialog
-  selectFileRadioOptions = [
-    {
-      label: 'Screenshot 2024-05-23 at 1.png',
-      value: 'uploadcomputer',
-    },
-    {
-      label: 'Screenshot 2024-05-23 at 1.png',
-      value: 'geniusdrive',
-    },
-    {
-      label: 'Screenshot 2024-05-23 at 1.png',
-      value: 'cloudstorage',
-    },
-  ];
-
-  // Checkbox state
-  accepted = false;
-
-  // Checkbox selection tracking
-  selectedCheckboxes: string[] = [];
-
-  // Method to handle checkbox selection
-  handleCheckboxSelection(event: RadioCheckboxChangeEvent) {
-    this.selectedCheckboxes = Array.isArray(event.value)
-      ? event.value
-      : [event.value];
-  }
-
-  // Helper methods to check if specific checkbox is selected
-  isCheckbox1Selected(): boolean {
-    return this.selectedCheckboxes.includes('dialogemailoptionone');
-  }
-
-  isCheckbox3Selected(): boolean {
-    return this.selectedCheckboxes.includes('dialogemailoptionthree');
-  }
-
-  // Dialog state for radio selection
-  dialogSelectedValue: string | null = null;
-
-  // Method to handle dialog radio selection
-  handleDialogSelection(event: RadioCheckboxChangeEvent) {
-    this.dialogSelectedValue = event.value;
-  }
-
-  // Method to preview account index
-  previewAcctIndex() {
-    // Add your preview logic here
-  }
-
-  // Method to show tooltip info
-  showTooltipInfo() {
-    // You can show additional info or another dialog here
-  }
-
+  selectedValue: string | null = null;
   radioOptions = [
     {
       label: 'Invite people to opt in to text messages',
@@ -265,8 +89,79 @@ export class ComposeTextMessageComponent {
       value: 'emailoptiontwo',
     },
   ];
+  checkboxOptions = [
+    { label: 'Include reply-to info', value: 'reply' },
+    { label: 'Include sign up link', value: 'link' },
+    {
+      label: 'Send message via email when text is not available',
+      value: 'fallback',
+    },
+  ];
 
-  selectedValue: string | null = null;
+  ngOnInit() {
+    this.initializeForms();
+    // Listen for changes on selectedSignups
+    const controlsToToggle = [
+      'message',
+      'attachments',
+      'includeOption',
+      'emailSubject',
+      'emailFrom',
+      'emailReplyTo',
+      'includefallback',
+      'includereply',
+    ];
+    this.sendTextEmailForm
+      .get('includefallback')
+      ?.valueChanges.subscribe((val) => {
+        if (val === false) {
+          this.showEmail = false;
+        }
+      });
+    this.sendTextEmailForm
+      .get('selectedSignups')
+      ?.valueChanges.subscribe((value) => {
+        if (!value || value.length === 0) {
+          controlsToToggle.forEach(
+            (ctrl) => this.sendTextEmailForm.get(ctrl)?.disable(),
+            this.stateService.clearAllSelections()
+          );
+        } else {
+          controlsToToggle.forEach((ctrl) =>
+            this.sendTextEmailForm.get(ctrl)?.enable()
+          );
+        }
+      });
+
+    controlsToToggle.forEach((ctrl) =>
+      this.sendTextEmailForm.get(ctrl)?.disable()
+    );
+  }
+
+  // Methods for "Select People" dialog
+  openPeopleDialog() {
+    this.isPeopleDialogVisible = true;
+  }
+
+  closePeopleDialog() {
+    this.isPeopleDialogVisible = false;
+  }
+  openSelectFileDialog() {
+    this.isSelectFileDialogVisible = true;
+  }
+
+  closeSelectFileDialog() {
+    this.isSelectFileDialogVisible = false;
+  }
+
+  // Methods for help dialog
+  openHelpDialog() {
+    this.isHelpDialogVisible = true;
+  }
+
+  closeHelpDialog() {
+    this.isHelpDialogVisible = false;
+  }
 
   handleSelection(event: RadioCheckboxChangeEvent) {
     this.selectedValue = event.value; // Update the selected size
@@ -278,9 +173,209 @@ export class ComposeTextMessageComponent {
     this.selectedValue = null; // Reset the selected size
   }
 
-  sendEmail() {
-    // In a real app, you would gather form data and send it.
+  openDateSlotsDialog(): void {
+    this.isDateSlotsDialogVisible = true;
+  }
 
-    alert('Email sent! (Check the console)');
+  closeDateSlotsDialog(): void {
+    this.isDateSlotsDialogVisible = false;
+  }
+
+  onDateSlotsSelected(): void {
+    // Called when date slots are selected from dialog
+    this.closeDateSlotsDialog();
+
+    // Re-open the people selection dialog to show the selected slots
+    setTimeout(() => {
+      this.isPeopleDialogVisible = true;
+    }, 100);
+  }
+
+  get hasPeopleSelection(): boolean {
+    return this.stateService.selectedGroups.length > 0;
+  }
+
+  getSelectedSignup() {
+    const selectedSignup = this.signupOptionsData.filter(
+      (signup) =>
+        Number(this.sendTextEmailForm.get('selectedSignups')?.value[0]) ===
+        signup.signupid
+    );
+    this.sendTextEmailForm.patchValue({
+      emailSubject: selectedSignup[0]?.title || '',
+    });
+    return selectedSignup;
+  }
+
+  showRecipientDetails(): void {
+    // Reset dialog state to ensure clean reopening
+    this.isRecipientDialogVisible = false;
+
+    // Reopen after Angular completes current change detection cycle
+    setTimeout(() => {
+      this.isRecipientDialogVisible = true;
+    });
+  }
+
+  // Get current form based on selected template type
+  get currentEmailForm(): FormGroup {
+    return this.selectedValue === 'emailoptionone'
+      ? this.inviteTextForm
+      : this.sendTextEmailForm;
+  }
+
+  get currentFormType(): 'inviteToSignUp' | 'emailParticipants' {
+    return this.selectedValue === 'emailoptionone'
+      ? 'inviteToSignUp'
+      : 'emailParticipants';
+  }
+
+  handleReset(): void {
+    this.currentEmailForm.get('token')?.reset();
+  }
+
+  handleExpire(): void {
+    this.currentEmailForm.get('token')?.setValue(null);
+  }
+
+  handleSuccess(token: string): void {
+    this.currentEmailForm.get('token')?.setValue(token);
+  }
+
+  private initializeForms(): void {
+    // Create form for reminder email template
+    this.inviteTextForm = this.fb.group({
+      fromName: ['', Validators.required],
+      replyTo: [''],
+      subject: ['', Validators.required],
+      message: ['', Validators.required],
+      token: ['', Validators.required],
+      to: [''],
+    });
+
+    // Create form for confirmation email template
+    this.sendTextEmailForm = this.fb.group({
+      token: ['', Validators.required],
+      selectedSignups: [[], Validators.required],
+      message: [{ value: '', disabled: true }, Validators.required],
+      attachments: [[]],
+      includefallback: false,
+      includereply: false,
+      includelink: false,
+      emailSubject: '',
+      emailFrom: '',
+      emailReplyTo: '',
+    });
+    this.getSubAdmins();
+    this.loadUserProfile();
+  }
+
+  private loadUserProfile(): void {
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.userProfile = profile;
+          if (profile) {
+            const fullName = `${profile.firstname || ''} ${
+              profile.lastname || ''
+            }`.trim();
+            if (this.inviteTextForm) {
+              this.inviteTextForm.patchValue({
+                fromName: fullName,
+                message:
+                  fullName +
+                  ' invites you to opt in to the SignUpGenius text messaging service. Your privacy is our top priority, and this is a voluntary opt-in process designed to provide updates related to your sign up participation. You may unsubscribe at any time.',
+              });
+            }
+            this.sendTextEmailForm.patchValue({
+              emailFrom: fullName,
+              message: 'From ' + fullName + ':',
+            });
+          }
+        },
+        error: () => {
+          // Error loading user profile
+        },
+      });
+  }
+
+  showProfileData() {
+    this.showProfile = !this.showProfile;
+  }
+
+  showEmailData() {
+    this.showEmail = !this.showEmail;
+  }
+
+  getGroups() {
+    this.composeService.getGroupforMembers().subscribe({
+      next: (response) => {
+        if (response?.data) {
+          const groupOptions = response.data.map((group) => ({
+            label: group.title || 'Unnamed Group',
+            value: group.id.toString(),
+          }));
+          this.stateService.setGroupOptions(groupOptions);
+          this.groupData = groupOptions;
+        }
+        this.getSignups();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.groupData = [];
+      },
+    });
+  }
+
+  getSignups() {
+    this.isLoading = true;
+    this.composeService.getSignUpList().subscribe({
+      next: (response) => {
+        if (response?.data) {
+          this.signupOptionsData = response.data;
+          const signupOptions = response?.data.map((signup) => ({
+            label: signup.title,
+            value: signup.signupid?.toString() || '',
+          }));
+          this.signupOptions = signupOptions;
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.signupOptions = [];
+      },
+    });
+  }
+  getSubAdmins() {
+    this.isLoading = true;
+    this.composeService
+      .getSubAdmins()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (apiResponse) => {
+          if (apiResponse && apiResponse.data) {
+            this.subAdminsData = apiResponse.data.map((admin) => ({
+              label: `${admin.firstname} ${admin.lastname} (${admin.email})`,
+              value: admin.id.toString(),
+            }));
+          }
+          this.isLoading = false;
+          this.getGroups();
+        },
+        error: () => {
+          this.isLoading = false;
+          this.subAdminsData = [];
+        },
+      });
+  }
+
+  /**
+   * Cleanup subscriptions on component destroy
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

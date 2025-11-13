@@ -97,6 +97,11 @@
 ::ng-deep {
   sug-ui-multi-select-dropdown {
     width: 70%;
+    .custom-dropdown {
+      .p-multiselect-option {
+        white-space: normal;
+      }
+    }
     @media (max-width: 767px) {
       width: 100%;
     }

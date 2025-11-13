@@ -21,23 +21,20 @@ import { Observable } from 'rxjs';
 export class ComposeService {
   private sugApiClient = inject(SugApiService);
 
-  getMemberVerificationDetails(): Observable<IMemberVerificationDetailsResponse> {
-    return this.sugApiClient.get(`messages/compose`);
-  }
-  getMemberEmailLimits(): Observable<IMemberEmailLimitsResponse> {
-    return this.sugApiClient.get(`messages/compose/member-email-limits`);
-  }
   getMemberInfo(): Observable<IMemberInfoData> {
     return this.sugApiClient.get(`messages/compose/member-info`);
   }
+
   getSignUpList(): Observable<ISignUpListResponse> {
     return this.sugApiClient.get(
       `/signups/created?page=1&limit=100&sortBy=startdate&sortOrder=desc&filter=active`
     );
   }
+
   getGroupforMembers(): Observable<IGroupListResponse> {
     return this.sugApiClient.get(`/groups`);
   }
+
   getGroupMembers(payload: {
     sentToType: string;
     sentTo: string;
@@ -51,15 +48,11 @@ export class ComposeService {
   }): Observable<IGroupMembersResponse> {
     return this.sugApiClient.post(`/messages/recipients`, payload);
   }
-  getCloudSpongeServices(): Observable<ICloudSpongeServicesResponse> {
-    return this.sugApiClient.get(`messages/compose/cloud-sponge-services`);
-  }
+
   getSubAdmins(): Observable<ISubAdminsResponse> {
     return this.sugApiClient.get(`auth/subadmins`);
   }
-  getSignUpListEmailTemplate(): Observable<IGetSignUpListResponse> {
-    return this.sugApiClient.get(`messages/compose/sign-up-list`);
-  }
+
   getTabGroups(): Observable<any> {
     return this.sugApiClient.get(
       `/tools/tabgroups?page=1&limit=100&sortBy=name&sortOrder=asc`
