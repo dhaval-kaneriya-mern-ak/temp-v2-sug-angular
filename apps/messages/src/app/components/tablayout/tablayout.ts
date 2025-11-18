@@ -29,6 +29,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
   private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+  public isProUser = false;
+  public isTrialUser = false;
 
   constructor() {
     this.checkAnnouncementBarVisibility();
@@ -59,6 +61,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (profile) => {
+          this.isProUser = profile?.ispro ?? false;
+          this.isTrialUser = profile?.istrial ?? false;
           this.updateNavigationTabs(profile);
           this.initializeActiveTab();
         },

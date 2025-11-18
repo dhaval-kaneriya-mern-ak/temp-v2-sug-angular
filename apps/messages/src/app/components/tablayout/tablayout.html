@@ -16,7 +16,18 @@
     </p>
   </div>
   }
-  <h2 class="tab-title col-md-8">Messages</h2>
+  <div
+    class="col-12 d-inline-block d-sm-flex align-items-center justify-content-between"
+  >
+    <h2 class="tab-title">Messages</h2>
+    <div class="mb-3">
+      @if (!isProUser && !isTrialUser) {
+      <a href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
+        >Try Premium for Free</a
+      >
+      }
+    </div>
+  </div>
   <div class="col-md-12">
     <sug-ui-menu-tabs
       [tabs]="navigationTabs"
