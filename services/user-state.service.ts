@@ -105,6 +105,18 @@ export class UserStateService implements OnDestroy {
   }
 
   /**
+   * Refresh authentication token
+   * POST to v3/auth/refresh with empty refreshToken and token
+   */
+  refreshToken(): Observable<any> {
+    const payload = {
+      refreshToken: '',
+      token: '',
+    };
+    return this.sugApiService.post<any>('v3/auth/refresh', payload);
+  }
+
+  /**
    * Get display name for the user's subscription plan
    */
   getPlanDisplayName(userProfile?: MemberProfile | null): string {

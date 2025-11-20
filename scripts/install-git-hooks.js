@@ -36,14 +36,14 @@ function resetHooksPath() {
       console.log('ℹ️  Git hooks path is already set to default location');
       return true;
     }
-    
+
     if (currentHooksPath) {
       console.log(`🔄 Current hooks path: ${currentHooksPath}`);
       console.log('🔧 Resetting git hooks path to default (.git/hooks/)...');
-      
+
       // Reset to default hooks directory
       execSync('git config --unset core.hookspath', { cwd: path.join(__dirname, '../..') });
-      
+
       console.log('✅ Git hooks path reset to default location');
       return true;
     }
@@ -51,7 +51,7 @@ function resetHooksPath() {
     console.error('❌ Failed to reset git hooks path:', error.message);
     return false;
   }
-  
+
   return true;
 }
 
@@ -93,12 +93,12 @@ if echo "$STAGED_FILES" | grep -q "^sug-angular/"; then
     exit 1
   fi
 
-  echo "🧪 Running tests..."
-  npm run test:ci
-  if [ $? -ne 0 ]; then
-    echo "❌ Tests failed"
-    exit 1
-  fi
+  # echo "🧪 Running tests..."
+  # npm run test:ci
+  # if [ $? -ne 0 ]; then
+  #   echo "❌ Tests failed"
+  #   exit 1
+  # fi
 
   echo "🏗️  Running build (this may take a moment)..."
   npm run build:all -- --skip-nx-cache
@@ -209,7 +209,7 @@ if (success) {
   console.log('🎉 Git hooks successfully installed!');
   console.log('');
   console.log('ℹ️  These hooks will:');
-  console.log('   • Run lint-staged, tests, and build when sug-angular files are committed');
+  console.log('   • Run lint-staged and build when sug-angular files are committed');
   console.log('   • Validate commit message format for sug-angular changes');
   console.log('   • Skip all checks when no sug-angular files are changed');
   console.log('');

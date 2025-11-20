@@ -6,6 +6,30 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- Freestar Preconnect Links for Ad Performance -->
+    <link rel="preconnect" href="https://a.pub.network/" crossorigin />
+    <link rel="preconnect" href="https://b.pub.network/" crossorigin />
+    <link rel="preconnect" href="https://c.pub.network/" crossorigin />
+    <link rel="preconnect" href="https://d.pub.network/" crossorigin />
+    <link rel="preconnect" href="https://c.amazon-adsystem.com" crossorigin />
+    <link rel="preconnect" href="https://s.amazon-adsystem.com" crossorigin />
+    <link rel="preconnect" href="https://btloader.com/" crossorigin />
+    <link rel="preconnect" href="https://api.btloader.com/" crossorigin />
+
+    <!-- Freestar: Set page_url for local testing -->
+    <!-- <script>
+      (function() {
+        // Initialize freestar queue if it doesn't exist
+        window.freestar = window.freestar || { queue: [] };
+
+        freestar.queue.push(function () {
+          if (typeof googletag !== 'undefined' && googletag.pubads) {
+            googletag.pubads().set('page_url', 'https://signupgenius.com/');
+          }
+        });
+      })();
+    </script> -->
   </head>
   <body>
     <sug-root></sug-root>
