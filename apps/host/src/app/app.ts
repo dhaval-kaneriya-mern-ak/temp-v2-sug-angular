@@ -201,7 +201,7 @@ export class App implements OnInit, OnDestroy {
     // Get just the path (e.g., /messages/dashboard)
     const currentPath = this.router.url;
     const encodedPath = encodeURIComponent(currentPath);
-    const loginUrl = `https://test.signupgenius.rocks/index.cfm?go=c.login&prior=${encodedPath}`;
+    const loginUrl = `/index.cfm?go=c.login&prior=${encodedPath}`;
     // console.log('[App] Redirecting to:', loginUrl);
     // console.log('[App] Current path:', currentPath);
     window.location.href = loginUrl;
