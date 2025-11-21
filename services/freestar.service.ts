@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, type Signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 declare global {
@@ -63,7 +63,9 @@ export class FreestarService {
   private scriptLoading = false;
   private initTimeout: ReturnType<typeof setTimeout> | null = null;
   private isInitializing = false;
-  private adsEnabled = true;
+  private readonly adsEnabled = signal<boolean>(true);
+
+  private static readonly MOBILE_BREAKPOINT = 768;
 
   /**
    * Route group configuration map for ad units fallback
@@ -90,43 +92,40 @@ export class FreestarService {
   /**
    * Enable or disable ads globally at runtime.
    * When disabled, the service becomes a no-op (no script load, no slot registration).
+   * Also cleans up any existing Freestar resources when disabled.
    */
   setAdsEnabled(enabled: boolean): void {
-    // console.log('[FreestarService] setAdsEnabled called:', {
-    //   enabled,
-    //   previousValue: this.adsEnabled,
-    // });
-    this.adsEnabled = enabled;
-    // console.log('[FreestarService] adsEnabled is now:', this.adsEnabled);
+    const previousValue = this.adsEnabled();
+    this.adsEnabled.set(enabled);
+
+    // If disabling ads, clean up all Freestar resources
+    if (!enabled && previousValue !== enabled) {
+      this.cleanupFreestarResources();
+    }
   }
 
   /**
    * Check if ads are enabled (for components to decide visibility).
+   * Returns a readonly signal for reactive updates.
    */
-  areAdsEnabled(): boolean {
-    // console.log(
-    //   '[FreestarService] areAdsEnabled called, returning:',
-    //   this.adsEnabled
-    // );
-    return this.adsEnabled;
+  areAdsEnabled(): Signal<boolean> {
+    return this.adsEnabled.asReadonly();
   }
 
   /**
    * Initialize Freestar framework
    */
   initializeFreestar(): void {
-    // console.log(
-    //   '[FreestarService] initializeFreestar called, adsEnabled:',
-    //   this.adsEnabled
-    // );
-    if (!this.adsEnabled) {
-      // console.log('[FreestarService] Ads disabled, skipping initialization');
+    if (!this.adsEnabled()) {
       return;
     }
     // console.log('[FreestarService] Proceeding with Freestar initialization');
     if (typeof window === 'undefined') {
       return;
     }
+
+    // Add preconnect links for performance (only when ads are enabled)
+    this.addPreconnectLinks();
 
     // Initialize freestar object if not exists, or ensure required properties exist
     if (!window.freestar) {
@@ -143,10 +142,11 @@ export class FreestarService {
           }
         },
         newAdSlots: (
-          slots: Array<{ placementName: string; slotId: string }>
+          _slots: Array<{ placementName: string; slotId: string }>
         ) => {
           // This will be implemented by the Freestar script
-          //console.log('[Freestar] newAdSlots called (stub)', slots);
+          // Stub function - parameter intentionally unused
+          void _slots;
         },
       };
       // console.log('[Freestar] Framework initialized');
@@ -174,17 +174,115 @@ export class FreestarService {
       }
       if (!window.freestar.newAdSlots) {
         window.freestar.newAdSlots = (
-          slots: Array<{ placementName: string; slotId: string }>
+          _slots: Array<{ placementName: string; slotId: string }>
         ) => {
           // This will be implemented by the Freestar script
-          // console.log('[Freestar] newAdSlots called (stub)', slots);
+          // Stub function - parameter intentionally unused
+          void _slots;
         };
       }
     }
 
+    // Queue page_url setting to run after Freestar script loads
+    this.queuePageUrlSetting();
+
     // Load Freestar script if not already loaded
     if (!this.scriptLoaded && !this.scriptLoading) {
       this.loadFreestarScript();
+    } else if (this.scriptLoaded) {
+      // If script is already loaded, set page_url immediately
+      this.setPageUrl();
+    }
+  }
+
+  /**
+   * Add preconnect links for Freestar domains to improve ad loading performance
+   * Only called when ads are enabled
+   */
+  private addPreconnectLinks(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const preconnectUrls = [
+      'https://a.pub.network/',
+      'https://b.pub.network/',
+      'https://c.pub.network/',
+      'https://d.pub.network/',
+      'https://c.amazon-adsystem.com',
+      'https://s.amazon-adsystem.com',
+      'https://btloader.com/',
+      'https://api.btloader.com/',
+    ];
+
+    preconnectUrls.forEach((url) => {
+      // Check if link already exists
+      const existingLink = document.querySelector(
+        `link[rel="preconnect"][href="${url}"]`
+      );
+      if (!existingLink) {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = url;
+        link.setAttribute('crossorigin', '');
+        document.head.appendChild(link);
+      }
+    });
+  }
+
+  /**
+   * Clean up Freestar scripts and links when ads are disabled
+   * Removes scripts, CSS, and preconnect links to prevent any network requests
+   */
+  private cleanupFreestarResources(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    // Remove Freestar script
+    const script = document.querySelector('script[src*="pubfig.min.js"]');
+    if (script) {
+      script.remove();
+      this.scriptLoaded = false;
+      this.scriptLoading = false;
+    }
+
+    // Remove Freestar CSS
+    const cssLink = document.querySelector('link[href*="cls.css"]');
+    if (cssLink) {
+      cssLink.remove();
+    }
+
+    // Remove preconnect links
+    const preconnectUrls = [
+      'https://a.pub.network/',
+      'https://b.pub.network/',
+      'https://c.pub.network/',
+      'https://d.pub.network/',
+      'https://c.amazon-adsystem.com',
+      'https://s.amazon-adsystem.com',
+      'https://btloader.com/',
+      'https://api.btloader.com/',
+    ];
+
+    preconnectUrls.forEach((url) => {
+      const link = document.querySelector(
+        `link[rel="preconnect"][href="${url}"]`
+      );
+      if (link) {
+        link.remove();
+      }
+    });
+
+    // Clear freestar object to prevent any further execution
+    if (typeof window !== 'undefined' && window.freestar) {
+      // Clear the queue to prevent queued functions from executing
+      if (window.freestar.queue) {
+        window.freestar.queue = [];
+      }
+      // Don't delete window.freestar entirely as other code might check for its existence
+      // Instead, ensure it's in a safe state
+      window.freestar.config = { enabled_slots: [] };
     }
   }
 
@@ -206,6 +304,8 @@ export class FreestarService {
       this.scriptLoaded = true;
       this.scriptLoading = false;
       this.executeQueuedFunctions();
+      // Set page_url if script already exists
+      this.setPageUrl();
       return;
     }
 
@@ -228,6 +328,8 @@ export class FreestarService {
       this.scriptLoading = false;
       // console.log('[Freestar] Script loaded successfully');
       this.executeQueuedFunctions();
+      // Set page_url after script loads and googletag is available
+      this.setPageUrl();
     };
     script.onerror = () => {
       console.error('[Freestar] Failed to load script from:', script.src);
@@ -254,17 +356,103 @@ export class FreestarService {
   }
 
   /**
+   * Queue page_url setting to run after Freestar script loads
+   * Only sets page_url if origin is NOT https://signupgenius.com
+   */
+  private queuePageUrlSetting(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Check if current origin is NOT signupgenius.com
+    if (window.location.origin !== 'https://signupgenius.com') {
+      // Queue the page_url setting to run after Freestar script loads
+      // Note: window.freestar should already be initialized by initializeFreestar() before this is called
+      if (window.freestar && window.freestar.queue) {
+        window.freestar.queue.push(() => {
+          this.setPageUrl();
+        });
+      }
+    }
+  }
+
+  /**
+   * Set page_url for googletag
+   * Only sets if origin is NOT https://signupgenius.com
+   * Waits for googletag to be available before setting
+   */
+  private setPageUrl(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Check if current origin is NOT signupgenius.com
+    if (window.location.origin !== 'https://signupgenius.com') {
+      // Wait for googletag to be available
+      this.waitForGoogletag(() => {
+        if (typeof googletag !== 'undefined' && googletag.pubads) {
+          try {
+            googletag.pubads().set('page_url', 'https://signupgenius.com/');
+            console.log('[Freestar] Set page_url to https://signupgenius.com/');
+          } catch (error) {
+            console.error('[Freestar] Error setting page_url:', error);
+          }
+        } else {
+          console.warn(
+            '[Freestar] googletag.pubads() still not available after waiting'
+          );
+        }
+      });
+    } else {
+      console.log(
+        '[Freestar] Skipping page_url setting - origin is https://signupgenius.com'
+      );
+    }
+  }
+
+  /**
+   * Wait for googletag to be available, then execute callback
+   * Uses polling with timeout to avoid infinite waiting
+   */
+  private waitForGoogletag(
+    callback: () => void,
+    maxAttempts = 50,
+    attempt = 0
+  ): void {
+    if (
+      typeof googletag !== 'undefined' &&
+      typeof googletag.pubads === 'function'
+    ) {
+      try {
+        // Try to call pubads() to verify it's actually available
+        const pubads = googletag.pubads();
+        if (pubads) {
+          callback();
+          return;
+        }
+      } catch {
+        // pubads() not ready yet, continue waiting
+      }
+    }
+
+    if (attempt >= maxAttempts) {
+      console.warn(
+        '[Freestar] googletag.pubads() not available after waiting, giving up'
+      );
+      return;
+    }
+
+    // Wait a bit and try again
+    setTimeout(() => {
+      this.waitForGoogletag(callback, maxAttempts, attempt + 1);
+    }, 100); // Check every 100ms
+  }
+
+  /**
    * Register an ad slot
    */
   registerAdSlot(placementName: string, slotId: string): void {
-    // console.log('[FreestarService] registerAdSlot called:', {
-    //   placementName,
-    //   slotId,
-    //   adsEnabled: this.adsEnabled,
-    // });
-
-    if (!this.adsEnabled) {
-      // console.log('[FreestarService] Ads disabled, skipping slot registration');
+    if (!this.adsEnabled()) {
       return;
     }
 
@@ -307,7 +495,7 @@ export class FreestarService {
    * Initialize all registered ad slots
    */
   private initializeAllSlots(): void {
-    if (!this.adsEnabled) {
+    if (!this.adsEnabled()) {
       return;
     }
     if (!window.freestar || window.freestar.config.enabled_slots.length === 0) {
@@ -325,6 +513,9 @@ export class FreestarService {
     this.isInitializing = true;
 
     const initSlots = () => {
+      // Set page_url BEFORE initializing slots
+      this.setPageUrl();
+
       // Check if the real Freestar newAdSlots is available (not our stub)
       const isRealFunction =
         window.freestar?.newAdSlots &&
@@ -356,6 +547,9 @@ export class FreestarService {
             window.freestar.newAdSlots.toString().indexOf('stub') === -1;
 
           if (isRealNow && window.freestar.config.enabled_slots.length > 0) {
+            // Set page_url BEFORE initializing slots (delayed)
+            this.setPageUrl();
+
             // console.log(
             //   '[Freestar] Initializing all ad slots (delayed):',
             //   window.freestar.config.enabled_slots
@@ -392,7 +586,7 @@ export class FreestarService {
    * Refresh all ad slots (useful for SPA navigation)
    */
   refreshAllSlots(): void {
-    if (!this.adsEnabled) {
+    if (!this.adsEnabled()) {
       return;
     }
     if (!window.freestar) {
@@ -416,14 +610,8 @@ export class FreestarService {
     }
 
     // Re-set page_url on route change to ensure it's still set correctly
-    if (typeof googletag !== 'undefined' && googletag.pubads) {
-      try {
-        googletag.pubads().set('page_url', 'https://signupgenius.com/');
-        // console.log('[Freestar] Re-set page_url after route change');
-      } catch (error) {
-        console.error('[Freestar] Error re-setting page_url:', error);
-      }
-    }
+    // Only set if origin is NOT https://signupgenius.com
+    this.setPageUrl();
   }
 
   /**
@@ -606,6 +794,6 @@ export class FreestarService {
     if (typeof window === 'undefined') {
       return false;
     }
-    return window.innerWidth <= 768;
+    return window.innerWidth <= FreestarService.MOBILE_BREAKPOINT;
   }
 }

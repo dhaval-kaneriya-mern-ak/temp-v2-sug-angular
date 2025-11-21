@@ -1,8 +1,9 @@
+@if (shouldDisplay()) {
 <div
   #adContainer
   class="freestar-ad-container"
-  [attr.data-position]="position"
-  [style.display]="shouldDisplay ? 'flex' : 'none'"
+  [attr.data-position]="position()"
 >
   <!-- Ad will be injected here by Freestar -->
 </div>
+}

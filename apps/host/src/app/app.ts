@@ -179,16 +179,11 @@ export class App implements OnInit, OnDestroy {
           // console.log('[App] Route showAds value:', showAds);
 
           // Only refresh ads if they're enabled (for free users) and route allows ads
-          if (this.freestarService.areAdsEnabled() && showAds) {
+          if (this.freestarService.areAdsEnabled()() && showAds) {
             // Refresh Freestar ads on route change (after page components initialize)
             setTimeout(() => {
-              // console.log('[App] Refreshing Freestar ads after route change');
               this.freestarService.refreshAllSlots();
             }, 100);
-          } else {
-            // console.log(
-            //   '[App] Ads disabled or route does not allow ads, skipping refresh'
-            // );
           }
         }
       });
@@ -254,7 +249,7 @@ export class App implements OnInit, OnDestroy {
     }
 
     // Check if ads are enabled globally
-    if (!this.freestarService.areAdsEnabled()) {
+    if (!this.freestarService.areAdsEnabled()()) {
       return false;
     }
 
