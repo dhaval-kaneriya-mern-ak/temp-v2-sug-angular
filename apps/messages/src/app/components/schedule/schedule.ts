@@ -75,7 +75,7 @@ export class Schedule {
     {
       field: 'messagetype',
       header: 'Type',
-      sortable: true,
+      sortable: false,
       filterable: false,
     },
     {
@@ -175,7 +175,7 @@ export class Schedule {
                 ...item,
                 datecreated: format(
                   new Date(Number(item.senddate) * 1000),
-                  'yyyy-MM-dd h:mmaaa'
+                  'dd/MM/yyyy h:mmaaa'
                 ),
                 // senddate: format(
                 //   new Date(Number(item.senddate) * 1000),

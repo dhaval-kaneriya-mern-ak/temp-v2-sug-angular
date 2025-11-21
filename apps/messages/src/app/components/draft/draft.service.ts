@@ -15,11 +15,17 @@ export class DraftService {
   getMessageTemplates(
     page: number,
     limit: number,
-    sortby = 'created',
-    sort = 'desc'
+    sortby = 'datecreated',
+    sort = 'desc',
+    searchTerm = ''
   ): Observable<DraftMessagesResponse> {
-    return this.sugApiClient.get(
-      `/messages/templates?page=${page}&limit=${limit}&sortby=${sortby}&sort=${sort}`
-    );
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortby,
+      sort,
+      search: searchTerm,
+    });
+    return this.sugApiClient.get(`/messages/drafts?${params.toString()}`);
   }
 }

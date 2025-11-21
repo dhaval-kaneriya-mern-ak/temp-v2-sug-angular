@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import {
@@ -11,16 +11,31 @@ import {
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { DraftService } from './draft.service';
-import { DraftMessage, MemberProfile } from '@services/interfaces';
+import {
+  DraftMessage,
+  MemberProfile,
+  selectedDraft,
+} from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
 import { UserStateService } from '@services/user-state.service';
-import { filter, take } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  takeUntil,
+  filter,
+  take,
+  catchError,
+  finalize,
+} from 'rxjs/operators';
 
 @Component({
   selector: 'sug-draft',
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     SugUiTableComponent,
     SugUiButtonComponent,
     SugUiDialogComponent,
@@ -31,7 +46,7 @@ import { filter, take } from 'rxjs';
   templateUrl: './draft.html',
   styleUrl: './draft.scss',
 })
-export class Draft {
+export class Draft implements OnDestroy, OnInit {
   dialogConf: DialogConfig = {
     modal: true,
     draggable: true,
@@ -45,16 +60,16 @@ export class Draft {
     width: '30vw',
   };
   isVisible = false;
-  selectedItem: DraftMessage | null = null;
+  selectedItem: selectedDraft | null = null;
   isLoading = false;
   draftService = inject(DraftService);
   private router = inject(Router);
   page = 1;
-  rows = 10;
-  sortField = 'created';
+  rows = 25;
+  sortField = 'datecreated';
   sortOrder: 'asc' | 'desc' = 'desc';
   tableConfig: ISugTableConfig = {
-    sortField: 'created',
+    sortField: 'datecreated',
     sortOrder: -1,
   };
   tableColumns: ISugTableColumn[] = [
@@ -73,7 +88,7 @@ export class Draft {
     {
       field: 'messagetype',
       header: 'Type',
-      sortable: true,
+      sortable: false,
       filterable: false,
     },
     {
@@ -86,10 +101,15 @@ export class Draft {
   totalRecords = 0;
   first = 0; // Important for proper pagination tracking
   tableData: DraftMessage[] = [];
+  searchTerm = '';
+  searchControl = new FormControl('');
+  private destroy$ = new Subject<void>();
+  private readonly SEARCH_DEBOUNCE_MS = 300;
+
   private userStateService = inject(UserStateService);
   userData: MemberProfile | null = null;
 
-  constructor() {
+  ngOnInit(): void {
     this.userStateService.userProfile$
       .pipe(
         filter((profile) => !!profile),
@@ -97,11 +117,24 @@ export class Draft {
       )
       .subscribe((profile) => {
         this.userData = profile;
-        this.getMessageTemplates();
+        this.getDraftMessages();
+      });
+
+    this.searchControl.valueChanges
+      .pipe(
+        debounceTime(this.SEARCH_DEBOUNCE_MS),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((val: string | null) => {
+        this.searchTerm = val || '';
+        this.page = 1;
+        this.first = 0;
+        this.getDraftMessages();
       });
   }
 
-  openDeleteDialog(item: DraftMessage) {
+  openDeleteDialog(item: selectedDraft) {
     this.selectedItem = item;
     this.isVisible = true;
   }
@@ -111,27 +144,52 @@ export class Draft {
     this.selectedItem = null;
   }
 
-  getMessageTemplates() {
+  getDraftMessages() {
     this.isLoading = true;
     this.totalRecords = 0;
     this.tableData = [];
     this.draftService
-      .getMessageTemplates(this.page, this.rows, this.sortField, this.sortOrder)
+      .getMessageTemplates(
+        this.page,
+        this.rows,
+        this.sortField,
+        this.sortOrder,
+        this.searchTerm
+      )
+      .pipe(
+        catchError((err) => {
+          console.error('Failed to load draft messages', err);
+          return of({ data: { messages: [], totalcount: 0 } });
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
       .subscribe((response) => {
-        // Handle the response from the service
-        if (response && response?.data?.length > 0) {
-          this.totalRecords = response?.data?.length;
-          this.tableData = response?.data.map((item) => ({
-            datecreated: new Date(
-              item.datecreated || new Date()
-            ).toLocaleString(),
-            subject: item.subject,
-            messageid: item.messageid,
-            messagetypeid: item.messagetypeid,
-            messagetype: item.messagetype,
-          }));
+        if (!response || !response.data) {
+          console.error('Invalid API response structure:', response);
+          this.tableData = [];
+          this.totalRecords = 0;
+          this.isLoading = false;
+          return;
         }
-        this.isLoading = false;
+        const messages = response.data.messages || [];
+        this.totalRecords = response.data.totalcount || 0;
+
+        this.tableData = messages.map((item) => ({
+          datecreated: format(
+            new Date(Number(item.datecreated) * 1000),
+            'dd/MM/yyyy h:mmaaa'
+          ),
+          subject: item.subject,
+          messageid: item.messageid,
+          memberid: item.memberid,
+          messagetype: item.messagetype?.toUpperCase() || '',
+          messagetypeid: item.messagetypeid,
+          status: item.status || '',
+          body: item.body || '',
+          action: 'actions',
+        }));
       });
   }
 
@@ -152,7 +210,7 @@ export class Draft {
 
     this.page = 1; // Reset to first page when sorting
     this.first = 0; // Reset first index
-    this.getMessageTemplates();
+    this.getDraftMessages();
   }
 
   editDraft() {
@@ -161,7 +219,8 @@ export class Draft {
 
   deleteItem(item: DraftMessage) {
     // Convert item to DraftMessage for the dialog
-    const draftItem: DraftMessage = {
+    const draftItem: selectedDraft = {
+      datecreated: item.datecreated,
       messageid: item.messageid,
       subject: item.subject,
       messagetype: item.messagetype,
@@ -174,7 +233,7 @@ export class Draft {
     this.first = event.first;
     this.page = Math.floor(event.first / event.rows) + 1;
     this.rows = event.rows;
-    this.getMessageTemplates();
+    this.getDraftMessages();
   }
 
   navigateToDraft() {
@@ -183,5 +242,10 @@ export class Draft {
 
   navigateToTemplate() {
     this.router.navigate([`/messages/compose/template`]);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
