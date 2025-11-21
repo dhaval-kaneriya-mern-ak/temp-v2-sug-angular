@@ -196,6 +196,12 @@ export interface IGroupMembersData {
   data?: IRecipientsData; // Nested data from v3 API response
 }
 
+export interface IGroupMemberData {
+  members: IGroupMember[];
+  title: string;
+  id: number;
+}
+
 /**
  * Interface for the complete API response from getGroupMembers
  * API Endpoint: /v3/messages/recipients (old: SUGboxAPI.cfm?go=t.getGroupMembers)
@@ -206,6 +212,12 @@ export interface IGroupMembersResponse {
   data: IGroupMembersData;
   pagination?: IPaginationData;
   links?: ILinkObject;
+}
+
+export interface IGroupMembersListResponse {
+  success: boolean;
+  message: string[];
+  data: IGroupMemberData;
 }
 
 /**

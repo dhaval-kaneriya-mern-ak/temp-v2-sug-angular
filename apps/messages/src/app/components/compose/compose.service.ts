@@ -1,16 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import {
-  IMemberVerificationDetailsResponse,
-  IMemberEmailLimitsResponse,
   IMemberInfoData,
   ISignUpListResponse,
   IGroupListResponse,
   IGroupMembersResponse,
-  ICloudSpongeServicesResponse,
   ISubAdminsResponse,
-  IGetSignUpListResponse,
   IDateSlotsResponse,
   IDateSlotsRequest,
+  IGroupMembersListResponse,
 } from '@services/interfaces';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
@@ -70,5 +67,33 @@ export class ComposeService {
     payload: IDateSlotsRequest
   ): Observable<IDateSlotsResponse> {
     return this.sugApiClient.post(`/signups/${signupId}/dateslots`, payload);
+  }
+
+  getGroupsMembers(
+    groupId: string | undefined
+  ): Observable<IGroupMembersListResponse> {
+    return this.sugApiClient.get(`/groups/${groupId}/members`);
+  }
+
+  addMembersToGroup(groupId: string, body: any): Observable<any> {
+    return this.sugApiClient.post(`/groups/${groupId}/members/create`, body);
+  }
+
+  deleteMembersFromGroup(
+    groupId: string,
+    memberIds: number[]
+  ): Observable<any> {
+    return this.sugApiClient.patch(
+      `/groups/${groupId}/members/remove-members`,
+      {
+        memberslist: memberIds,
+      }
+    );
+  }
+
+  updateGroupTitle(groupId: string, title: string): Observable<any> {
+    return this.sugApiClient.patch(`/groups/${groupId}`, {
+      title: title,
+    });
   }
 }

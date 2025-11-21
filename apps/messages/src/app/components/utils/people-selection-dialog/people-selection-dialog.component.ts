@@ -28,6 +28,7 @@ import { ComposeService } from '../../compose/compose.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ChipModule } from 'primeng/chip';
 import { ToastrService } from 'ngx-toastr';
+import { SugUpdateGroupSectionComponent } from '../update-group-section/update-group-section.component';
 
 @Component({
   selector: 'sug-people-selection-dialog',
@@ -41,6 +42,7 @@ import { ToastrService } from 'ngx-toastr';
     SugUiMultiSelectDropdownComponent,
     InputTextModule,
     ChipModule,
+    SugUpdateGroupSectionComponent,
   ],
   templateUrl: './people-selection-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
@@ -79,6 +81,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   private fb = inject(FormBuilder);
   private composeService = inject(ComposeService);
 
+  groupDialogVisible = false;
   peopleDialogForm!: FormGroup;
   isLoading = false;
   private skipNextRadioChange = false; // Flag to skip the next radio change event
@@ -87,10 +90,12 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   dialogConfig: DialogConfig = {
     modal: true,
     closable: true,
-    closeOnEscape: true,
-    dismissableMask: true,
+    closeOnEscape: false,
+    dismissableMask: false,
+    visible: this.visible,
+    appendTo: 'body',
     position: 'center',
-    width: '600px',
+    width: '800px',
   };
 
   // Form One radio options
@@ -285,7 +290,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
     if (
       changes['visible'] &&
       changes['visible'].currentValue === true &&
-      !changes['visible'].firstChange
+      !changes['visible'].previousValue
     ) {
       // Defer form operations to avoid change detection errors
       setTimeout(() => {
@@ -300,6 +305,16 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         if (shouldPreserveRecipientCount) {
           this.skipNextRadioChange = true;
         }
+
+        const formValue = this.peopleDialogForm?.value;
+
+        const autoSelectedGroups =
+          formValue.selectedGroups.length > 0
+            ? formValue.selectedGroups
+            : this.selectedSignups.length === 1 &&
+              this.selectedSignups[0].communityid
+            ? [this.selectedSignups[0].communityid.toString()]
+            : [];
 
         // Always reset the form first to ensure clean state
         if (this.peopleDialogForm) {
@@ -317,6 +332,25 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
             rsvpResponsemaybe: false,
             rsvpResponsenoresponse: false,
           });
+
+          // Set auto-selected groups and radio option after reset if available
+          if (autoSelectedGroups.length > 0) {
+            setTimeout(() => {
+              // Auto-select the appropriate radio option based on form type
+              const autoRadioValue =
+                this.formType === 'inviteToSignUp'
+                  ? 'peopleingroups'
+                  : 'sendMessagePeopleRadio';
+
+              // Set both radio option and groups
+              this.skipNextRadioChange = true; // Skip the onRadioChange to prevent clearing our selection
+              this.peopleDialogForm.patchValue({
+                selectedValue: autoRadioValue,
+                selectedGroups: autoSelectedGroups,
+              });
+              this.cdr.markForCheck();
+            }, 100);
+          }
         }
 
         // If date slots are selected and form is formTwo, auto-select "People I will select"
@@ -351,6 +385,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   }
 
   private initializeForm(): void {
+    this.groupDialogVisible = false;
     this.peopleDialogForm = this.fb.group({
       selectedValue: [null, Validators.required],
       selectedGroups: [[]],
@@ -587,8 +622,14 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
       // The saved state in the service will be restored on next open
     }
 
-    this.visible = false;
-    this.visibleChange.emit(false);
+    if (this.groupDialogVisible) {
+      this.groupDialogVisible = false;
+      this.visible = true;
+    } else {
+      this.groupDialogVisible = false;
+      this.visible = false;
+      this.visibleChange.emit(false);
+    }
   }
 
   onRadioChange(): void {
@@ -938,5 +979,37 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   editSelectedSlots(): void {
     // Re-open the "From This Sign Up" dialog to edit selections
     this.openFromThisSignUpDialog();
+  }
+
+  openUpdateGroupsDialog(): void {
+    this.groupDialogVisible = true;
+  }
+
+  hideUpdateGroupsDialog(): void {
+    this.groupDialogVisible = false;
+
+    const formValue = this.peopleDialogForm.value;
+    // If there are selected groups, ensure they remain selected in the UI
+    if (formValue.selectedGroups && formValue.selectedGroups.length > 0) {
+      this.peopleDialogForm.patchValue({
+        selectedGroups: [...formValue.selectedGroups],
+      });
+    }
+
+    setTimeout(() => {
+      // Auto-select the appropriate radio option based on form type
+      const autoRadioValue =
+        this.formType === 'inviteToSignUp'
+          ? 'peopleingroups'
+          : 'sendMessagePeopleRadio';
+
+      // Set both radio option and groups
+      this.skipNextRadioChange = true; // Skip the onRadioChange to prevent clearing our selection
+      this.peopleDialogForm.patchValue({
+        selectedValue: autoRadioValue,
+        selectedGroups: [...formValue.selectedGroups],
+      });
+      this.cdr.markForCheck();
+    }, 0);
   }
 }

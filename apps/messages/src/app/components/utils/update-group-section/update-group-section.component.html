@@ -1,0 +1,250 @@
+@if (isLoading || isUpdating) {
+<sug-ui-loading-spinner
+  [isLoading]="isLoading || isUpdating"
+></sug-ui-loading-spinner>
+} @else if(!isLoading) {
+<div class="update-group-dialog-content">
+  <p>
+    <strong
+      >NOTE: Any changes you make will be saved for the group going
+      forward.</strong
+    >
+  </p>
+  <!-- Add your form fields and logic here -->
+
+  <div class="form-wrapper mb-3">
+    <label for="group-name" class="w-max">Group Name</label>
+    <input
+      id="group-name"
+      type="text"
+      [ngModel]="selectedGroup?.title"
+      (ngModelChange)="titleChanges($event)"
+      placeholder="Enter group name"
+    />
+  </div>
+
+  <div class="mb-5">
+    <div class="table-container">
+      <sug-ui-table
+        [data]="selectedGroup?.members || []"
+        [columns]="tableColumns"
+        [config]="tableConfig"
+        [paginator]="false"
+        [loading]="isLoading"
+        [selection]="selectedMembers"
+        (selectionChange)="onSelectionChange($event)"
+      >
+      </sug-ui-table>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <h3 class="mb-2">Add Emails:</h3>
+    <div onClick="$event.stopPropagation()">
+      <sug-ui-radio-checkbox-button
+        type="radio"
+        name="updateGroupRadioGroup"
+        [ngModel]="selectedRadioValue"
+        (ngModelChange)="onRadioSelectionChange($event)"
+        [options]="GroupRadioOptions"
+      >
+      </sug-ui-radio-checkbox-button>
+    </div>
+
+    @if (selectedRadioValue === 'addManuallyEmail') {
+    <div class="manual-email-form mt-4">
+      <div class="form-field mb-3">
+        <p class="form-instruction">
+          Enter emails separated by commas or one per line.
+        </p>
+        <textarea
+          [(ngModel)]="manualEmails"
+          placeholder="Enter email addresses here..."
+          rows="6"
+          class="email-textarea"
+        ></textarea>
+
+        <!-- Email preview section -->
+        @if (manualEmails.trim()) {
+        <div class="email-preview mt-3">
+          <h5 class="preview-title">Parsed Emails:</h5>
+          @if (parseManualEmails().length > 0) {
+          <div class="valid-emails">
+            <span class="email-count"
+              >✓ {{ parseManualEmails().length }} valid email(s) found</span
+            >
+            <div class="email-tags">
+              @for (email of parseManualEmails(); track email) {
+              <span class="email-tag">{{ email }}</span>
+              }
+            </div>
+          </div>
+          } @else {
+          <div class="invalid-emails">
+            <span class="error-message"
+              >⚠️ No valid emails found. Please check your input.</span
+            >
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="group-alias-section">
+        <div class="checkbox-wrapper mb-3">
+          <input
+            type="checkbox"
+            id="group-email-alias"
+            [(ngModel)]="needGroupEmailAlias"
+            (change)="onGroupEmailAliasChange($event)"
+            class="group-alias-checkbox"
+          />
+          <label for="group-email-alias" class="checkbox-label">
+            I need to enter a group email alias.
+          </label>
+        </div>
+
+        @if (needGroupEmailAlias) {
+        <div class="alias-input-section">
+          <p class="alias-instruction">
+            If possible, enter individual user's emails in the box above to get
+            the most functionality from our system. If you have a group email
+            alias that sends to multiple people, enter it here:
+          </p>
+          <input
+            type="email"
+            [(ngModel)]="groupEmailAlias"
+            placeholder="Enter group email alias"
+            class="group-alias-input"
+          />
+        </div>
+        }
+      </div>
+    </div>
+    } @if (selectedRadioValue === 'importFromAddress') {
+    <div class="import-provider-form mt-4">
+      <h4 class="provider-title">Choose a provider to import contacts:</h4>
+      <div class="provider-buttons-grid">
+        @for (service of cloudSpongeServices; track $index) { @if (service ===
+        'gmail') {
+        <sug-ui-button
+          type="button"
+          [label]="'Gmail'"
+          class="provider-btn"
+          icon="pi pi-envelope"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('gmail')"
+        ></sug-ui-button>
+        } @if (service === 'icloud') {
+        <sug-ui-button
+          type="button"
+          [label]="'iCloud'"
+          class="provider-btn"
+          icon="pi pi-cloud"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('icloud')"
+        ></sug-ui-button>
+        } @if (service === 'windowslive') {
+        <sug-ui-button
+          type="button"
+          [label]="'Outlook'"
+          class="provider-btn"
+          icon="pi pi-microsoft"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('windowslive')"
+        ></sug-ui-button>
+        } @if (service === 'yahoo') {
+        <sug-ui-button
+          type="button"
+          [label]="'Yahoo'"
+          class="provider-btn"
+          icon="pi pi-envelope"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('yahoo')"
+        ></sug-ui-button>
+        } @if (service === 'aol') {
+        <sug-ui-button
+          type="button"
+          [label]="'AOL'"
+          class="provider-btn"
+          icon="pi pi-envelope"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('aol')"
+        ></sug-ui-button>
+        } @if (service === 'csv') {
+        <sug-ui-button
+          type="button"
+          [label]="'CSV File'"
+          class="provider-btn"
+          icon="pi pi-file"
+          [size]="'large'"
+          [severity]="'secondary'"
+          [outlined]="true"
+          (buttonClick)="onProviderClick('csv')"
+        ></sug-ui-button>
+        } }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Error message display -->
+  @if (errorMessage) {
+  <div
+    class="error-message-container mt-3 p-3 mb-4"
+    style="
+      background-color: #fee;
+      border: 1px solid #fcc;
+      border-radius: 4px;
+      color: #c66;
+    "
+  >
+    <div class="d-flex align-items-baseline gap-1">
+      <i class="pi pi-exclamation-triangle mr-2" style="color: #c66"></i>
+      <div>
+        <strong>Error:</strong>
+        <p class="mb-0 mt-1">{{ errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+
+<div
+  slot="footer"
+  class="d-flex justify-content-start align-items-center w-100 gap-2"
+>
+  <sug-ui-button
+    [label]="isUpdating ? 'Updating...' : 'Update'"
+    [icon]="isUpdating ? 'pi pi-spin pi-spinner' : ''"
+    [rounded]="false"
+    [size]="'large'"
+    [severity]="'success'"
+    [outlined]="false"
+    [disabled]="isUpdating"
+    styleClass="confirmation-btn"
+    (buttonClick)="updateChanges()"
+  ></sug-ui-button>
+  <sug-ui-button
+    label="Cancel"
+    icon=""
+    [rounded]="false"
+    [size]="'large'"
+    [severity]="'secondary'"
+    [outlined]="false"
+    [disabled]="isUpdating"
+    styleClass="confirmation-btn"
+    (buttonClick)="closeDialog()"
+  ></sug-ui-button>
+</div>
+}

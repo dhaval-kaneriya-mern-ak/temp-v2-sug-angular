@@ -3,8 +3,15 @@
   [(visible)]="visible"
   (hide)="closeDialog(true)"
   [showFooter]="true"
+  [showHeader]="true"
 >
-  <h2 slot="header">Send this message to...</h2>
+  <div slot="header" class="flex align-items-center">
+    <span class="font-bold">
+      @if (!groupDialogVisible) { Send this message to... } @else { Update group
+      }
+    </span>
+  </div>
+  @if (!groupDialogVisible) {
 
   <div class="dialog-content">
     <form [formGroup]="peopleDialogForm">
@@ -23,11 +30,24 @@
           @if (formType === 'inviteToSignUp' &&
           peopleDialogForm.get('selectedValue')?.value === 'peopleingroups') {
           <div class="signup-radio-content send-msg-dialog-content">
-            <sug-ui-multi-select-dropdown
-              [options]="groupOptions"
-              formControlName="selectedGroups"
+            <div
+              class="d-flex align-items-center justify-content-between gap-2 w-100"
             >
-            </sug-ui-multi-select-dropdown>
+              <sug-ui-multi-select-dropdown
+                [options]="groupOptions"
+                formControlName="selectedGroups"
+              >
+              </sug-ui-multi-select-dropdown>
+              @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){
+              <button
+                type="button"
+                class="edit-signup-btn"
+                (click)="openUpdateGroupsDialog()"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+              }
+            </div>
 
             <!-- Only show "include non-group members" checkbox when specific signups are selected AND they are standard (not RSVP) -->
             @if (selectedSignups.length > 0 && !isSignUpIndexPageSelected &&
@@ -190,23 +210,37 @@
           peopleDialogForm.get('selectedValue')?.value ===
           'sendMessagePeopleRadio') {
           <div class="signup-radio-content send-msg-dialog-content">
-            <sug-ui-multi-select-dropdown
-              [options]="groupOptions"
-              formControlName="selectedGroups"
+            <div
+              class="d-flex align-items-center justify-content-between gap-2 w-100"
             >
-            </sug-ui-multi-select-dropdown>
+              <sug-ui-multi-select-dropdown
+                [options]="groupOptions"
+                formControlName="selectedGroups"
+              >
+              </sug-ui-multi-select-dropdown>
+              @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){
+              <button
+                type="button"
+                class="edit-signup-btn"
+                (click)="openUpdateGroupsDialog()"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+              }
+            </div>
 
-            <!-- Only show "include non-group members" checkbox for standard signups (not RSVP) -->
-            @if (isStandardSignup) { @for (item of nonGroupMemberOption; track
-            item) {
-            <div class="d-flex gap-2">
+            <!-- Only show "include non-group members" checkbox when specific signups are selected AND they are standard (not RSVP) -->
+            @if (selectedSignups.length > 0 && !isSignUpIndexPageSelected &&
+            selectedTabGroups.length === 0 && isStandardSignup) { @for (item of
+            nonGroupMemberOption; track item) {
+            <div class="d-flex gap-2 mt-3">
               <sug-ui-radio-checkbox-button
-                [formControlName]="'includeNonGroupMembersForPeople'"
+                formControlName="includeNonGroupMembers"
                 [binary]="true"
-                [inputId]="item.value"
+                type="checkbox"
+                [options]="[item]"
               >
               </sug-ui-radio-checkbox-button>
-              <label [for]="item.value"> {{ item.label }} </label>
             </div>
             } }
           </div>
@@ -294,4 +328,13 @@
     >
     </sug-ui-button>
   </div>
+  } @else {
+  <!-- Update Group Dialog -->
+  <sug-update-group-section
+    [visible]="groupDialogVisible"
+    [selectedGroupId]="peopleDialogForm.get('selectedGroups')?.value?.[0]"
+    (visibleChange)="hideUpdateGroupsDialog()"
+  >
+  </sug-update-group-section>
+  }
 </sug-ui-dialog>
