@@ -40,7 +40,7 @@
       (openSelectFileDialog)="openSelectFileDialog()"
       (openHelpDialog)="openHelpDialog()"
       (previewAndSend)="onPreviewAndSend(currentFormType)"
-      (saveDraft)="onSaveDraft(currentFormType)"
+      (saveDraft)="onSaveDraft(messageStatus.DRAFT)"
       (showRecipientDetails)="showRecipientDetails()"
       (editSelectedSlots)="openDateSlotsDialog()"
       (removeSignupItem)="stateService.removeSignup($event)"
@@ -154,6 +154,7 @@
   (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
   (recipientCountChange)="stateService.setRecipientCount($event)"
   (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
+  (selectedRadioOption)="setSelectedRadio($event)"
   (removeSlot)="stateService.removeSelectedSlot($event)"
   (openDateSlotsDialog)="openDateSlotsDialog()"
 >
@@ -183,4 +184,12 @@
 </sug-file-selection-dialog>
 
 <!-- Preview Email Dialog -->
-<sug-preview-email [(visible)]="isPreviewDialogVisible"></sug-preview-email>
+<sug-preview-email
+  [(visible)]="isPreviewDialogVisible"
+  (visibleChange)="isPreviewDialogVisible = false;"
+  (themeChange)="onThemeChange($event)"
+  (scheduleEmail)="scheduleEmail($event)"
+  (sendNow)="onSaveDraft(messageStatus.SEND)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>

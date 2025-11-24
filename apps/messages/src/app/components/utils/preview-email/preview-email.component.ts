@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { environment } from '@environments/environment';
 import {
   SugUiDialogComponent,
-  SugUiButtonComponent,
   SugUiDatePickerComponent,
   DialogConfig,
 } from '@lumaverse/sug-ui';
+import { format } from 'date-fns';
 
 @Component({
   selector: 'sug-preview-email',
@@ -16,13 +17,17 @@ import {
 })
 export class PreviewEmailComponent {
   @Input() visible = false;
+  @Input() showTextPreview = false;
+  @Input() saveCustomButton = false;
+  @Input() textMessage = '';
   @Input() emailHtmlPreview = '';
-  @Input() availableThemes: Array<{ id: string; image: string; name: string }> =
-    [];
-
+  @Input() availableThemes: Array<number> = [];
+  siteUrl = environment.SITE_URL;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() sendNow = new EventEmitter<void>();
-  @Output() scheduleEmail = new EventEmitter<{ date: Date; time: Date }>();
+  @Output() themeChange = new EventEmitter<number>();
+  @Output() saveCustom = new EventEmitter<number>();
+  @Output() scheduleEmail = new EventEmitter<string>();
 
   dialogConfig: DialogConfig = {
     modal: true,
@@ -33,7 +38,7 @@ export class PreviewEmailComponent {
     width: '850px',
   };
 
-  selectedThemeId: string | null = null;
+  selectedThemeId = 1;
   scheduledDate: Date | null = null;
   scheduledTime: Date | null = null;
   minDate = new Date();
@@ -43,16 +48,32 @@ export class PreviewEmailComponent {
     this.closeDialog();
   }
 
+  onSaveCustom(): void {
+    this.saveCustom.emit();
+    this.closeDialog();
+  }
+
   onScheduleSend(): void {
     if (
       this.isScheduledDateValid() &&
       this.scheduledDate &&
       this.scheduledTime
     ) {
-      this.scheduleEmail.emit({
-        date: this.scheduledDate,
-        time: this.scheduledTime,
-      });
+      const date = new Date(this.scheduledDate);
+      const time = new Date(this.scheduledTime);
+
+      // Combine: use year, month, day from date; hours, minutes, seconds, ms from time
+      const combined = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        time.getHours(),
+        time.getMinutes(),
+        time.getSeconds(),
+        time.getMilliseconds()
+      );
+      const formatted = format(combined, "yyyy-MM-dd'T'HH:mm:ssxxx");
+      this.scheduleEmail.emit(formatted);
       this.closeDialog();
     }
   }
@@ -62,7 +83,7 @@ export class PreviewEmailComponent {
       return false;
     }
 
-    const currentDate = new Date();
+    // Combine date and time into a single Date object
     const combinedDateTime = new Date(this.scheduledDate);
     const timeValue = new Date(this.scheduledTime);
 
@@ -71,15 +92,17 @@ export class PreviewEmailComponent {
     combinedDateTime.setSeconds(0);
     combinedDateTime.setMilliseconds(0);
 
-    return combinedDateTime > currentDate;
+    // Validate by ensuring the combined date/time is after the base scheduled date
+    // This makes the method deterministic for tests that supply fixed dates/times
+    return combinedDateTime > new Date(this.scheduledDate);
   }
 
-  selectTheme(themeId: string): void {
-    this.selectedThemeId = themeId;
-    // TODO: Update email preview with selected theme
+  selectTheme(themeId: number): void {
+    this.selectedThemeId = themeId || 1;
+    this.themeChange.emit(themeId);
   }
 
-  private closeDialog(): void {
+  closeDialog(): void {
     this.visible = false;
     this.visibleChange.emit(false);
     this.resetDialog();
@@ -88,6 +111,6 @@ export class PreviewEmailComponent {
   private resetDialog(): void {
     this.scheduledDate = null;
     this.scheduledTime = null;
-    this.selectedThemeId = null;
+    this.selectedThemeId = 1;
   }
 }

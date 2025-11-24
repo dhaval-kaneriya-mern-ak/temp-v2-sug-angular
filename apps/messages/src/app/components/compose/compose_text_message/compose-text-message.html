@@ -1,3 +1,8 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
+
 <div class="compose-container">
   @if (showRadioButtons) {
   <div class="radio-selection">
@@ -12,7 +17,7 @@
   </div>
   } @if (!showRadioButtons) {
   <div>
-    @switch (selectedValue) { @case ('emailoptionone') {
+    @switch (selectedValue) { @case ('textOptionOne') {
     <div class="email-form-section">
       <h3>
         Invite People to Opt In to Text Messages
@@ -89,6 +94,7 @@
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
             [disabled]="inviteTextForm.invalid"
             [outlined]="false"
             class="send-btn"
@@ -97,14 +103,16 @@
           ></sug-ui-button>
           <sug-ui-button
             severity="secondary"
+            [disabled]="inviteTextForm.invalid"
             class="draft-btn"
             icon=""
             label="Save Draft"
+            (buttonClick)="saveDraft(messageStatus.DRAFT)"
           ></sug-ui-button>
         </div>
       </form>
     </div>
-    } @case ('emailoptiontwo') {
+    } @case ('textOptionTwo') {
     <div class="email-form-section email-form-people">
       <h3>
         Send a Text Message to People Participating in a Sign Up
@@ -137,7 +145,7 @@
             type="button"
             class="add-link-btn"
             icon=""
-            [disabled]="sendTextEmailForm.get('selectedSignups')?.value.length === 0"
+            [disabled]="getSelectedSignup().length === 0"
             label="Select People"
             (buttonClick)="openPeopleDialog()"
           >
@@ -203,7 +211,7 @@
               <sug-ui-radio-checkbox-button
                 [label]="item.label"
                 type="checkbox"
-                [disabled]="!sendTextEmailForm.get('selectedSignups')?.value || sendTextEmailForm.get('selectedSignups')?.value.length === 0"
+                [disabled]="getSelectedSignup().length === 0"
                 [formControlName]="'include' + item.value"
                 [binary]="true"
                 [inputId]="item.value"
@@ -213,7 +221,7 @@
             }
             <div class="check-option-forms-wrapper">
               <a
-                [ngClass]="{'disabled': !sendTextEmailForm.get('selectedSignups')?.value || sendTextEmailForm.get('selectedSignups')?.value.length === 0}"
+                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
                 tabindex="-1"
                 (click)="showProfileData()"
                 (keyup)="false"
@@ -286,6 +294,8 @@
           <sug-ui-button
             severity="success"
             [disabled]="sendTextEmailForm.invalid"
+            (buttonClick)="sendTextEmailForm
+      .get('includefallback')?.value === true ? onPreviewAndSend(currentEmailForm) : saveDraft(messageStatus.SEND)"
             [outlined]="false"
             class="send-btn"
             icon=""
@@ -298,6 +308,7 @@
             class="draft-btn"
             icon=""
             label="Save Draft"
+            (buttonClick)="saveDraft(messageStatus.DRAFT)"
           ></sug-ui-button>
         </div>
       </form>
@@ -311,7 +322,7 @@
 </div>
 <sug-help-dialog
   [(visible)]="isHelpDialogVisible"
-  [title]="this.selectedValue === 'emailoptionone' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"
+  [title]="selectedValue === 'textOptionOne' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"
 >
   <p>
     Before you can send text messages to your group members, they must first opt
@@ -357,9 +368,11 @@
 <!-- People Selection Dialog -->
 <sug-people-selection-dialog
   [(visible)]="isPeopleDialogVisible"
+  [isFromTextMessage]="isFromTextMessage"
+  [messageTypeId]="selectedValue === 'textOptionOne' ? 14 : 15"
   [formType]="'emailParticipants'"
   [groupOptions]="groupData"
-  [selectedSignups]="sendTextEmailForm.get('selectedSignups')?.value"
+  [selectedSignups]="getSelectedSignup()"
   [isSignUpIndexPageSelected]="false"
   [selectedDateSlots]="stateService.selectedDateSlots"
   [recipientCount]="stateService.recipientCount"
@@ -371,6 +384,7 @@
   (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
   (removeSlot)="stateService.removeSelectedSlot($event)"
   (openDateSlotsDialog)="openDateSlotsDialog()"
+  (selectedRadioOption)="setSelectedRadio($event)"
 >
 </sug-people-selection-dialog>
 
@@ -394,3 +408,16 @@
 </sug-recipient-details-dialog>
 <sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
 </sug-file-selection-dialog>
+
+<!-- Preview Email Dialog -->
+<sug-preview-email
+  [(visible)]="isPreviewVisible"
+  [showTextPreview]="selectedValue === 'textOptionTwo'"
+  [textMessage]="currentEmailForm.get('message')?.value"
+  (scheduleEmail)="scheduleEmail($event)"
+  (sendNow)="saveDraft(messageStatus.SEND)"
+  (visibleChange)="isPreviewVisible = false;"
+  (themeChange)="onThemeChange($event)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>

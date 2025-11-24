@@ -34,6 +34,11 @@ import {
   MemberProfile,
   ISignUpItem,
   SignupOptionGroup,
+  IMessagePreviewRequest,
+  ICreateMessageRequest,
+  MessageStatus,
+  SentTo,
+  SendToType,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 
@@ -75,10 +80,19 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
   @ViewChild(SignupSelectionDialogComponent)
   signupDialog!: SignupSelectionDialogComponent;
-
+  messageStatus = MessageStatus;
   // Forms
   emailFormOne!: FormGroup;
   emailFormTwo!: FormGroup;
+  selectedRadioOption: {
+    selectedValue: string;
+    includeNonGroupMembers: boolean;
+    recipients: any[];
+  } = {
+    selectedValue: '',
+    includeNonGroupMembers: false,
+    recipients: [],
+  };
 
   // UI State
   showRadioButtons = true;
@@ -102,7 +116,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       value: 'emailoptiontwo',
     },
   ];
-
+  emailHtmlPreview = '';
+  availableThemes: Array<number> = [1];
   private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
@@ -131,6 +146,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       subject: [{ value: '', disabled: true }, Validators.required],
       message: [{ value: '', disabled: true }, Validators.required],
       attachments: [[]],
+      themeid: [1],
     });
 
     // Form for "Email people participating in a sign up"
@@ -145,6 +161,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       subject: [{ value: '', disabled: true }, Validators.required],
       message: [{ value: '', disabled: true }, Validators.required],
       attachments: [[]],
+      themeid: [1],
     });
 
     // Subscribe to state changes and update forms accordingly
@@ -378,8 +395,12 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.selectedValue = null;
 
     // Reset main forms
-    this.emailFormOne.reset();
-    this.emailFormTwo.reset();
+    this.emailFormOne.reset({
+      themeid: 1,
+    });
+    this.emailFormTwo.reset({
+      themeid: 1,
+    });
 
     // Clear all selections in state service
     this.stateService.clearAllSelections();
@@ -453,13 +474,71 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   /**
    * Opens the preview dialog with proper state reset to avoid dialog stuck issues
    */
-  private openPreviewDialog(): void {
-    // Reset dialog state to ensure clean reopening
-    this.isPreviewDialogVisible = false;
-
-    // Reopen after Angular completes current change detection cycle
-    setTimeout(() => {
-      this.isPreviewDialogVisible = true;
+  private openPreviewDialog(form: FormGroup): void {
+    this.isLoading = true;
+    const payload: IMessagePreviewRequest = {
+      fromname: form.value.fromName,
+      replyto: this.stateService.subAdminsData
+        .filter((su) => form.value.replyTo.includes(String(su.value)))
+        .map((su) => su.label), //this.stateService.subAdminsData.map((admin) => admin.label),
+      subject: form.value.subject,
+      message: form.value.message,
+      emailType: this.selectedValue === 'emailoptionone' ? '4' : '1',
+      themeid: form.value.themeid,
+      signups: form.value.selectedSignups.map((su: ISignUpItem) => ({
+        id: su.signupid,
+        title: su.title,
+        themeid: su.themeid,
+      })),
+    };
+    if (form.value.selectedSignups.length === 0) {
+      payload.signUpType = 'acctindex';
+      const signupsFromOptions = (this.stateService.signUpOptions || [])
+        .flatMap((g) => g.items ?? [])
+        .map((item) => {
+          const signupData = (item as any).signupData as
+            | ISignUpItem
+            | undefined;
+          return {
+            id: signupData?.signupid ?? Number(item.value),
+            title: signupData?.title ?? item.label,
+            themeid: signupData?.themeid ?? 1,
+          };
+        });
+      payload.signups = signupsFromOptions;
+      this.availableThemes = [
+        1,
+        ...(signupsFromOptions || []).map((su) => su.themeid),
+      ];
+    }
+    if (form.value.toPeople.length > 0) {
+      payload.sendTo = form.value.toPeople.map((person: any) => ({
+        id: Number(person.value || 1),
+        displayName: person.label,
+        isChecked: true,
+      }));
+    }
+    // Load signups
+    this.composeService.messagePreview(payload).subscribe({
+      next: (response) => {
+        if (
+          response?.success &&
+          response.data &&
+          response.data?.textpreview?.length > 0
+        ) {
+          this.emailHtmlPreview = response.data.htmlpreview;
+          // this.isPreviewDialogVisible = false;
+          setTimeout(() => {
+            this.isLoading = false;
+            this.isPreviewDialogVisible = true;
+            this.cdr.detectChanges();
+          });
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.isPreviewDialogVisible = false;
+      },
     });
   }
 
@@ -470,16 +549,20 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     const form =
       formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
 
-    // Perform custom validation based on people selection
+    // Perform custom validation based on people selection and Show error messages to user
     const customValidationResult = this.validateFormBasedOnSelection();
     if (!customValidationResult.isValid) {
-      // Show error messages to user
       customValidationResult.errors.forEach((error) => {
         this.toastr.error(error, 'Validation Error');
       });
       return;
     }
-
+    this.availableThemes = [
+      1,
+      ...((form.value.selectedSignups || []) as ISignUpItem[]).map(
+        (su: ISignUpItem) => su.themeid
+      ),
+    ];
     if (form.invalid) {
       // Mark all controls as touched to show validation errors
       Object.keys(form.controls).forEach((key) => {
@@ -487,13 +570,138 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    // Open preview dialog using dedicated method
-    this.openPreviewDialog();
+    this.openPreviewDialog(form);
   }
 
-  onSaveDraft(formType: 'inviteToSignUp' | 'emailParticipants'): void {
-    // const form =
-    //   formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
+  scheduleEmail(event: string): void {
+    this.onSaveDraft(this.messageStatus.SCHEDULED, event);
+  }
+
+  setSelectedRadio(event: {
+    selectedValue: string;
+    includeNonGroupMembers: boolean;
+    recipients: any[];
+  }): void {
+    this.selectedRadioOption = event;
+  }
+
+  onSaveDraft(status: MessageStatus, date?: string): void {
+    this.isLoading = true;
+    const groups = this.stateService.selectedGroups;
+    const form = this.currentForm.value;
+    const payload: ICreateMessageRequest = {
+      subject: form.subject,
+      body: form.message,
+      sentto: SentTo.SIGNED_UP,
+      sendtotype: SendToType.SIGNED_UP,
+      status: status,
+      messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
+      sendasemail: true,
+      sendastext: false,
+      themeid: form.themeid,
+      contactname: form.fromName,
+      replytoids: form.replyTo.map((id: string) => Number(id)),
+      signupids: this.stateService.selectedSignups.map(
+        (signup) => signup.signupid
+      ),
+      groupids: groups
+        .filter(
+          (group) =>
+            group.value !== 'manual_entry' && !isNaN(Number(group.value))
+        )
+        .map((group) => Number(group.value)),
+    };
+    if (date) {
+      payload.senddate = date;
+    }
+
+    // Handle radio selection logic
+    switch (this.selectedRadioOption.selectedValue) {
+      case 'peopleingroups':
+      case 'sendMessagePeopleRadio':
+        payload.sentto = SentTo.ALL;
+        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+        break;
+
+      case 'ManuallyEnterEmail':
+        payload.alias = this.selectedRadioOption.recipients[1];
+        payload.addEmails = this.selectedRadioOption.recipients[0];
+        payload.sendtotype = SendToType.MANUAL;
+        payload.sentto = SentTo.MANUAL;
+        break;
+
+      case 'specificRsvpResponse':
+        payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
+        payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
+          ','
+        )}`;
+        payload.groupids = [];
+        break;
+
+      case 'peopleWhoSignedUp':
+        payload.sendtotype = SendToType.SIGNED_UP;
+        payload.sentto = SentTo.SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleOnWaitlist':
+        payload.sendtotype = SendToType.WAITLIST;
+        payload.sentto = SentTo.NOT_SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleSignedUpAndWaitlist':
+        payload.sendtotype = SendToType.WAITLIST;
+        payload.sentto = SentTo.SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleWhoNotSignedUp':
+        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+        payload.sentto = SentTo.NOT_SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'sendMessagePeopleIselect':
+        payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+        payload.sentto = SentTo.ALL;
+        payload.groupids = [];
+        payload.slotids = this.selectedRadioOption.recipients.map(
+          (slot) => 'slot_' + slot.slotid
+        );
+        payload.sendToGroups = this.selectedRadioOption.recipients.map(
+          (slot) => ({
+            id: 'slot_' + slot.slotid,
+            isWaitlistedRow: slot.waitlist,
+          })
+        );
+        break;
+    }
+
+    // Apply non-group members rule after switch (can override sentto)
+    if (this.selectedRadioOption.includeNonGroupMembers) {
+      payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+    }
+
+    this.composeService.createMessage(payload).subscribe({
+      next: (response) => {
+        if (response.success === true && response.data) {
+          this.toastr.success('Message saved successfully', 'Success');
+          this.showOptionsAgain();
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toastr.error(err.error.message[0]?.details, 'Error');
+        this.openPreviewDialog(this.currentForm);
+      },
+    });
+  }
+
+  onThemeChange(themeId: number): void {
+    this.currentForm.get('themeid')?.setValue(themeId || 1);
+    this.onPreviewAndSend(this.currentFormType);
   }
 
   /**

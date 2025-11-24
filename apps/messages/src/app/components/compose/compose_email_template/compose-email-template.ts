@@ -1,17 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import {
   SugUiRadioCheckboxButtonComponent,
   RadioCheckboxChangeEvent,
   SugUiButtonComponent,
   SugUiTooltipComponent,
   SugUiMultiSelectDropdownComponent,
+  SugUiLoadingSpinnerComponent,
+  ISelectOption,
 } from '@lumaverse/sug-ui';
-import { ISelectOption } from '@lumaverse/sug-ui';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
 import { ComposeService } from '../compose.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, finalize } from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
 import {
   FormBuilder,
@@ -19,11 +28,23 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { MemberProfile } from '@services/interfaces';
+import {
+  IMessagePreviewRequest,
+  IMessagePreviewResponse,
+  ISignUpItem,
+  ISubAdmin,
+  ICreateMessageRequest,
+  MessageStatus,
+  SentTo,
+  SendToType,
+} from '@services/interfaces/messages-interface/compose.interface';
+import { MemberProfile } from '@services/interfaces/member-profile.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
 import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
+import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'sug-compose-email-template',
@@ -40,14 +61,19 @@ import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/
     FileSelectionDialogComponent,
     NgxCaptchaModule,
     HelpDialogComponent,
+    PreviewEmailComponent,
+    SugUiLoadingSpinnerComponent,
   ],
   templateUrl: './compose-email-template.html',
   styleUrls: ['./compose-email-template.scss'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   composeService = inject(ComposeService);
   protected readonly userStateService = inject(UserStateService);
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
+  private toastr = inject(ToastrService);
   reminderEmailForm!: FormGroup;
   confirmationEmailForm!: FormGroup;
   isLoading = false;
@@ -56,6 +82,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   @Input() readonly siteKey: string = environment.siteKey;
   isSelectFileDialogVisible = false;
   isHelpDialogVisible = false;
+  subAdminsApiData: ISubAdmin[] = [];
+  signupOptionApiData: ISignUpItem[] = [];
   subAdminsData: ISelectOption[] = [];
   assignToData: ISelectOption[] = [];
   // Options for the dialog select box when first radio option is selected
@@ -70,7 +98,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     },
   ];
   selectedValue: string | null = null;
-
+  isPreviewVisible = false;
+  emailHtmlPreview = '';
+  availableThemes: Array<number> = [1];
+  messageStatus = MessageStatus;
   ngOnInit(): void {
     this.initializeForms();
   }
@@ -83,8 +114,12 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   showOptionsAgain() {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
-    this.reminderEmailForm.reset();
-    this.confirmationEmailForm.reset();
+    this.reminderEmailForm.reset({
+      themeid: 1,
+    });
+    this.confirmationEmailForm.reset({
+      themeid: 1,
+    });
     this.loadUserProfile();
   }
 
@@ -106,11 +141,6 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.isHelpDialogVisible = false;
   }
 
-  sendEmail() {
-    // In a real app, you would gather form data and send it.
-    // alert('Email sent! (Check the console)');
-  }
-
   private initializeForms(): void {
     // Create form for reminder email template
     this.reminderEmailForm = this.fb.group({
@@ -120,6 +150,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       message: ['', Validators.required],
       token: ['', Validators.required],
       assignTo: [''],
+      themeid: [1],
     });
 
     // Create form for confirmation email template
@@ -130,8 +161,97 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       message: ['', Validators.required],
       token: ['', Validators.required],
       assignTo: [''],
+      themeid: [1],
     });
     this.getSubAdmins();
+  }
+
+  onThemeChange(themeId: number): void {
+    this.currentEmailForm.get('themeid')?.setValue(themeId || 1);
+    this.onPreviewAndSend(this.currentEmailForm);
+  }
+
+  onSaveDraft(status: MessageStatus): void {
+    this.isLoading = true;
+    const form = this.currentEmailForm.value;
+    const payload: ICreateMessageRequest = {
+      subject: form.subject,
+      body: form.message,
+      sentto: SentTo.CUSTOM,
+      sendtotype: SendToType.CUSTOM,
+      status: status,
+      messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
+      sendasemail: true,
+      sendastext: false,
+      themeid: form.themeid,
+      contactname: form.fromName,
+      replytoids: form.replyTo.map((id: string) => Number(id)),
+      signupids: form.assignTo.map((id: string) => Number(id)),
+    };
+
+    this.composeService.createMessage(payload).subscribe({
+      next: (response) => {
+        if (response.success === true && response.data) {
+          this.toastr.success('Message saved successfully', 'Success');
+          this.showOptionsAgain();
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toastr.error(err.error.message[0]?.details, 'Error');
+        this.onPreviewAndSend(this.currentEmailForm);
+      },
+    });
+  }
+
+  onPreviewAndSend(form: FormGroup): void {
+    this.isLoading = true;
+    const selectedSignups = this.signupOptionApiData
+      .filter((su) => form.value.assignTo.includes(String(su.signupid)))
+      .map((su) => ({
+        id: su.signupid,
+        title: su.title,
+        themeid: su.themeid ?? 1,
+      }));
+    const payload: IMessagePreviewRequest = {
+      fromname: form.value.fromName,
+      replyto: this.subAdminsApiData
+        .filter((su) => form.value.replyTo.includes(String(su.id)))
+        .map((su) => su.email),
+      subject: form.value.subject,
+      message: form.value.message,
+      emailType: this.selectedValue === 'emailoptionone' ? '8' : '2',
+      themeid: form.value.themeid ?? 1,
+      signups: selectedSignups,
+    };
+    this.availableThemes = [
+      1,
+      ...(selectedSignups || []).map((su) => su.themeid),
+    ];
+    // Load signups
+    this.composeService
+      .messagePreview(payload)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (response: IMessagePreviewResponse) => {
+          if (response?.success && response.data?.textpreview?.length > 0) {
+            this.emailHtmlPreview = response.data.htmlpreview;
+            this.isPreviewVisible = true;
+          }
+        },
+        error: (err) => {
+          this.isPreviewVisible = false;
+          this.toastr.error(
+            err?.error?.message?.[0]?.details || 'Failed to load preview',
+            'Error'
+          );
+        },
+      });
   }
 
   // Get current form based on selected template type
@@ -154,17 +274,21 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   }
 
   getSignUpList() {
+    this.isLoading = true;
     this.composeService.getSignUpList().subscribe({
       next: (apiResponse) => {
         if (apiResponse && apiResponse.success) {
+          this.signupOptionApiData = apiResponse.data;
           this.signUpOptions = apiResponse.data.map((signup) => ({
             label: signup.title,
             value: signup.signupid?.toString() || '',
           }));
         }
         this.loadUserProfile();
+        this.isLoading = false;
       },
       error: (error) => {
+        this.isLoading = false;
         console.error('Error fetching signup list:', error);
       },
     });
@@ -178,6 +302,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (apiResponse) => {
           if (apiResponse && apiResponse.data) {
+            this.subAdminsApiData = apiResponse.data;
             this.subAdminsData = apiResponse.data.map((admin) => ({
               label: `${admin.firstname} ${admin.lastname} (${admin.email})`,
               value: admin.id.toString(),

@@ -8,6 +8,10 @@ import {
   IDateSlotsResponse,
   IDateSlotsRequest,
   IGroupMembersListResponse,
+  IMessagePreviewResponse,
+  IMessagePreviewRequest,
+  ICreateMessageRequest,
+  ICreateMessageResponse,
 } from '@services/interfaces';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
@@ -95,5 +99,17 @@ export class ComposeService {
     return this.sugApiClient.patch(`/groups/${groupId}`, {
       title: title,
     });
+  }
+
+  createMessage(
+    payload: ICreateMessageRequest
+  ): Observable<ICreateMessageResponse> {
+    return this.sugApiClient.post(`/messages`, payload);
+  }
+
+  messagePreview(
+    payload: IMessagePreviewRequest
+  ): Observable<IMessagePreviewResponse> {
+    return this.sugApiClient.post(`/messages/preview`, payload);
   }
 }

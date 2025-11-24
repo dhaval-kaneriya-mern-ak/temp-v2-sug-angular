@@ -584,3 +584,112 @@ export interface SignupOptionGroup {
     signupData: ISignUpItem;
   }>;
 }
+
+export interface IMessagePreviewRequest {
+  fromname: string;
+  replyto?: string[];
+  subject: string;
+  message: string;
+  emailType: string;
+  themeid: number;
+  signups: Array<{ id: number; title: string; themeid: number }>;
+  signUpType?: string;
+  tabgroups?: [];
+  portals?: [];
+  sendTo?: Array<{ id: number; displayName: string; isChecked: boolean }>;
+}
+
+/**
+ * Interface for Preview API Response
+ */
+export interface IMessagePreviewResponse {
+  success: boolean;
+  message: [];
+  data: {
+    htmlpreview: string;
+    textpreview: string;
+  };
+}
+
+/**
+ * Enum for target audience identifier (sentto)
+ */
+export enum SentTo {
+  NOT_SIGNED_UP = 'notsignedup',
+  SIGNED_UP = 'signedup',
+  CUSTOM = 'custom',
+  ALL = 'all',
+  ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
+  MANUAL = 'manual',
+  SPECIFIC_DATE_SLOT = 'specificdateslot',
+  PEOPLE_IN_GROUPS = 'peopleingroups',
+}
+
+/**
+ * Enum for type of recipient selection (sendtotype)
+ */
+export enum SendToType {
+  CUSTOM = 'custom',
+  SIGNED_UP = 'signedup',
+  SPECIFIC_RSVP_RESPONSE = 'specificrsvpresponse',
+  SPECIFIC_DATE_SLOT = 'specificdateslot',
+  PEOPLE_IN_GROUPS = 'peopleingroups',
+  NOT_SIGNED_UP = 'notsignedup',
+  MANUAL = 'manual',
+  WAITLIST = 'waitlist',
+  ALL = 'all',
+  SIGNUP_WAITLIST = 'signedupandwaitlist',
+}
+
+/**
+ * Enum for message status values
+ */
+export enum MessageStatus {
+  DRAFT = 'draft',
+  SCHEDULED = 'scheduled',
+  SEND = 'send',
+}
+
+/**
+ * Interface for creating a message (email/text) request
+ * All fields are based on API requirements and documentation
+ */
+export interface ICreateMessageRequest {
+  subject: string;
+  body: string;
+  sentto?: SentTo | string;
+  sendtotype?: SendToType;
+  messagetypeid: number;
+  status: MessageStatus;
+  sendasemail: boolean;
+  sendastext: boolean;
+  contactname?: string;
+  replytoids?: number[];
+  themeid?: number;
+  attachmentids?: number[];
+  senddate?: string;
+  alias?: string;
+  addEmails?: string;
+  messageid?: number;
+  tabgroupids?: number[];
+  portals?: number[];
+  signupids?: number[];
+  groupids?: number[];
+  slotids?: string[];
+  to?: IMesssageMember[];
+  sendToGroups?: Array<{ id: string; isWaitlistedRow?: boolean }>;
+}
+
+export interface IMesssageMember {
+  memberid?: number;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  isgroupemail?: boolean;
+}
+
+export interface ICreateMessageResponse {
+  success: boolean;
+  message: string[];
+  data: number;
+}

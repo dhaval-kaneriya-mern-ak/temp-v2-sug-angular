@@ -194,6 +194,9 @@ export class DateSlotsSelectionComponent implements OnInit, OnChanges {
         qtytaken: slot.qtytaken,
         qtyremaining: slot.qtyremaining,
         signedupmembers: slot.signedupmembers || '',
+        slotid: slot.slotid,
+        waitlist: slot.waitlist,
+        waitlistedmembers: slot.waitlistedmembers,
       }));
 
       // For "People I will select" with date slots, the recipient count is the number of slots selected

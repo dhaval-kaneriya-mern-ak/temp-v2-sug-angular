@@ -1,12 +1,30 @@
+import {
+  ISignUpItem,
+  ISubAdmin,
+  IGroupItem,
+  MessageStatus,
+  SentTo,
+  SendToType,
+  ICreateMessageRequest,
+  IMessagePreviewRequest,
+} from '@services/interfaces/messages-interface/compose.interface';
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import {
   SugUiRadioCheckboxButtonComponent,
   RadioCheckboxChangeEvent,
   SugUiButtonComponent,
   SugUiTooltipComponent,
   SugUiMultiSelectDropdownComponent,
-  DialogConfig,
+  SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 import { ISelectOption } from '@lumaverse/sug-ui';
 import { ButtonModule } from 'primeng/button';
@@ -20,7 +38,7 @@ import {
 import { ComposeService } from '../compose.service';
 import { Subject, takeUntil } from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
-import { MemberProfile, ISignUpItem } from '@services/interfaces';
+import { MemberProfile } from '@services/interfaces/member-profile.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
@@ -29,6 +47,8 @@ import { PeopleSelectionDialogComponent } from '../../utils/people-selection-dia
 import { DateSlotsSelectionComponent } from '../../utils/date-slots-selection/date-slots-selection.component';
 import { RecipientDetailsDialogComponent } from '../../utils/recipient-details-dialog/recipient-details-dialog.component';
 import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
+import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -48,16 +68,21 @@ import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/
     DateSlotsSelectionComponent,
     RecipientDetailsDialogComponent,
     FileSelectionDialogComponent,
+    PreviewEmailComponent,
+    SugUiLoadingSpinnerComponent,
   ],
   providers: [ComposeEmailStateService],
   templateUrl: './compose-text-message.html',
   styleUrls: ['./compose-text-message.scss'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   composeService = inject(ComposeService);
+  private cdr = inject(ChangeDetectorRef);
   protected readonly userStateService = inject(UserStateService);
   private fb = inject(FormBuilder);
   stateService = inject(ComposeEmailStateService);
+  private toastr = inject(ToastrService);
   inviteTextForm!: FormGroup;
   sendTextEmailForm!: FormGroup;
   isDateSlotsDialogVisible = false;
@@ -65,6 +90,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   isLoading = false;
   showProfile = false;
   showEmail = false;
+  isFromTextMessage = false;
   userProfile: MemberProfile | null = null;
   @Input() readonly siteKey: string = environment.siteKey;
   private readonly destroy$ = new Subject<void>();
@@ -76,17 +102,20 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   groupData: ISelectOption[] = [];
   signupOptions: ISelectOption[] = [];
   signupOptionsData: ISignUpItem[] = [];
+  subAdminsApiData: ISubAdmin[] = [];
+  grooupApiResponse: IGroupItem[] = [];
   defaultOption: ISelectOption = this.subAdminsData[0];
   showRadioButtons = true;
+  messageStatus = MessageStatus; // Expose enum to template
   selectedValue: string | null = null;
   radioOptions = [
     {
       label: 'Invite people to opt in to text messages',
-      value: 'emailoptionone',
+      value: 'textOptionOne',
     },
     {
       label: 'Send a text message to people participating in a sign up',
-      value: 'emailoptiontwo',
+      value: 'textOptionTwo',
     },
   ];
   checkboxOptions = [
@@ -97,7 +126,23 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       value: 'fallback',
     },
   ];
-
+  isPreviewVisible = false;
+  emailHtmlPreview = '';
+  availableThemes: Array<number> = [1];
+  selectedRadioOption: {
+    selectedValue: string;
+    includeNonGroupMembers: boolean;
+    recipients: (
+      | string
+      | number
+      | { value: string | number }
+      | { slotid: number; waitlist: boolean }
+    )[];
+  } = {
+    selectedValue: '',
+    includeNonGroupMembers: false,
+    recipients: [],
+  };
   ngOnInit() {
     this.initializeForms();
     // Listen for changes on selectedSignups
@@ -127,10 +172,17 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             this.stateService.clearAllSelections()
           );
         } else {
+          this.getSlotsForSignup(Number(value[0]));
           controlsToToggle.forEach((ctrl) =>
             this.sendTextEmailForm.get(ctrl)?.enable()
           );
         }
+      });
+
+    this.stateService.selectedGroups$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((selectedGroups) => {
+        this.sendTextEmailForm.patchValue({ to: selectedGroups });
       });
 
     controlsToToggle.forEach((ctrl) =>
@@ -171,6 +223,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   showOptionsAgain() {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+    this.inviteTextForm.reset({
+      themeid: 1,
+    });
+    this.sendTextEmailForm.reset({
+      themeid: 1,
+    });
+    this.loadUserProfile();
   }
 
   openDateSlotsDialog(): void {
@@ -186,9 +245,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     this.closeDateSlotsDialog();
 
     // Re-open the people selection dialog to show the selected slots
-    setTimeout(() => {
-      this.isPeopleDialogVisible = true;
-    }, 100);
+    this.isPeopleDialogVisible = true;
   }
 
   get hasPeopleSelection(): boolean {
@@ -198,8 +255,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   getSelectedSignup() {
     const selectedSignup = this.signupOptionsData.filter(
       (signup) =>
-        Number(this.sendTextEmailForm.get('selectedSignups')?.value[0]) ===
-        signup.signupid
+        Number(
+          (this.sendTextEmailForm.get('selectedSignups')?.value ?? [])[0]
+        ) === signup.signupid
     );
     this.sendTextEmailForm.patchValue({
       emailSubject: selectedSignup[0]?.title || '',
@@ -209,25 +267,261 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
   showRecipientDetails(): void {
     // Reset dialog state to ensure clean reopening
-    this.isRecipientDialogVisible = false;
-
-    // Reopen after Angular completes current change detection cycle
-    setTimeout(() => {
-      this.isRecipientDialogVisible = true;
-    });
+    this.isRecipientDialogVisible = true;
   }
 
   // Get current form based on selected template type
   get currentEmailForm(): FormGroup {
-    return this.selectedValue === 'emailoptionone'
+    return this.selectedValue === 'textOptionOne'
       ? this.inviteTextForm
       : this.sendTextEmailForm;
   }
 
   get currentFormType(): 'inviteToSignUp' | 'emailParticipants' {
-    return this.selectedValue === 'emailoptionone'
+    return this.selectedValue === 'textOptionOne'
       ? 'inviteToSignUp'
       : 'emailParticipants';
+  }
+
+  setSelectedRadio(event: {
+    selectedValue: string;
+    includeNonGroupMembers: boolean;
+    recipients: (
+      | string
+      | number
+      | { value: string | number }
+      | { slotid: number; waitlist: boolean }
+    )[];
+  }): void {
+    this.selectedRadioOption = event;
+  }
+
+  scheduleEmail(event: string): void {
+    this.saveDraft(MessageStatus.SCHEDULED, event);
+  }
+
+  saveDraft(status: MessageStatus, date?: string) {
+    this.isLoading = true;
+    const form = this.currentEmailForm.value;
+    const groups = form.to
+      ? form.to.map((g: string) => parseInt(g))
+      : this.stateService.selectedGroups.map((g) => parseInt(g.value));
+
+    const payload: ICreateMessageRequest = {
+      subject: form.subject || form.emailSubject,
+      body: form.message,
+      sentto: SentTo.PEOPLE_IN_GROUPS,
+      sendtotype: SendToType.ALL,
+      status: status,
+      messagetypeid: this.selectedValue === 'textOptionOne' ? 14 : 15,
+      sendasemail: this.selectedValue === 'textOptionTwo' ? true : false,
+      sendastext: true,
+      themeid: form.themeid,
+      contactname: form.fromName || form.emailFrom,
+      replytoids: this.subAdminsApiData
+        .filter((su) =>
+          (form.replyTo ?? form.emailReplyTo).includes(
+            String(su.id || su.email)
+          )
+        )
+        .map((su) => su.id),
+      signupids: form.selectedSignups
+        ?.map((signup: string | number | { value: string | number }) => {
+          if (
+            typeof signup === 'object' &&
+            signup !== null &&
+            'value' in signup
+          ) {
+            return parseInt(String(signup.value), 10);
+          }
+          return parseInt(String(signup), 10);
+        })
+        .filter((id: number) => !isNaN(id)),
+      groupids: groups,
+    };
+    if (date) {
+      payload.senddate = date;
+    }
+
+    // Handle radio selection logic
+    switch (this.selectedRadioOption.selectedValue) {
+      case 'peopleingroups':
+      case 'sendMessagePeopleRadio':
+        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+        payload.sentto = SentTo.ALL;
+        payload.groupids = this.stateService.selectedGroups.map((g) =>
+          parseInt(g.value)
+        );
+        break;
+
+      case 'ManuallyEnterEmail':
+        payload.alias = String(this.selectedRadioOption.recipients[1] ?? '');
+        payload.addEmails = String(
+          this.selectedRadioOption.recipients[0] ?? ''
+        );
+        payload.signupids = [];
+        payload.sendtotype = SendToType.MANUAL;
+        payload.sentto = SentTo.MANUAL;
+        break;
+
+      case 'specificRsvpResponse':
+        payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
+        payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
+          ','
+        )}`;
+        payload.groupids = [];
+        break;
+
+      case 'peopleWhoSignedUp':
+        payload.sendtotype = SendToType.SIGNED_UP;
+        payload.sentto = SentTo.SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleOnWaitlist':
+        payload.sendtotype = SendToType.WAITLIST;
+        payload.sentto = SentTo.SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleSignedUpAndWaitlist':
+        payload.sendtotype = SendToType.SIGNUP_WAITLIST;
+        payload.sentto = SentTo.SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'peopleWhoNotSignedUp':
+        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+        payload.sentto = SentTo.NOT_SIGNED_UP;
+        payload.groupids = [];
+        break;
+
+      case 'sendMessagePeopleIselect':
+        payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+        payload.sentto = SentTo.ALL;
+        payload.groupids = [];
+        payload.slotids = this.selectedRadioOption.recipients
+          .filter(
+            (slot): slot is { slotid: number; waitlist: boolean } =>
+              typeof slot === 'object' &&
+              slot !== null &&
+              'slotid' in slot &&
+              'waitlist' in slot
+          )
+          .map((slot) => 'slot_' + slot.slotid);
+        payload.sendToGroups = this.selectedRadioOption.recipients
+          .filter(
+            (slot): slot is { slotid: number; waitlist: boolean } =>
+              typeof slot === 'object' &&
+              slot !== null &&
+              'slotid' in slot &&
+              'waitlist' in slot
+          )
+          .map((slot) => ({
+            id: 'slot_' + slot.slotid,
+            isWaitlistedRow: slot.waitlist,
+          }));
+        break;
+    }
+
+    // Apply non-group members rule after switch (can override sentto)
+    if (this.selectedRadioOption.includeNonGroupMembers) {
+      payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+    }
+
+    this.composeService.createMessage(payload).subscribe({
+      next: (response) => {
+        if (response.success === true && response.data) {
+          this.toastr.success('Message saved successfully', 'Success');
+          this.showOptionsAgain();
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toastr.error(err.error.message[0]?.details, 'Error');
+        if (this.sendTextEmailForm.get('includefallback')?.value === true) {
+          this.onPreviewAndSend(this.currentEmailForm);
+        }
+      },
+    });
+  }
+
+  onThemeChange(themeId: number): void {
+    this.currentEmailForm.get('themeid')?.setValue(themeId || 1);
+    this.onPreviewAndSend(this.currentEmailForm);
+  }
+
+  onPreviewAndSend(form: FormGroup): void {
+    this.isLoading = true;
+    const payload: IMessagePreviewRequest = {
+      fromname: form.value.fromName || form.value.emailFrom,
+      replyto: this.subAdminsApiData
+        .filter((su) =>
+          (form.value.replyTo ?? form.value.emailReplyTo).includes(
+            String(su.id || su.email)
+          )
+        )
+        .map((su) => su.email),
+      subject: form.value.subject || form.value.emailSubject,
+      message: form.value.message,
+      emailType: this.selectedValue === 'textOptionOne' ? '14' : '15',
+      themeid: form.value.themeid,
+      signups: this.getSelectedSignup().map((su) => ({
+        id: su.signupid,
+        title: su.title,
+        themeid: su.themeid ?? 1,
+      })),
+    };
+    this.availableThemes = [
+      1,
+      ...this.signupOptionsData.map((su) => su.themeid),
+    ];
+
+    if (this.getSelectedSignup().length === 0) {
+      payload.signUpType = 'acctindex';
+    }
+    if (form.value.to && form.value.to.length > 0) {
+      payload.sendTo = form.value.to.map(
+        (person: string | { label: string; value: string | number }) => {
+          // Handle case where person is just a string (like '37826')
+          if (typeof person === 'string') {
+            return {
+              id: Number(person),
+              displayName: person,
+              isChecked: true,
+            };
+          }
+          // Handle case where person is an object with label and value
+          return {
+            id: Number(person.value),
+            displayName: person.label,
+            isChecked: true,
+          };
+        }
+      );
+    }
+    // Load signups
+    this.composeService.messagePreview(payload).subscribe({
+      next: (response) => {
+        if (
+          response?.success &&
+          response.data &&
+          response.data.textpreview.length > 0
+        ) {
+          this.emailHtmlPreview = response.data.htmlpreview;
+          setTimeout(() => {
+            this.isPreviewVisible = true;
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.isPreviewVisible = false;
+      },
+    });
   }
 
   handleReset(): void {
@@ -251,6 +545,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       message: ['', Validators.required],
       token: ['', Validators.required],
       to: [''],
+      themeid: [1],
     });
 
     // Create form for confirmation email template
@@ -265,6 +560,8 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       emailSubject: '',
       emailFrom: '',
       emailReplyTo: '',
+      themeid: [1],
+      to: [''],
     });
     this.getSubAdmins();
     this.loadUserProfile();
@@ -283,6 +580,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             if (this.inviteTextForm) {
               this.inviteTextForm.patchValue({
                 fromName: fullName,
+                replyTo: profile.email,
                 message:
                   fullName +
                   ' invites you to opt in to the SignUpGenius text messaging service. Your privacy is our top priority, and this is a voluntary opt-in process designed to provide updates related to your sign up participation. You may unsubscribe at any time.',
@@ -291,11 +589,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             this.sendTextEmailForm.patchValue({
               emailFrom: fullName,
               message: 'From ' + fullName + ':',
+              emailReplyTo: profile.email,
             });
           }
-        },
-        error: () => {
-          // Error loading user profile
         },
       });
   }
@@ -309,9 +605,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   }
 
   getGroups() {
+    this.isLoading = true;
     this.composeService.getGroupforMembers().subscribe({
       next: (response) => {
         if (response?.data) {
+          this.grooupApiResponse = response.data;
           const groupOptions = response.data.map((group) => ({
             label: group.title || 'Unnamed Group',
             value: group.id.toString(),
@@ -348,6 +646,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       },
     });
   }
+
   getSubAdmins() {
     this.isLoading = true;
     this.composeService
@@ -356,6 +655,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (apiResponse) => {
           if (apiResponse && apiResponse.data) {
+            this.subAdminsApiData = apiResponse.data;
             this.subAdminsData = apiResponse.data.map((admin) => ({
               label: `${admin.firstname} ${admin.lastname} (${admin.email})`,
               value: admin.id.toString(),
@@ -369,6 +669,25 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
           this.subAdminsData = [];
         },
       });
+  }
+
+  getSlotsForSignup(signupId: number): void {
+    this.isLoading = true;
+    const payload = {
+      includeSignedUpMembers: true,
+    };
+    this.composeService.getDateSlots(signupId, payload).subscribe({
+      next: (response) => {
+        if (response && response.success && response.data) {
+          this.isFromTextMessage =
+            response.data.filter((item) => item.waitlist === true).length > 0;
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      },
+    });
   }
 
   /**

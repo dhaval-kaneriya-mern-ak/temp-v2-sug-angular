@@ -1,10 +1,23 @@
 <sug-ui-dialog
   [config]="dialogConfig"
   [(visible)]="visible"
+  (hide)="closeDialog()"
   [showFooter]="true"
 >
-  <h2 slot="header">Message Preview</h2>
-
+  <h2 slot="header">&nbsp;</h2>
+  @if (showTextPreview) {
+  <div class="row col-sm-12 mb-4">
+    <h2>Text Preview</h2>
+    <div class="email-content">
+      <div class="announcement-box">
+        <div class="text">SignUpGenius:{{ textMessage }} STOP to opt out</div>
+      </div>
+    </div>
+  </div>
+  }
+  <div class="row col-sm-12">
+    <h2 slot="header">Email Preview</h2>
+  </div>
   <div class="dialog-content preview-email-content">
     <!-- Email HTML Preview -->
     <div class="email-preview-wrapper">
@@ -19,25 +32,40 @@
     <div class="theme-section-footer">
       <span class="theme-label">Choose Theme:</span>
       <div class="theme-icons">
-        @for (theme of availableThemes; track theme.id) {
+        @for (theme of availableThemes; track theme) {
         <div
           class="theme-icon-item"
-          [class.selected]="selectedThemeId === theme.id"
-          (click)="selectTheme(theme.id)"
-          (keydown.enter)="selectTheme(theme.id)"
-          (keydown.space)="selectTheme(theme.id)"
-          tabindex="0"
+          [class.selected]="selectedThemeId === theme"
+          (click)="selectTheme(theme)"
+          (keydown.enter)="selectTheme(theme)"
+          (keydown.space)="selectTheme(theme)"
+          tabindex="-1"
           role="button"
-          [attr.aria-label]="'Select theme: ' + theme.name"
+          [attr.aria-label]="'Select theme: ' + theme"
         >
-          <img [src]="theme.image" [alt]="theme.name" />
+          @if (theme === 1) {
+          <div class="blank">
+            <img
+              [src]="siteUrl + `/images/icons/icon-sug-bulb-color.svg`"
+              [alt]="theme"
+            />
+          </div>
+          } @else {
+          <img [src]="siteUrl + `/images/theme/${theme}.jpg`" [alt]="theme" />
+          }
         </div>
         }
       </div>
     </div>
     }
-
     <!-- Send Buttons - Below Theme Section -->
+    @if (saveCustomButton) {
+    <div class="button-group">
+      <button class="send-now-btn" (click)="onSaveCustom()">
+        Save Custome Confirmation
+      </button>
+    </div>
+    } @if (!saveCustomButton) {
     <div class="button-group">
       @if (!scheduledDate) {
       <button class="send-now-btn" (click)="onSendNow()">Send Now</button>
@@ -50,7 +78,6 @@
         Schedule
       </button>
       }
-
       <!-- Date & Time Picker -->
       <sug-ui-date-picker
         [(value)]="scheduledDate"
@@ -65,7 +92,6 @@
         [tabindex]="-1"
       >
       </sug-ui-date-picker>
-
       <!-- Time Only Picker -->
       @if (scheduledDate) {
       <sug-ui-date-picker
@@ -79,5 +105,6 @@
       </sug-ui-date-picker>
       }
     </div>
+    }
   </div>
 </sug-ui-dialog>

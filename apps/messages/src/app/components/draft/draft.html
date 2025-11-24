@@ -1,23 +1,55 @@
 <div class="draft-messages">
-  <sug-ui-loading-spinner [isLoading]="isLoading" [isFullPageLoader]="true"></sug-ui-loading-spinner>
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <div class="d-flex align-items-center justify-content-between">
     <h2>Draft Messages & Templates</h2>
     <div class="search-box mb-3 d-flex align-items-center">
       <i class="pi pi-search btn-search" title="Search" aria-hidden="true"></i>
-      <input type="text" [formControl]="searchControl" placeholder="Search subject..." class="form-control" />
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Search subject..."
+        class="form-control"
+      />
     </div>
   </div>
   @if (tableData.length > 0) {
-  <sug-ui-table [data]="tableData" [columns]="tableColumns" [totalRecords]="totalRecords" [paginator]="true"
-    [config]="tableConfig" [lazy]="true" [rows]="rows" [first]="first" [loading]="isLoading" (page)="onPage($event)"
-    (sort)="onSort($event)">
-    <ng-template #actionTemplate let-rowData let-column="column" let-rowIndex="rowIndex">
+  <sug-ui-table
+    [data]="tableData"
+    [columns]="tableColumns"
+    [totalRecords]="totalRecords"
+    [paginator]="true"
+    [config]="tableConfig"
+    [lazy]="true"
+    [rows]="rows"
+    [first]="first"
+    [loading]="isLoading"
+    (page)="onPage($event)"
+    (sort)="onSort($event)"
+  >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
       <div class="table-action-wrapper">
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-        <i class="pi pi-pencil btn-action" (click)="editDraft()" title="Edit message" style="cursor: pointer"></i>
+        <i
+          class="pi pi-pencil btn-action"
+          (click)="editDraft()"
+          title="Edit message"
+          style="cursor: pointer"
+        ></i>
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-        <i class="pi pi-times btn-action" (click)="openDeleteDialog(rowData)" title="Delete message"
-          style="cursor: pointer"></i>
+        <i
+          class="pi pi-times btn-action"
+          (click)="openDeleteDialog(rowData)"
+          title="Delete message"
+          style="cursor: pointer"
+        ></i>
       </div>
     </ng-template>
   </sug-ui-table>
@@ -27,16 +59,31 @@
       <p>There are no draft and template messages.</p>
     </div>
     <div class="d-flex justify-content-center align-items-center gap-2">
-      <sug-ui-button [buttonText]="'Draft a message'" [severity]="'primary'" [outlined]="false" styleClass="rounded-1"
-        (buttonClick)="navigateToDraft()"></sug-ui-button>
+      <sug-ui-button
+        [buttonText]="'Draft a message'"
+        [severity]="'primary'"
+        [outlined]="false"
+        styleClass="rounded-1"
+        (buttonClick)="navigateToDraft()"
+      ></sug-ui-button>
       <p class="m-0">or</p>
-      <sug-ui-button [buttonText]="'Create a template'" [severity]="'primary'" [outlined]="false" styleClass="rounded-1"
-        (buttonClick)="navigateToTemplate()"></sug-ui-button>
+      <sug-ui-button
+        [buttonText]="'Create a template'"
+        [severity]="'primary'"
+        [outlined]="false"
+        styleClass="rounded-1"
+        (buttonClick)="navigateToTemplate()"
+      ></sug-ui-button>
     </div>
   </div>
   }
 </div>
-<sug-ui-dialog [config]="dialogConf" [(visible)]="isVisible" [showHeader]="true" [showFooter]="true">
+<sug-ui-dialog
+  [config]="dialogConf"
+  [(visible)]="isVisible"
+  [showHeader]="true"
+  [showFooter]="true"
+>
   <div slot="header" class="flex align-items-center">
     <span class="font-bold">Confirmation</span>
   </div>
@@ -44,8 +91,19 @@
     Are you sure you want to delete "{{ selectedItem?.subject }}" draft from the
     list?
   </p>
-  <div slot="footer" class="d-flex justify-content-center align-items-center w-100">
-    <sug-ui-button label="Yes" icon="" [rounded]="false" [size]="'large'" [severity]="'success'" [outlined]="false"
-      styleClass="confirmation-btn" (buttonClick)="closeDeleteDialog()"></sug-ui-button>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Yes"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      styleClass="confirmation-btn"
+      (buttonClick)="closeDeleteDialog()"
+    ></sug-ui-button>
   </div>
 </sug-ui-dialog>

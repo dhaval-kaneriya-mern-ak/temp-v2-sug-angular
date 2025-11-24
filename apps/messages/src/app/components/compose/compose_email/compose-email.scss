@@ -456,7 +456,7 @@
     align-items: center;
     gap: 20px; // Gap between "Choose Theme:" text and icons
     justify-content: space-between;
-
+    overflow: auto;
     .theme-label {
       font-size: 15px;
       font-weight: 400; // Normal weight
@@ -470,24 +470,32 @@
       align-items: center;
 
       .theme-icon-item {
-        width: 50px;
-        height: 50px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         overflow: hidden;
         border: 2px solid #e0e0e0; // Lighter border
         cursor: pointer;
         transition: all 0.2s ease;
         background-color: #fff;
-
-        &:hover {
-          border-color: #a8c939;
-          transform: scale(1.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid transparent;
+        opacity: 0.65;
+        &.selected {
+          border: 3px solid orange;
+          opacity: 1;
+        }
+        .blank {
+          background: linear-gradient(180deg, #f8ce61 0, #f9ae3d);
         }
 
         img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          border-radius: 50%;
         }
       }
     }
@@ -576,4 +584,12 @@
     font-size: 14px;
     color: #374151;
   }
+}
+
+.announcement-box {
+  padding: 16px 24px;
+  background: #e5e5ea;
+  border-radius: 16px;
+  box-shadow: 15px 30px 100px -30px rgba(34, 34, 34, 0.35);
+  animation-fill-mode: forwards;
 }

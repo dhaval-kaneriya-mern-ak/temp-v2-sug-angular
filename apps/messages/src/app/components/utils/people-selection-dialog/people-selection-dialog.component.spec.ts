@@ -112,12 +112,12 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
       expect(component.dialogConfig).toBeDefined();
       expect(component.dialogConfig.modal).toBe(true);
       expect(component.dialogConfig.closable).toBe(true);
-      expect(component.dialogConfig.width).toBe('600px');
+      expect(component.dialogConfig.width).toBe('800px');
     });
 
     it('should allow escape key and mask dismissal', () => {
-      expect(component.dialogConfig.closeOnEscape).toBe(true);
-      expect(component.dialogConfig.dismissableMask).toBe(true);
+      expect(component.dialogConfig.closeOnEscape).toBe(false);
+      expect(component.dialogConfig.dismissableMask).toBe(false);
     });
   });
 

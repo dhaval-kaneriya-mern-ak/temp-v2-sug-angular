@@ -53,6 +53,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() selectedSignups: any[] = [];
   @Input() isSignUpIndexPageSelected = false;
+  @Input() isFromTextMessage = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() selectedTabGroups: any[] = [];
   @Input() groupOptions: ISelectOption[] = [];
@@ -67,6 +68,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   @Output() peopleSelected = new EventEmitter<void>();
   @Output() openDateSlotsDialog = new EventEmitter<void>();
   @Output() selectedGroupsChange = new EventEmitter<ISelectOption[]>();
+  @Output() selectedRadioOption = new EventEmitter<{
+    selectedValue: string;
+    includeNonGroupMembers: boolean;
+    recipients: any[];
+  }>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Output() recipientsChange = new EventEmitter<any[]>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,7 +135,10 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
 
     // If multiple signups are selected (only for emailParticipants - "Email people participating in a sign up")
     // Show multi-signup options with waitlist support
-    if (hasMultipleSignups && this.formType === 'emailParticipants') {
+    if (
+      (hasMultipleSignups && this.formType === 'emailParticipants') ||
+      this.isFromTextMessage
+    ) {
       return [
         {
           label: 'People who have signed up',
@@ -453,9 +462,19 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
               value: groupIds.join(','), // Store all group IDs in value
             },
           ]);
+          this.selectedRadioOption.emit({
+            selectedValue,
+            includeNonGroupMembers,
+            recipients: [],
+          });
         } else {
           // Show actual group names when checkbox is not checked
           this.selectedGroupsChange.emit(selectedGroupOptions);
+          this.selectedRadioOption.emit({
+            selectedValue,
+            includeNonGroupMembers,
+            recipients: [],
+          });
         }
 
         // Clear any previous recipients (e.g., from manual email entry)
@@ -508,11 +527,14 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
           },
         ]);
         this.recipientCountChange.emit(emailList.length);
-
         // Store the emails as recipients for the recipient details dialog
         const recipients = emailList.map((email: string) => ({ email }));
         this.recipientsChange.emit(recipients);
-
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [formValue.manualEmails, formValue.groupEmailAlias],
+        });
         // Clear date slots when switching to manual entry
         this.selectedDateSlotsChange.emit([]);
       } else if (selectedValue === 'specificRsvpResponse') {
@@ -533,9 +555,13 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
             value: 'specificRsvpResponse',
           },
         ]);
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: responses,
+        });
         // Clear date slots when switching to RSVP selection
         this.selectedDateSlotsChange.emit([]);
-        // TODO: Calculate actual recipient count from API
         this.calculateRecipientCountForRsvp();
       } else if (selectedValue === 'peopleWhoSignedUp') {
         // People who have signed up
@@ -548,6 +574,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         // Clear date slots when switching to signed up people
         this.selectedDateSlotsChange.emit([]);
         this.calculateRecipientCountForSignedUp();
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [],
+        });
       } else if (selectedValue === 'peopleOnWaitlist') {
         // People who are on a waitlist
         this.selectedGroupsChange.emit([
@@ -559,6 +590,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         // Clear date slots when switching to waitlist
         this.selectedDateSlotsChange.emit([]);
         this.calculateRecipientCountForWaitlist();
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [],
+        });
       } else if (selectedValue === 'peopleSignedUpAndWaitlist') {
         // People who have signed up and people who are on a waitlist
         this.selectedGroupsChange.emit([
@@ -570,6 +606,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         // Clear date slots when switching to signed up and waitlist
         this.selectedDateSlotsChange.emit([]);
         this.calculateRecipientCountForSignedUpAndWaitlist();
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [],
+        });
       } else if (selectedValue === 'peopleWhoNotSignedUp') {
         // People who have NOT signed up
         this.selectedGroupsChange.emit([
@@ -581,6 +622,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         // Clear date slots when switching to not signed up
         this.selectedDateSlotsChange.emit([]);
         this.calculateRecipientCountForNotSignedUp();
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [],
+        });
       } else if (selectedValue === 'sendMessagePeopleIselect') {
         // People I will select - custom selection
         // Validate that at least one slot is selected
@@ -598,6 +644,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
             value: 'sendMessagePeopleIselect',
           },
         ]);
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: this.selectedDateSlots,
+        });
         // Recipient count should already be set from the date slots selection
         // No need to calculate here as it's done in the date slots dialog
       } else if (selectedValue === 'ImportEmailFromProvider') {
@@ -611,6 +662,11 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
         this.recipientCountChange.emit(0);
         // Clear date slots when switching to import from provider
         this.selectedDateSlotsChange.emit([]);
+        this.selectedRadioOption.emit({
+          selectedValue,
+          includeNonGroupMembers: false,
+          recipients: [],
+        });
       }
 
       // Save the current form state for restoration on next open
@@ -703,17 +759,17 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
    * @param showErrorIfEmpty - Whether to show error toast if no signups selected
    * @returns Array of signup IDs or null if validation fails
    */
-  private getSignupIds(showErrorIfEmpty = false): number[] | null {
+  private getSignupIds(showErrorIfEmpty = false): number[] {
     if (this.selectedSignups.length === 0) {
       if (showErrorIfEmpty) {
         this.toastr.error('Please select a signup', 'Error');
       }
-      return null;
+      return [];
     }
-
-    return this.selectedSignups.map((s) =>
-      parseInt(s.signupid?.toString() || '0', 10)
+    const signupIds: number[] = this.selectedSignups.map((s) =>
+      parseInt(Array.isArray(s) ? s.join(',') : s.signupid)
     );
+    return signupIds;
   }
 
   /**

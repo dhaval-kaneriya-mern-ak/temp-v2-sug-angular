@@ -1,3 +1,7 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
 <div class="compose-container">
   @if (showRadioButtons) {
   <div class="radio-selection">
@@ -78,7 +82,6 @@
             [placeholder]="'Select a Sign Up'"
             appendTo="parent"
             panelStyleClass="custom-dropdown"
-            [selectionLimit]="1"
           ></sug-ui-multi-select-dropdown>
         </div>
         <div class="form-wrapper">
@@ -96,6 +99,7 @@
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
             [disabled]="reminderEmailForm.invalid"
             [outlined]="false"
             class="send-btn"
@@ -187,6 +191,7 @@
         </div>
         <div class="btn-wrapper">
           <sug-ui-button
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
             severity="success"
             [disabled]="confirmationEmailForm.invalid"
             [outlined]="false"
@@ -207,7 +212,7 @@
 
 <sug-help-dialog
   [(visible)]="isHelpDialogVisible"
-  [title]="this.selectedValue === 'emailoptionone' ? 'Help:  Create a reminder email template ' : 'Help: Create a Confirmation Email Template'"
+  [title]="selectedValue === 'emailoptionone' ? 'Help:  Create a reminder email template ' : 'Help: Create a Confirmation Email Template'"
 >
   <p>
     A custom reminder email is a powerful way to communicate important details
@@ -247,3 +252,12 @@
 </sug-help-dialog>
 <sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
 </sug-file-selection-dialog>
+<sug-preview-email
+  [(visible)]="isPreviewVisible"
+  [saveCustomButton]="true"
+  (saveCustom)="onSaveDraft(messageStatus.SEND)"
+  (visibleChange)="isPreviewVisible = false;"
+  (themeChange)="onThemeChange($event)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>

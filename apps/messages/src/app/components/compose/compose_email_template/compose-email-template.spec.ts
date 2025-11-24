@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ComposeEmailTemplateComponent } from './compose-email-template';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TOAST_CONFIG, ToastrService } from 'ngx-toastr';
 
 describe('ComposeEmailTemplateComponent', () => {
   let component: ComposeEmailTemplateComponent;
@@ -9,6 +10,23 @@ describe('ComposeEmailTemplateComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ComposeEmailTemplateComponent, HttpClientTestingModule],
+      providers: [
+        ToastrService,
+        {
+          provide: TOAST_CONFIG,
+          useValue: {
+            default: {
+              iconClasses: {
+                error: 'toast-error',
+                info: 'toast-info',
+                success: 'toast-success',
+                warning: 'toast-warning',
+              },
+            },
+            config: {},
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ComposeEmailTemplateComponent);
