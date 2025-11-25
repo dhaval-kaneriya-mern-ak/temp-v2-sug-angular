@@ -190,6 +190,15 @@ export class UserStateService implements OnDestroy {
     return emailRegex.test(email.trim());
   }
 
+
+  isBasicUser(userProfile?: MemberProfile | null): boolean {
+    const profile = userProfile ?? this._userProfile();
+    if (!profile) return true; // Treat null profile as basic user
+
+    const isBasic = profile.istrial === false && profile.ispro === false;
+    return isBasic;
+  }
+
   /**
    * Cleanup resources
    */

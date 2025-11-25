@@ -25,6 +25,7 @@ import {
   ISelectOption,
 } from '@lumaverse/sug-ui';
 import { ComposeService } from '../../compose/compose.service';
+import { UserStateService } from '@services/user-state.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ChipModule } from 'primeng/chip';
 import { ToastrService } from 'ngx-toastr';
@@ -86,6 +87,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private composeService = inject(ComposeService);
+  private userStateService = inject(UserStateService);
 
   groupDialogVisible = false;
   peopleDialogForm!: FormGroup;
@@ -292,6 +294,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.setupSingleSelectionEnforcement();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -412,10 +415,67 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
     });
   }
 
+  private setupSingleSelectionEnforcement(): void {
+    const selectedGroupsCtrl = this.peopleDialogForm.get('selectedGroups');
+    const manualEmailsGroupCtrl =
+      this.peopleDialogForm.get('manualEmailsGroup');
+
+    if (selectedGroupsCtrl) {
+      selectedGroupsCtrl.valueChanges.subscribe(
+        (values: string[] | undefined) => {
+          if (
+            this.userStateService.isBasicUser() &&
+            Array.isArray(values) &&
+            values.length > 1
+          ) {
+            const trimmed = [values[values.length - 1]];
+            this.peopleDialogForm.patchValue(
+              { selectedGroups: trimmed },
+              { emitEvent: false }
+            );
+          }
+        }
+      );
+    }
+
+    if (manualEmailsGroupCtrl) {
+      manualEmailsGroupCtrl.valueChanges.subscribe(
+        (values: string[] | undefined) => {
+          if (
+            this.userStateService.isBasicUser() &&
+            Array.isArray(values) &&
+            values.length > 1
+          ) {
+            const trimmed = [values[values.length - 1]];
+            this.peopleDialogForm.patchValue(
+              { manualEmailsGroup: trimmed },
+              { emitEvent: false }
+            );
+          }
+        }
+      );
+    }
+  }
+
   closeDialog(cancelled: boolean): void {
     if (!cancelled) {
       const formValue = this.peopleDialogForm.value;
       const selectedValue = formValue.selectedValue;
+
+      // Final enforcement of single selection for basic users before processing
+      if (this.userStateService.isBasicUser()) {
+        if (
+          Array.isArray(formValue.selectedGroups) &&
+          formValue.selectedGroups.length > 1
+        ) {
+          formValue.selectedGroups = [
+            formValue.selectedGroups[formValue.selectedGroups.length - 1],
+          ];
+          this.peopleDialogForm.patchValue({
+            selectedGroups: formValue.selectedGroups,
+          });
+        }
+      }
 
       // Validate that a radio option is selected
       if (!selectedValue) {

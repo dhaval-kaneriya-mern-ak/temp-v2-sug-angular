@@ -192,16 +192,23 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
       const formValue = this.signUpDialogForm.value;
       const selectedValue = formValue.selectedSignupValue;
 
-      // Validate that a radio option is selected
       if (!selectedValue) {
         this.toastr.error('Please select an option', 'Error');
         return;
       }
 
       if (selectedValue === 'LinkSpecificSignup') {
-        const selectedSignupIds = formValue.selectedSignups || [];
+        let selectedSignupIds = formValue.selectedSignups || [];
 
-        // Validate that at least one signup is selected
+        if (
+          this.userStateService.isBasicUser() &&
+          selectedSignupIds.length > 1
+        ) {
+          selectedSignupIds = [selectedSignupIds[selectedSignupIds.length - 1]];
+          this.signUpDialogForm.patchValue({
+            selectedSignups: selectedSignupIds,
+          });
+        }
         if (selectedSignupIds.length === 0) {
           this.toastr.error('Please select at least one sign up', 'Error');
           return;
@@ -220,24 +227,18 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
             );
           }
         });
-
         this.selectedSignupsChange.emit(allSignups);
         this.selectedTabGroupsChange.emit([]);
         this.signUpIndexPageSelectedChange.emit(false);
       } else if (selectedValue === 'LinkSpecifixTabGroup') {
         const selectedTabGroupIds = formValue.selectedTabGroups || [];
-
-        // Validate that at least one tab group is selected
         if (selectedTabGroupIds.length === 0) {
           this.toastr.error('Please select at least one tab group', 'Error');
           return;
         }
-
-        // Find the full tab group objects
         const tabGroups = this.tabGroupsData.filter((group) =>
           selectedTabGroupIds.includes(group.value)
         );
-
         this.selectedSignupsChange.emit([]);
         this.selectedTabGroupsChange.emit(tabGroups);
         this.signUpIndexPageSelectedChange.emit(false);
@@ -284,8 +285,13 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   }
 
   onSignUpSelectionChange(event: { value: string[] }): void {
-    this.signUpDialogForm.patchValue({ selectedSignups: event.value });
-    this.updateGroupOptionsState(event.value);
+    let values = event.value || [];
+    // Restrict basic users to only one signup selection
+    if (this.userStateService.isBasicUser() && values.length > 1) {
+      values = [values[values.length - 1]];
+    }
+    this.signUpDialogForm.patchValue({ selectedSignups: values });
+    this.updateGroupOptionsState(values);
   }
 
   onTabGroupSelectionChange(event: { value: string[] }): void {
@@ -293,7 +299,12 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   }
 
   onPortalPageSelectionChange(event: { value: string[] }): void {
-    this.signUpDialogForm.patchValue({ selectedPortalPages: event.value });
+    let values = event.value || [];
+    // Restrict basic users to only one portal page selection
+    if (this.userStateService.isBasicUser() && values.length > 1) {
+      values = [values[values.length - 1]];
+    }
+    this.signUpDialogForm.patchValue({ selectedPortalPages: values });
   }
 
   getSignupLinkRadioValue(value: string): void {
