@@ -17,7 +17,10 @@ import {
 } from '@lumaverse/sug-ui';
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
-import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
+import {
+  ISelectPortalOption,
+  ISignUpItem,
+} from '@services/interfaces/messages-interface/compose.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 
@@ -45,6 +48,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   // Data inputs - replacing service dependencies
   @Input() selectedSignups: ISignUpItem[] = [];
   @Input() selectedTabGroups: ISelectOption[] = [];
+  @Input() selectedPortalPages: ISelectPortalOption[] = [];
   @Input() isSignUpIndexPageSelected = false;
   @Input() showAttachments = false;
   @Input() selectedGroups: ISelectOption[] = [];
@@ -70,13 +74,15 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Output() editSelectedSlots = new EventEmitter<void>();
   @Output() removeSignupItem = new EventEmitter<number>();
   @Output() removeTabGroupItem = new EventEmitter<number>();
+  @Output() removePortalPageItem = new EventEmitter<number>();
   @Output() removeSignUpIndexPageItem = new EventEmitter<void>();
 
   get hasSignupSelection(): boolean {
     return (
       this.selectedSignups.length > 0 ||
       this.selectedTabGroups.length > 0 ||
-      this.isSignUpIndexPageSelected
+      this.isSignUpIndexPageSelected ||
+      this.selectedPortalPages.length > 0
     );
   }
 
@@ -102,6 +108,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
     if (
       changes['selectedSignups'] ||
       changes['selectedTabGroups'] ||
+      changes['selectedPortalPages'] ||
       changes['isSignUpIndexPageSelected']
     ) {
       this.updateFormControlsState();
@@ -121,6 +128,12 @@ export class EmailFormComponent implements OnInit, OnChanges {
       if (this.selectedDateSlots.length > 0) {
         this.emailForm.patchValue({ toPeople: this.selectedDateSlots });
       }
+    }
+
+    if (changes['selectedPortalPages'] && this.emailForm) {
+      this.emailForm.patchValue({
+        selectedPortalPages: this.selectedPortalPages,
+      });
     }
   }
 
@@ -219,6 +232,10 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   removeSignUpIndexPage(): void {
     this.removeSignUpIndexPageItem.emit();
+  }
+
+  removePortalPage(index: number): void {
+    this.removePortalPageItem.emit(index);
   }
 
   handleReset(): void {

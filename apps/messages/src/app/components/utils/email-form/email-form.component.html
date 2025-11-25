@@ -53,6 +53,16 @@
               (onRemove)="removeTabGroup(i)"
             />
           </span>
+          } @for (item of selectedPortalPages; track item.id || $index; let i =
+          $index) {
+          <span [ngClass]="{ '': selectedPortalPages.length > 0 || i >= 1 }">
+            <p-chip
+              class="gap-2"
+              [label]="item.title"
+              [removable]="true"
+              (onRemove)="removePortalPage(i)"
+            />
+          </span>
           } @if (isSignUpIndexPageSelected) {
           <span>
             <p-chip

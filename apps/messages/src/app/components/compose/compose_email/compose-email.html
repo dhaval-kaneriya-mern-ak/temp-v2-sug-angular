@@ -45,7 +45,9 @@
       (editSelectedSlots)="openDateSlotsDialog()"
       (removeSignupItem)="stateService.removeSignup($event)"
       (removeTabGroupItem)="stateService.removeTabGroup($event)"
+      (removePortalPageItem)="stateService.removePortalPage($event)"
       (removeSignUpIndexPageItem)="stateService.setSignUpIndexPageSelected(false)"
+      [selectedPortalPages]="stateService.selectedPortalPages"
     >
     </sug-email-form>
 
@@ -64,10 +66,12 @@
   [signUpOptions]="stateService.signUpOptions"
   [tabGroupsData]="stateService.tabGroupsData"
   [selectedSignups]="stateService.selectedSignups"
+  [selectedPortalPages]="stateService.selectedPortalPages"
   [selectedTabGroups]="stateService.selectedTabGroups"
   [isSignUpIndexPageSelected]="stateService.isSignUpIndexPageSelected"
   (signUpOptionsChange)="stateService.setSignUpOptions($event)"
   (selectedSignupsChange)="stateService.setSelectedSignups($event)"
+  (selectedPortalPagesChange)="stateService.setSelectedPortalPages($event)"
   (selectedTabGroupsChange)="stateService.setSelectedTabGroups($event)"
   (signUpIndexPageSelectedChange)="stateService.setSignUpIndexPageSelected($event)"
   (signupsSelected)="onSignupsSelected()"

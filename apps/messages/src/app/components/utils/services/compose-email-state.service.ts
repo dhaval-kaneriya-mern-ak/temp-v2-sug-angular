@@ -5,6 +5,7 @@ import {
   ISignUpItem,
   IGroupMember,
   IRecipient,
+  ISelectPortalOption,
 } from '@services/interfaces/messages-interface/compose.interface';
 
 /**
@@ -32,6 +33,12 @@ export class ComposeEmailStateService {
   private selectedGroupsSubject = new BehaviorSubject<ISelectOption[]>([]);
   selectedGroups$ = this.selectedGroupsSubject.asObservable();
 
+  //selected portal pages state
+  private selectedPortalPagesSubject = new BehaviorSubject<
+    ISelectPortalOption[]
+  >([]);
+  selectedPortalPages$ = this.selectedPortalPagesSubject.asObservable();
+
   // Recipient count state
   private recipientCountSubject = new BehaviorSubject<number>(0);
   recipientCount$ = this.recipientCountSubject.asObservable();
@@ -46,6 +53,7 @@ export class ComposeEmailStateService {
   private peopleSelectionDataSubject = new BehaviorSubject<{
     selectedValue: string | null;
     selectedGroups: string[];
+    selectedPortalPages: string[];
     manualEmails: string;
     groupEmailAlias: string;
     useGroupAlias: boolean;
@@ -59,6 +67,7 @@ export class ComposeEmailStateService {
   }>({
     selectedValue: null,
     selectedGroups: [],
+    selectedPortalPages: [],
     manualEmails: '',
     groupEmailAlias: '',
     useGroupAlias: false,
@@ -99,6 +108,11 @@ export class ComposeEmailStateService {
   private subAdminsDataSubject = new BehaviorSubject<ISelectOption[]>([]);
   subAdminsData$ = this.subAdminsDataSubject.asObservable();
 
+  private portalSignUpOptionsSubject = new BehaviorSubject<
+    ISelectPortalOption[]
+  >([]);
+  portalSignUpOptions$ = this.portalSignUpOptionsSubject.asObservable();
+
   // Getters
   get selectedSignups(): ISignUpItem[] {
     return this.selectedSignupsSubject.value;
@@ -124,6 +138,10 @@ export class ComposeEmailStateService {
     return this.recipientsSubject.value;
   }
 
+  get selectedPortalPages(): ISelectPortalOption[] {
+    return this.selectedPortalPagesSubject.value;
+  }
+
   get peopleSelectionData() {
     return this.peopleSelectionDataSubject.value;
   }
@@ -134,6 +152,10 @@ export class ComposeEmailStateService {
 
   get signUpOptions(): ISelectOption[] {
     return this.signUpOptionsSubject.value;
+  }
+
+  get portalSignUpOptions(): ISelectPortalOption[] {
+    return this.portalSignUpOptionsSubject.value;
   }
 
   get tabGroupsData(): ISelectOption[] {
@@ -153,6 +175,10 @@ export class ComposeEmailStateService {
     this.selectedSignupsSubject.next(signups);
     // Reset people selection when signups change
     this.resetPeopleSelection();
+  }
+
+  setSelectedPortalPages(pages: ISelectPortalOption[]): void {
+    this.selectedPortalPagesSubject.next(pages);
   }
 
   setSelectedTabGroups(tabGroups: ISelectOption[]): void {
@@ -214,6 +240,10 @@ export class ComposeEmailStateService {
     this.signUpOptionsSubject.next(options);
   }
 
+  setPortalSignUpOptions(options: ISelectPortalOption[]): void {
+    this.portalSignUpOptionsSubject.next(options);
+  }
+
   setTabGroupsData(data: ISelectOption[]): void {
     this.tabGroupsDataSubject.next(data);
   }
@@ -265,6 +295,18 @@ export class ComposeEmailStateService {
     this.resetPeopleSelection();
   }
 
+  removePortalPage(index: number): void {
+    const current = this.selectedPortalPagesSubject.value;
+    const updated = current.filter((_, i) => i !== index);
+    this.selectedPortalPagesSubject.next(updated);
+
+    if (updated.length === 0) {
+      this.resetSignUpOptionsState();
+    }
+
+    this.resetPeopleSelection();
+  }
+
   removeSelectedSlot(index: number): void {
     const current = this.selectedDateSlotsSubject.value;
     this.selectedDateSlotsSubject.next(current.filter((_, i) => i !== index));
@@ -284,6 +326,7 @@ export class ComposeEmailStateService {
     this.peopleSelectionDataSubject.next({
       selectedValue: null,
       selectedGroups: [],
+      selectedPortalPages: [],
       manualEmails: '',
       groupEmailAlias: '',
       useGroupAlias: false,
@@ -322,6 +365,7 @@ export class ComposeEmailStateService {
     this.peopleSelectionDataSubject.next({
       selectedValue: null,
       selectedGroups: [],
+      selectedPortalPages: [],
       manualEmails: '',
       groupEmailAlias: '',
       useGroupAlias: false,

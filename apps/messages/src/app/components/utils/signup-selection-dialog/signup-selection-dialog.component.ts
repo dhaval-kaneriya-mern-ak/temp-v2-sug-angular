@@ -4,6 +4,7 @@ import {
   EventEmitter,
   inject,
   Input,
+  OnDestroy,
   OnInit,
   Output,
 } from '@angular/core';
@@ -17,8 +18,15 @@ import {
   DialogConfig,
   ISelectOption,
 } from '@lumaverse/sug-ui';
-import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
+import {
+  ISelectPortalOption,
+  ISignUpItem,
+} from '@services/interfaces/messages-interface/compose.interface';
 import { ToastrService } from 'ngx-toastr';
+import { UserStateService } from '@services/user-state.service';
+import { Subject, takeUntil } from 'rxjs';
+import { MemberProfile } from '@services/interfaces';
+import { ComposeEmailStateService } from '../services/compose-email-state.service';
 
 @Component({
   selector: 'sug-signup-selection-dialog',
@@ -35,13 +43,14 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './signup-selection-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
 })
-export class SignupSelectionDialogComponent implements OnInit {
+export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   @Input() visible = false;
   @Input() signUpOptions: ISelectOption[] = [];
   @Input() tabGroupsData: ISelectOption[] = [];
   @Input() selectedSignups: ISignUpItem[] = [];
   @Input() selectedTabGroups: ISelectOption[] = [];
   @Input() isSignUpIndexPageSelected = false;
+  @Input() selectedPortalPages: ISelectPortalOption[] = [];
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() signupsSelected = new EventEmitter<void>();
@@ -49,9 +58,16 @@ export class SignupSelectionDialogComponent implements OnInit {
   @Output() selectedSignupsChange = new EventEmitter<ISignUpItem[]>();
   @Output() selectedTabGroupsChange = new EventEmitter<ISelectOption[]>();
   @Output() signUpIndexPageSelectedChange = new EventEmitter<boolean>();
+  @Output() selectedPortalPagesChange = new EventEmitter<
+    ISelectPortalOption[]
+  >();
+  private readonly destroy$ = new Subject<void>();
+  private userProfile: MemberProfile | null = null;
 
   toastr = inject(ToastrService);
   private fb = inject(FormBuilder);
+  private userStateService = inject(UserStateService);
+  composeStateService = inject(ComposeEmailStateService);
 
   signUpDialogForm!: FormGroup;
 
@@ -64,6 +80,13 @@ export class SignupSelectionDialogComponent implements OnInit {
     width: '480px',
     contentStyleClass: 'dialog-overflow-visible',
   };
+
+  get portalOptionsForDropdown(): ISelectOption[] {
+    return this.composeStateService.portalSignUpOptions.map((option) => ({
+      label: option.title || option.label || 'Untitled Portal',
+      value: (option.id || option.value || '').toString(),
+    }));
+  }
 
   get dialogRadioOptions() {
     const baseOptions = [
@@ -83,12 +106,32 @@ export class SignupSelectionDialogComponent implements OnInit {
         hasCustomContent: true,
       });
     }
+    // Only add portal pages option if user has access
+    if (this.userProfile?.features?.portalpages) {
+      baseOptions.push({
+        label: 'Link to specific portal page(s)',
+        value: 'LinkSpecificPortalPage',
+        hasCustomContent: true,
+      });
+    }
 
     return baseOptions;
   }
 
   ngOnInit(): void {
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.userProfile = profile;
+        },
+      });
     this.initializeForm();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private initializeForm(): void {
@@ -96,6 +139,7 @@ export class SignupSelectionDialogComponent implements OnInit {
       selectedSignupValue: [null],
       selectedSignups: [[]],
       selectedTabGroups: [[]],
+      selectedPortalPages: [[]],
     });
   }
 
@@ -121,6 +165,14 @@ export class SignupSelectionDialogComponent implements OnInit {
         selectedSignupValue: 'LinkMainAccount',
         selectedSignups: [],
         selectedTabGroups: [],
+      });
+    } else if (this.selectedPortalPages.length > 0) {
+      const portalPageIds = this.selectedPortalPages
+        .map((page) => page.id?.toString())
+        .filter(Boolean);
+      this.signUpDialogForm.patchValue({
+        selectedSignupValue: 'LinkSpecificPortalPage',
+        selectedPortalPages: portalPageIds,
       });
     } else {
       // Don't set any default value - let user choose
@@ -193,16 +245,42 @@ export class SignupSelectionDialogComponent implements OnInit {
         this.selectedSignupsChange.emit([]);
         this.selectedTabGroupsChange.emit([]);
         this.signUpIndexPageSelectedChange.emit(true);
+      } else if (selectedValue === 'LinkSpecificPortalPage') {
+        const selectedPortalPageIds = formValue.selectedPortalPages || [];
+
+        // Validate that at least one portal page is selected
+        if (selectedPortalPageIds.length === 0) {
+          this.toastr.error('Please select at least one portal page', 'Error');
+          return;
+        }
+
+        // You might want to emit the portal page selection or handle it differently
+        // For now, we'll clear other selections
+        this.selectedSignupsChange.emit([]);
+        this.selectedTabGroupsChange.emit([]);
+        this.signUpIndexPageSelectedChange.emit(false);
+        console.log(
+          'changes',
+          this.composeStateService.portalSignUpOptions,
+          selectedPortalPageIds
+        );
+
+        this.selectedPortalPagesChange.emit(
+          this.composeStateService.portalSignUpOptions.filter(
+            (page) =>
+              page?.id && selectedPortalPageIds.includes(page.id.toString())
+          ) ?? []
+        );
+
+        this.signupsSelected.emit();
+      } else {
+        // Reset form to previous values
+        this.initializeForm();
       }
 
-      this.signupsSelected.emit();
-    } else {
-      // Reset form to previous values
-      this.initializeForm();
+      this.visible = false;
+      this.visibleChange.emit(false);
     }
-
-    this.visible = false;
-    this.visibleChange.emit(false);
   }
 
   onSignUpSelectionChange(event: { value: string[] }): void {
@@ -214,8 +292,12 @@ export class SignupSelectionDialogComponent implements OnInit {
     this.signUpDialogForm.patchValue({ selectedTabGroups: event.value });
   }
 
-  getSignupLinkRadioValue(_value: string): void {
-    // No action needed currently
+  onPortalPageSelectionChange(event: { value: string[] }): void {
+    this.signUpDialogForm.patchValue({ selectedPortalPages: event.value });
+  }
+
+  getSignupLinkRadioValue(value: string): void {
+    this.signUpDialogForm.patchValue({ selectedSignupValue: value });
   }
 
   private updateGroupOptionsState(selectedValues: string[]): void {

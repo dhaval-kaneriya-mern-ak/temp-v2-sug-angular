@@ -139,6 +139,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       token: ['', Validators.required],
       selectedSignups: [[]],
       selectedTabGroups: [[]],
+      selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
       fromName: ['', Validators.required],
       replyTo: [{ value: [], disabled: true }],
@@ -154,6 +155,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       token: ['', Validators.required],
       selectedSignups: [[]],
       selectedTabGroups: [[]],
+      selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
       fromName: ['', Validators.required],
       replyTo: [{ value: [], disabled: true }],
@@ -192,6 +194,13 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((selectedSignups) => {
         handleFormStateChange({ selectedSignups });
+      });
+
+    // Portal pages subscription
+    this.stateService.selectedPortalPages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((selectedPortalPages) => {
+        handleFormStateChange({ selectedPortalPages });
       });
 
     // Tab groups subscription
@@ -240,6 +249,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         }
       },
     });
+
+    //Load portal signup info
+    // if (this.userProfile?.features?.portalpages) {
+    this.composeService.getPortalSignup().subscribe({
+      next: (response) => {
+        if (response?.data) {
+          this.stateService.setPortalSignUpOptions(response.data);
+        }
+      },
+    });
+    // }
 
     // Load groups
     this.composeService.getGroupforMembers().subscribe({
@@ -361,6 +381,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     const hasSelection =
       this.stateService.selectedSignups.length > 0 ||
       this.stateService.selectedTabGroups.length > 0 ||
+      this.stateService.selectedPortalPages.length > 0 ||
       this.stateService.isSignUpIndexPageSelected;
 
     const forms = [this.emailFormOne, this.emailFormTwo];
@@ -727,6 +748,15 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
     // If tab groups are selected, clear subject and message (user enters manually)
     if (this.stateService.selectedTabGroups.length > 0) {
+      if (subjectControl && messageControl) {
+        subjectControl.patchValue('');
+        messageControl.patchValue('');
+      }
+      return;
+    }
+
+    // If portal pages are selected, clear subject and message (user enters manually)
+    if (this.stateService.selectedPortalPages.length > 0) {
       if (subjectControl && messageControl) {
         subjectControl.patchValue('');
         messageControl.patchValue('');

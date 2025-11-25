@@ -72,6 +72,21 @@
         >
         </sug-ui-multi-select-dropdown>
       </div>
+      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+      'LinkSpecificPortalPage') {
+      <div class="signup-radio-content">
+        <sug-ui-multi-select-dropdown
+          [options]="portalOptionsForDropdown"
+          [optionLabel]="'label'"
+          [optionValue]="'value'"
+          [placeholder]="'Select Portal Page(s)'"
+          panelStyleClass="custom-dropdown"
+          appendTo="parent"
+          (valueChanged)="onPortalPageSelectionChange($event)"
+          formControlName="selectedPortalPages"
+        >
+        </sug-ui-multi-select-dropdown>
+      </div>
       }
     </form>
   </div>

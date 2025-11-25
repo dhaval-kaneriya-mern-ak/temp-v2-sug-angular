@@ -13,6 +13,7 @@ import {
   ICreateMessageRequest,
   ICreateMessageResponse,
 } from '@services/interfaces';
+import { IPortalSignupResponse } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
 
@@ -54,7 +55,7 @@ export class ComposeService {
     return this.sugApiClient.get(`auth/subadmins`);
   }
 
-  getTabGroups(): Observable<any> {
+  getTabGroups(): Observable<unknown> {
     return this.sugApiClient.get(
       `/tools/tabgroups?page=1&limit=100&sortBy=name&sortOrder=asc`
     );
@@ -79,14 +80,14 @@ export class ComposeService {
     return this.sugApiClient.get(`/groups/${groupId}/members`);
   }
 
-  addMembersToGroup(groupId: string, body: any): Observable<any> {
+  addMembersToGroup(groupId: string, body: unknown): Observable<unknown> {
     return this.sugApiClient.post(`/groups/${groupId}/members/create`, body);
   }
 
   deleteMembersFromGroup(
     groupId: string,
     memberIds: number[]
-  ): Observable<any> {
+  ): Observable<unknown> {
     return this.sugApiClient.patch(
       `/groups/${groupId}/members/remove-members`,
       {
@@ -95,7 +96,7 @@ export class ComposeService {
     );
   }
 
-  updateGroupTitle(groupId: string, title: string): Observable<any> {
+  updateGroupTitle(groupId: string, title: string): Observable<unknown> {
     return this.sugApiClient.patch(`/groups/${groupId}`, {
       title: title,
     });
@@ -111,5 +112,9 @@ export class ComposeService {
     payload: IMessagePreviewRequest
   ): Observable<IMessagePreviewResponse> {
     return this.sugApiClient.post(`/messages/preview`, payload);
+  }
+
+  getPortalSignup(): Observable<IPortalSignupResponse> {
+    return this.sugApiClient.get(`/portals?includeTheme=true`);
   }
 }

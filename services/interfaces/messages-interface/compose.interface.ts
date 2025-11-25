@@ -94,6 +94,29 @@ export interface ISignUpItem {
   passcode?: string;
 }
 
+export interface ISelectPortalOption {
+  label?: string;
+  value?: string | number;
+  id?: number;
+  active?: boolean;
+  associatedthemes?: number[];
+  datecreated?: number;
+  dateupdated?: number;
+  embeddedmode?: boolean;
+  memberid?: number;
+  portalcolorschemeid?: number;
+  removebranding?: boolean;
+  title?: string;
+  urlkey?: string;
+}
+
+export interface IPortalSignupResponse {
+  message?: string[];
+  data?: ISelectPortalOption[];
+  success?: boolean;
+}
+
+
 /**
  * Interface for pagination data
  */
