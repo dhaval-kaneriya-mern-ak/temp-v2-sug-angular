@@ -256,7 +256,7 @@
   [(visible)]="isPreviewVisible"
   [saveCustomButton]="true"
   (saveCustom)="onSaveDraft(messageStatus.SEND)"
-  (visibleChange)="isPreviewVisible = false;"
+  (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   [emailHtmlPreview]="emailHtmlPreview"
   [availableThemes]="availableThemes"

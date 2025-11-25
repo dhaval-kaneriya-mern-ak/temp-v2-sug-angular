@@ -87,14 +87,16 @@ export class PreviewEmailComponent {
     const combinedDateTime = new Date(this.scheduledDate);
     const timeValue = new Date(this.scheduledTime);
 
-    combinedDateTime.setHours(timeValue.getHours());
-    combinedDateTime.setMinutes(timeValue.getMinutes());
-    combinedDateTime.setSeconds(0);
-    combinedDateTime.setMilliseconds(0);
+    // Apply hours/minutes/seconds/milliseconds from the time picker
+    combinedDateTime.setHours(
+      timeValue.getHours(),
+      timeValue.getMinutes(),
+      timeValue.getSeconds(),
+      timeValue.getMilliseconds()
+    );
 
-    // Validate by ensuring the combined date/time is after the base scheduled date
-    // This makes the method deterministic for tests that supply fixed dates/times
-    return combinedDateTime > new Date(this.scheduledDate);
+    // Validate that the combined date/time is in the future relative to now
+    return combinedDateTime.getTime() > new Date().getTime();
   }
 
   selectTheme(themeId: number): void {

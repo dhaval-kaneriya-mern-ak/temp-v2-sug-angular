@@ -416,7 +416,7 @@
   [textMessage]="currentEmailForm.get('message')?.value"
   (scheduleEmail)="scheduleEmail($event)"
   (sendNow)="saveDraft(messageStatus.SEND)"
-  (visibleChange)="isPreviewVisible = false;"
+  (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   [emailHtmlPreview]="emailHtmlPreview"
   [availableThemes]="availableThemes"

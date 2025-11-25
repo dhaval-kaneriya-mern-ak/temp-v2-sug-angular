@@ -510,6 +510,10 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
           response.data.textpreview.length > 0
         ) {
           this.emailHtmlPreview = response.data.htmlpreview;
+          this.currentEmailForm
+            .get('token')
+            ?.removeValidators(Validators.required);
+          this.currentEmailForm.get('token')?.updateValueAndValidity();
           setTimeout(() => {
             this.isPreviewVisible = true;
             this.isLoading = false;
@@ -522,6 +526,24 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         this.isPreviewVisible = false;
       },
     });
+  }
+
+  /**
+   * Called when preview dialog is closed. Reset preview related state so
+   * reopening the dialog shows default values (themeid=1 and empty preview).
+   */
+  onPreviewClose(): void {
+    // Ensure the dialog visibility flag is false
+    this.isPreviewVisible = false;
+
+    // Reset the preview HTML shown in the dialog
+    this.emailHtmlPreview = '';
+
+    // Reset available themes and form theme to default (1)
+    this.availableThemes = [1];
+    this.currentEmailForm.get('themeid')?.setValue(1);
+    this.currentEmailForm.get('token')?.addValidators(Validators.required);
+    this.currentEmailForm.get('token')?.updateValueAndValidity();
   }
 
   handleReset(): void {

@@ -190,7 +190,7 @@
 <!-- Preview Email Dialog -->
 <sug-preview-email
   [(visible)]="isPreviewDialogVisible"
-  (visibleChange)="isPreviewDialogVisible = false;"
+  (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   (scheduleEmail)="scheduleEmail($event)"
   (sendNow)="onSaveDraft(messageStatus.SEND)"

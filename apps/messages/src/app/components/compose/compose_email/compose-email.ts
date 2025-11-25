@@ -137,7 +137,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // Form for "Invite people to a sign up"
     this.emailFormOne = this.fb.group({
       token: ['', Validators.required],
-      selectedSignups: [[]],
+      selectedSignups: [[], Validators.required],
       selectedTabGroups: [[]],
       selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
@@ -153,7 +153,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // Form for "Email people participating in a sign up"
     this.emailFormTwo = this.fb.group({
       token: ['', Validators.required],
-      selectedSignups: [[]],
+      selectedSignups: [[], Validators.required],
       selectedTabGroups: [[]],
       selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
@@ -548,7 +548,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           response.data?.textpreview?.length > 0
         ) {
           this.emailHtmlPreview = response.data.htmlpreview;
-          // this.isPreviewDialogVisible = false;
+          this.currentForm.get('token')?.removeValidators(Validators.required);
+          this.currentForm.get('token')?.updateValueAndValidity();
           setTimeout(() => {
             this.isLoading = false;
             this.isPreviewDialogVisible = true;
@@ -723,6 +724,24 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   onThemeChange(themeId: number): void {
     this.currentForm.get('themeid')?.setValue(themeId || 1);
     this.onPreviewAndSend(this.currentFormType);
+  }
+
+  /**
+   * Called when preview dialog is closed. Reset preview related state so
+   * reopening the dialog shows default values (themeid=1 and empty preview).
+   */
+  onPreviewClose(): void {
+    // Ensure the dialog visibility flag is false
+    this.isPreviewDialogVisible = false;
+
+    // Reset the preview HTML shown in the dialog
+    this.emailHtmlPreview = '';
+
+    // Reset available themes and form theme to default (1)
+    this.availableThemes = [1];
+    this.currentForm.get('themeid')?.setValue(1);
+    this.currentForm.get('token')?.addValidators(Validators.required);
+    this.currentForm.get('token')?.updateValueAndValidity();
   }
 
   /**

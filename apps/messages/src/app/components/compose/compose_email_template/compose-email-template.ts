@@ -242,6 +242,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
           if (response?.success && response.data?.textpreview?.length > 0) {
             this.emailHtmlPreview = response.data.htmlpreview;
             this.isPreviewVisible = true;
+            this.currentEmailForm
+              .get('token')
+              ?.removeValidators(Validators.required);
+            this.currentEmailForm.get('token')?.updateValueAndValidity();
           }
         },
         error: (err) => {
@@ -252,6 +256,24 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
           );
         },
       });
+  }
+
+  /**
+   * Called when preview dialog is closed. Reset preview related state so
+   * reopening the dialog shows default values (themeid=1 and empty preview).
+   */
+  onPreviewClose(): void {
+    // Ensure the dialog visibility flag is false
+    this.isPreviewVisible = false;
+
+    // Reset the preview HTML shown in the dialog
+    this.emailHtmlPreview = '';
+
+    // Reset available themes and form theme to default (1)
+    this.availableThemes = [1];
+    this.currentEmailForm.get('themeid')?.setValue(1);
+    this.currentEmailForm.get('token')?.addValidators(Validators.required);
+    this.currentEmailForm.get('token')?.updateValueAndValidity();
   }
 
   // Get current form based on selected template type

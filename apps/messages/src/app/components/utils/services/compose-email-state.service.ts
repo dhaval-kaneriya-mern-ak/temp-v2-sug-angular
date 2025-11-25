@@ -377,6 +377,8 @@ export class ComposeEmailStateService {
       rsvpResponsemaybe: false,
       rsvpResponsenoresponse: false,
     });
+    // Ensure any disabled sign up options are reset when clearing selections
+    this.resetSignUpOptionsState();
   }
 
   reset(): void {
