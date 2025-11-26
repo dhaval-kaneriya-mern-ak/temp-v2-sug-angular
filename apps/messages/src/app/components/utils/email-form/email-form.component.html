@@ -120,7 +120,8 @@
         (buttonClick)="onOpenPeopleDialog()"
       >
       </sug-ui-button>
-      } @if (hasPeopleSelection && selectedDateSlots.length === 0) {
+      } @if (hasPeopleSelection && selectedDateSlots.length === 0 &&
+      selectedMemberGroups.length === 0) {
       <div class="recipient-info-container">
         @for (item of selectedGroups; track item.value || $index; let i =
         $index) {
@@ -157,6 +158,22 @@
             class="edit-icon-btn"
             (click)="onEditSelectedSlots()"
             aria-label="Edit selected slots"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+        </div>
+      </div>
+      } @if (selectedMemberGroups.length > 0) {
+      <div class="recipient-info-container">
+        <div class="recipient-text">
+          <span class="recipient-label">Custom Selection</span>
+        </div>
+        <div class="recipient-text">
+          <button
+            type="button"
+            class="edit-icon-btn"
+            (click)="onEditSelectedMemberGroups()"
+            aria-label="Edit selected member groups"
           >
             <i class="pi pi-pencil"></i>
           </button>

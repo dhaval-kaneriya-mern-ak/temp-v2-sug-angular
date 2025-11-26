@@ -18,6 +18,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import {
+  IMemberInfoDto,
   ISelectPortalOption,
   ISignUpItem,
 } from '@services/interfaces/messages-interface/compose.interface';
@@ -63,7 +64,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
     signedupmembers: string;
   }> = [];
   @Input() subAdminsData: ISelectOption[] = [];
-
+  @Input() selectedMemberGroups: IMemberInfoDto[] = [];
   @Output() openSignUpsDialog = new EventEmitter<void>();
   @Output() openPeopleDialog = new EventEmitter<void>();
   @Output() openSelectFileDialog = new EventEmitter<void>();
@@ -72,6 +73,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Output() saveDraft = new EventEmitter<void>();
   @Output() showRecipientDetails = new EventEmitter<void>();
   @Output() editSelectedSlots = new EventEmitter<void>();
+  @Output() editSelectedMemberGroups = new EventEmitter<void>();
   @Output() removeSignupItem = new EventEmitter<number>();
   @Output() removeTabGroupItem = new EventEmitter<number>();
   @Output() removePortalPageItem = new EventEmitter<number>();
@@ -130,6 +132,13 @@ export class EmailFormComponent implements OnInit, OnChanges {
       }
     }
 
+    if (changes['selectedMemberGroups'] && this.emailForm) {
+      // Update toPeople with selected member groups if applicable
+      if (this.selectedMemberGroups.length > 0) {
+        this.emailForm.patchValue({ toPeople: this.selectedMemberGroups });
+      }
+    }
+
     if (changes['selectedPortalPages'] && this.emailForm) {
       this.emailForm.patchValue({
         selectedPortalPages: this.selectedPortalPages,
@@ -157,6 +166,10 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
     if (this.selectedPortalPages) {
       updateData['selectedPortalPages'] = this.selectedPortalPages;
+    }
+
+    if (this.selectedMemberGroups && this.selectedMemberGroups.length > 0) {
+      updateData['toPeople'] = this.selectedMemberGroups;
     }
 
     // Update form with new values
@@ -211,6 +224,10 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   onEditSelectedSlots(): void {
     this.editSelectedSlots.emit();
+  }
+
+  onEditSelectedMemberGroups(): void {
+    this.editSelectedMemberGroups.emit();
   }
 
   getSignupTitle(item: ISignUpItem): string {

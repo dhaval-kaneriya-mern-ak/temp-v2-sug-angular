@@ -151,7 +151,7 @@
           >
           </sug-ui-button>
           } @if (hasPeopleSelection && stateService.selectedDateSlots.length ===
-          0) {
+          0 && stateService.selectedMemberGroups.length === 0) {
           <div class="recipient-info-container">
             @for (item of stateService.selectedGroups; track item.value ||
             $index; let i = $index) {
@@ -188,6 +188,22 @@
                 class="edit-icon-btn"
                 (click)="openDateSlotsDialog()"
                 aria-label="Edit selected slots"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+            </div>
+          </div>
+          } @if (stateService.selectedMemberGroups.length > 0) {
+          <div class="recipient-info-container">
+            <div class="recipient-text">
+              <span class="recipient-label">Custom Selection</span>
+            </div>
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openMyGroupDialog()"
+                aria-label="Edit selected member groups"
               >
                 <i class="pi pi-pencil"></i>
               </button>
@@ -385,6 +401,10 @@
   (removeSlot)="stateService.removeSelectedSlot($event)"
   (openDateSlotsDialog)="openDateSlotsDialog()"
   (selectedRadioOption)="setSelectedRadio($event)"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (removeMemberGroup)="stateService.removeSelectedMemberGroup($event)"
+  (openMyGroupDialog)="openMyGroupDialog()"
 >
 </sug-people-selection-dialog>
 
@@ -399,6 +419,16 @@
   (slotsSelected)="onDateSlotsSelected()"
 >
 </sug-date-slots-selection>
+
+<!-- My Groups Selection -->
+<sug-my-group-selection
+  [(visible)]="isMyGroupsDialogVisible"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="stateService.setRecipients($event)"
+  (groupMemberSelected)="onMyGroupsSelected()"
+></sug-my-group-selection>
 
 <!-- Recipient Details Dialog -->
 <sug-recipient-details-dialog

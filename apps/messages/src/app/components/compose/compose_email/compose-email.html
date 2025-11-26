@@ -35,6 +35,7 @@
       [recipientCount]="stateService.recipientCount"
       [selectedDateSlots]="stateService.selectedDateSlots"
       [subAdminsData]="stateService.subAdminsData"
+      [selectedMemberGroups]="stateService.selectedMemberGroups"
       (openSignUpsDialog)="openSignUpsDialog()"
       (openPeopleDialog)="openPeopleDialog()"
       (openSelectFileDialog)="openSelectFileDialog()"
@@ -43,6 +44,8 @@
       (saveDraft)="onSaveDraft(messageStatus.DRAFT)"
       (showRecipientDetails)="showRecipientDetails()"
       (editSelectedSlots)="openDateSlotsDialog()"
+      (editSelectedMemberGroups)="openMyGroupDialog()"
+      (openMyGroupDialog)="openMyGroupDialog()"
       (removeSignupItem)="stateService.removeSignup($event)"
       (removeTabGroupItem)="stateService.removeTabGroup($event)"
       (removePortalPageItem)="stateService.removePortalPage($event)"
@@ -152,15 +155,19 @@
   [groupOptions]="stateService.groupOptions"
   [selectedDateSlots]="stateService.selectedDateSlots"
   [recipientCount]="stateService.recipientCount"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
   [peopleSelectionData]="stateService.peopleSelectionData"
   (selectedGroupsChange)="stateService.setSelectedGroups($event)"
   (recipientsChange)="stateService.setRecipients($event)"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
   (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
   (recipientCountChange)="stateService.setRecipientCount($event)"
   (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
   (selectedRadioOption)="setSelectedRadio($event)"
   (removeSlot)="stateService.removeSelectedSlot($event)"
+  (removeMemberGroup)="stateService.removeSelectedMemberGroup($event)"
   (openDateSlotsDialog)="openDateSlotsDialog()"
+  (openMyGroupDialog)="openMyGroupDialog()"
 >
 </sug-people-selection-dialog>
 
@@ -176,6 +183,15 @@
 >
 </sug-date-slots-selection>
 
+<!-- My Groups Selection -->
+<sug-my-group-selection
+  [(visible)]="isMyGroupsDialogVisible"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="stateService.setRecipients($event)"
+  (groupMemberSelected)="onMyGroupsSelected()"
+></sug-my-group-selection>
 <!-- Recipient Details Dialog -->
 <sug-recipient-details-dialog
   [(visible)]="isRecipientDialogVisible"

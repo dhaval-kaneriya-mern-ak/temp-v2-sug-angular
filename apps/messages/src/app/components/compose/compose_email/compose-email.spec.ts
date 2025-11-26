@@ -72,6 +72,18 @@ describe('ComposeEmailComponent (Refactored)', () => {
           message: [],
           data: [],
         }),
+      getPortalSignup: () =>
+        of({
+          success: true,
+          message: [],
+          data: null,
+        }),
+      getMemberIndexPage: () =>
+        of({
+          success: true,
+          message: [],
+          data: null,
+        }),
     };
 
     const mockUserStateService = {

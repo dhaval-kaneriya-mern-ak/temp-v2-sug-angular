@@ -6,6 +6,7 @@ import {
   IGroupMember,
   IRecipient,
   ISelectPortalOption,
+  IMemberInfoDto,
 } from '@services/interfaces/messages-interface/compose.interface';
 
 /**
@@ -96,6 +97,11 @@ export class ComposeEmailStateService {
   >([]);
   selectedDateSlots$ = this.selectedDateSlotsSubject.asObservable();
 
+  // Date slots selection state
+  private selectedMemberGroupsSubject = new BehaviorSubject<IMemberInfoDto[]>(
+    []
+  );
+  selectedMemberGroups$ = this.selectedMemberGroupsSubject.asObservable();
   // Available options data
   private signUpOptionsSubject = new BehaviorSubject<ISelectOption[]>([]);
   signUpOptions$ = this.signUpOptionsSubject.asObservable();
@@ -149,6 +155,10 @@ export class ComposeEmailStateService {
 
   get selectedDateSlots() {
     return this.selectedDateSlotsSubject.value;
+  }
+
+  get selectedMemberGroups() {
+    return this.selectedMemberGroupsSubject.value;
   }
 
   get signUpOptions(): ISelectOption[] {
@@ -245,6 +255,10 @@ export class ComposeEmailStateService {
     this.selectedDateSlotsSubject.next(slots);
   }
 
+  setSelectedMemberGroups(options: IMemberInfoDto[]): void {
+    this.selectedMemberGroupsSubject.next(options);
+  }
+
   setSignUpOptions(options: ISelectOption[]): void {
     this.signUpOptionsSubject.next(options);
   }
@@ -323,6 +337,14 @@ export class ComposeEmailStateService {
     this.setRecipientCount(this.selectedDateSlotsSubject.value.length);
   }
 
+  removeSelectedMemberGroup(index: number): void {
+    const current = this.selectedMemberGroupsSubject.value;
+    this.selectedMemberGroupsSubject.next(
+      current.filter((_, i) => i !== index)
+    );
+    this.setRecipientCount(this.selectedMemberGroupsSubject.value.length);
+  }
+
   resetPeopleSelection(): void {
     // Clear selected groups
     this.selectedGroupsSubject.next([]);
@@ -331,6 +353,7 @@ export class ComposeEmailStateService {
     this.recipientsSubject.next([]);
     // Clear date slots
     this.selectedDateSlotsSubject.next([]);
+    this.selectedMemberGroupsSubject.next([]);
     // Reset people selection form data
     this.peopleSelectionDataSubject.next({
       selectedValue: null,
@@ -371,6 +394,7 @@ export class ComposeEmailStateService {
     this.recipientCountSubject.next(0);
     this.recipientsSubject.next([]);
     this.selectedDateSlotsSubject.next([]);
+    this.selectedMemberGroupsSubject.next([]);
     this.peopleSelectionDataSubject.next({
       selectedValue: null,
       selectedGroups: [],

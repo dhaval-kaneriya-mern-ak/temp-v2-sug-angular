@@ -49,6 +49,7 @@ import { RecipientDetailsDialogComponent } from '../../utils/recipient-details-d
 import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
 import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
 import { ToastrService } from 'ngx-toastr';
+import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -70,6 +71,7 @@ import { ToastrService } from 'ngx-toastr';
     FileSelectionDialogComponent,
     PreviewEmailComponent,
     SugUiLoadingSpinnerComponent,
+    MyGroupSelection,
   ],
   providers: [ComposeEmailStateService],
   templateUrl: './compose-text-message.html',
@@ -132,17 +134,14 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   selectedRadioOption: {
     selectedValue: string;
     includeNonGroupMembers: boolean;
-    recipients: (
-      | string
-      | number
-      | { value: string | number }
-      | { slotid: number; waitlist: boolean }
-    )[];
+    fromCustomGroup?: boolean;
+    recipients: any[];
   } = {
     selectedValue: '',
     includeNonGroupMembers: false,
     recipients: [],
   };
+  isMyGroupsDialogVisible = false;
   ngOnInit() {
     this.initializeForms();
     // Listen for changes on selectedSignups
@@ -204,6 +203,28 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
   closeSelectFileDialog() {
     this.isSelectFileDialogVisible = false;
+  }
+
+  // On My Groups selection
+  openMyGroupDialog(): void {
+    this.isMyGroupsDialogVisible = false;
+    setTimeout(() => {
+      this.isMyGroupsDialogVisible = true;
+    });
+  }
+
+  onMyGroupsSelected(): void {
+    // Called when date slots are selected from dialog
+    this.closeMyGroupDialog();
+
+    // Re-open the people selection dialog to show the selected slots
+    setTimeout(() => {
+      this.isPeopleDialogVisible = true;
+    }, 100);
+  }
+
+  closeMyGroupDialog(): void {
+    this.isMyGroupsDialogVisible = false;
   }
 
   // Methods for help dialog
@@ -303,9 +324,20 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   saveDraft(status: MessageStatus, date?: string) {
     this.isLoading = true;
     const form = this.currentEmailForm.value;
+
+    // Only extract numeric group IDs, filtering out non-numeric values like 'sendMessagePeopleIselect'
     const groups = form.to
-      ? form.to.map((g: string) => parseInt(g))
-      : this.stateService.selectedGroups.map((g) => parseInt(g.value));
+      ? form.to
+          .map((g: string | { label: string; value: string | number }) => {
+            if (typeof g === 'object' && g !== null && 'value' in g) {
+              return parseInt(String(g.value), 10);
+            }
+            return parseInt(String(g), 10);
+          })
+          .filter((id: number) => !isNaN(id))
+      : this.stateService.selectedGroups
+          .map((g) => parseInt(g.value, 10))
+          .filter((id: number) => !isNaN(id));
 
     const payload: ICreateMessageRequest = {
       subject: form.subject || form.emailSubject,
@@ -354,15 +386,33 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         );
         break;
 
-      case 'ManuallyEnterEmail':
-        payload.alias = String(this.selectedRadioOption.recipients[1] ?? '');
-        payload.addEmails = String(
-          this.selectedRadioOption.recipients[0] ?? ''
-        );
-        payload.signupids = [];
-        payload.sendtotype = SendToType.MANUAL;
+      case 'ManuallyEnterEmail': {
+        const emailsString = this.selectedRadioOption.recipients[0] || '';
+        const aliasString = this.selectedRadioOption.recipients[1] || '';
+
+        // Convert comma-separated string to array of email objects
+        payload.to = emailsString
+          ? emailsString
+              .split(',')
+              .map((email: string) => email.trim())
+              .filter((email: string) => email)
+              .map((email: string) => ({
+                email: email,
+              }))
+          : [];
+
+        // Convert comma-separated alias string to array
+        payload.alias = aliasString
+          ? aliasString
+              .split(',')
+              .map((email: string) => email.trim())
+              .filter((email: string) => email)
+          : [];
+
+        payload.sendtotype = SendToType.CUSTOM;
         payload.sentto = SentTo.MANUAL;
         break;
+      }
 
       case 'specificRsvpResponse':
         payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
@@ -397,30 +447,41 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         break;
 
       case 'sendMessagePeopleIselect':
-        payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
-        payload.sentto = SentTo.ALL;
-        payload.groupids = [];
-        payload.slotids = this.selectedRadioOption.recipients
-          .filter(
-            (slot): slot is { slotid: number; waitlist: boolean } =>
-              typeof slot === 'object' &&
-              slot !== null &&
-              'slotid' in slot &&
-              'waitlist' in slot
-          )
-          .map((slot) => 'slot_' + slot.slotid);
-        payload.sendToGroups = this.selectedRadioOption.recipients
-          .filter(
-            (slot): slot is { slotid: number; waitlist: boolean } =>
-              typeof slot === 'object' &&
-              slot !== null &&
-              'slotid' in slot &&
-              'waitlist' in slot
-          )
-          .map((slot) => ({
-            id: 'slot_' + slot.slotid,
-            isWaitlistedRow: slot.waitlist,
+        if (this.selectedRadioOption.fromCustomGroup === true) {
+          payload.sendtotype = SendToType.CUSTOM;
+          payload.sentto = SentTo.MEMBERS;
+          payload.to = this.selectedRadioOption.recipients.map((slot) => ({
+            memberid: slot.id,
+            firstname: slot.firstname,
+            lastname: slot.lastname,
+            email: slot.email,
           }));
+        } else {
+          payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+          payload.sentto = SentTo.ALL;
+          payload.groupids = [];
+          payload.slotids = this.selectedRadioOption.recipients
+            .filter(
+              (slot): slot is { slotid: number; waitlist: boolean } =>
+                typeof slot === 'object' &&
+                slot !== null &&
+                'slotid' in slot &&
+                'waitlist' in slot
+            )
+            .map((slot) => 'slot_' + slot.slotid);
+          payload.sendToGroups = this.selectedRadioOption.recipients
+            .filter(
+              (slot): slot is { slotid: number; waitlist: boolean } =>
+                typeof slot === 'object' &&
+                slot !== null &&
+                'slotid' in slot &&
+                'waitlist' in slot
+            )
+            .map((slot) => ({
+              id: 'slot_' + slot.slotid,
+              isWaitlistedRow: slot.waitlist,
+            }));
+        }
         break;
     }
 

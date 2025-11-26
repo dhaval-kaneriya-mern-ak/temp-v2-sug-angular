@@ -33,6 +33,7 @@ import { ToastrService } from 'ngx-toastr';
 import { SugUpdateGroupSectionComponent } from '../update-group-section/update-group-section.component';
 import { Subject, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
+import { IMemberInfoDto } from '@services/interfaces';
 
 @Component({
   selector: 'sug-people-selection-dialog',
@@ -69,6 +70,7 @@ export class PeopleSelectionDialogComponent
   @Input() messageTypeId = 4;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() peopleSelectionData: any = {};
+  @Input() selectedMemberGroups: IMemberInfoDto[] = [];
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() peopleSelected = new EventEmitter<void>();
@@ -77,6 +79,7 @@ export class PeopleSelectionDialogComponent
   @Output() selectedRadioOption = new EventEmitter<{
     selectedValue: string;
     includeNonGroupMembers: boolean;
+    fromCustomGroup?: boolean;
     recipients: any[];
   }>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,6 +92,9 @@ export class PeopleSelectionDialogComponent
   @Output() removeSlot = new EventEmitter<number>();
   private readonly destroy$ = new Subject<void>();
   private userProfile: MemberProfile | null = null;
+  @Output() removeMemberGroup = new EventEmitter<number>();
+  @Output() openMyGroupDialog = new EventEmitter<void>();
+  @Output() selectedMemberGroupsChange = new EventEmitter<IMemberInfoDto[]>();
 
   private toastr = inject(ToastrService);
   private cdr = inject(ChangeDetectorRef);
@@ -330,22 +336,13 @@ export class PeopleSelectionDialogComponent
         // Check if we should preserve recipient count (when editing slots)
         const shouldPreserveRecipientCount =
           this.formType === 'emailParticipants' &&
-          this.selectedDateSlots.length > 0;
+          (this.selectedDateSlots.length > 0 ||
+            this.selectedMemberGroups.length > 0);
 
         // Set flag before reset if we're going to restore state with slots
         if (shouldPreserveRecipientCount) {
           this.skipNextRadioChange = true;
         }
-
-        const formValue = this.peopleDialogForm?.value;
-
-        const autoSelectedGroups =
-          formValue.selectedGroups.length > 0
-            ? formValue.selectedGroups
-            : this.selectedSignups.length === 1 &&
-              this.selectedSignups[0].communityid
-            ? [this.selectedSignups[0].communityid.toString()]
-            : [];
 
         // Always reset the form first to ensure clean state
         if (this.peopleDialogForm) {
@@ -364,23 +361,32 @@ export class PeopleSelectionDialogComponent
             rsvpResponsenoresponse: false,
           });
 
-          // Set auto-selected groups and radio option after reset if available
-          if (autoSelectedGroups.length > 0) {
-            setTimeout(() => {
-              // Auto-select the appropriate radio option based on form type
-              const autoRadioValue =
-                this.formType === 'inviteToSignUp'
-                  ? 'peopleingroups'
-                  : 'sendMessagePeopleRadio';
+          // Only auto-select groups if there's NO saved state (first time opening)
+          // Don't auto-select if user has already made a selection previously
+          if (!savedData.selectedValue) {
+            const autoSelectedGroups =
+              this.selectedSignups.length === 1 &&
+              this.selectedSignups[0].communityid
+                ? [this.selectedSignups[0].communityid.toString()]
+                : [];
 
-              // Set both radio option and groups
-              this.skipNextRadioChange = true; // Skip the onRadioChange to prevent clearing our selection
-              this.peopleDialogForm.patchValue({
-                selectedValue: autoRadioValue,
-                selectedGroups: autoSelectedGroups,
-              });
-              this.cdr.markForCheck();
-            }, 100);
+            if (autoSelectedGroups.length > 0) {
+              setTimeout(() => {
+                // Auto-select the appropriate radio option based on form type
+                const autoRadioValue =
+                  this.formType === 'inviteToSignUp'
+                    ? 'peopleingroups'
+                    : 'sendMessagePeopleRadio';
+
+                // Set both radio option and groups
+                this.skipNextRadioChange = true; // Skip the onRadioChange to prevent clearing our selection
+                this.peopleDialogForm.patchValue({
+                  selectedValue: autoRadioValue,
+                  selectedGroups: autoSelectedGroups,
+                });
+                this.cdr.markForCheck();
+              }, 100);
+            }
           }
         }
 
@@ -561,6 +567,7 @@ export class PeopleSelectionDialogComponent
 
         // Clear date slots when switching to group selection
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
 
         // Calculate recipient count - this will set recipients from API
         // Pass the checkbox state for proper API payload
@@ -571,23 +578,27 @@ export class PeopleSelectionDialogComponent
         const groupEmailAlias = formValue.groupEmailAlias || '';
 
         // Parse emails from the manual entry textarea
-        const emailList = manualEmails
+        const manualEmailList = manualEmails
           .split(/[,\n]/)
           .map((email: string) => email.trim())
           .filter((email: string) => email.length > 0);
 
-        // Add group email alias if provided
-        if (groupEmailAlias.trim().length > 0) {
-          emailList.push(groupEmailAlias.trim());
-        }
+        // Parse alias emails separately
+        const aliasEmailList = groupEmailAlias
+          .split(/[,\n]/)
+          .map((email: string) => email.trim())
+          .filter((email: string) => email.length > 0);
 
-        if (emailList.length === 0) {
+        // Combine for validation and count
+        const allEmails = [...manualEmailList, ...aliasEmailList];
+
+        if (allEmails.length === 0) {
           this.toastr.error('Please enter at least one email address', 'Error');
           return;
         }
 
         // Validate each email format
-        const invalidEmails = emailList.filter(
+        const invalidEmails = allEmails.filter(
           (email: string) => !this.isValidEmail(email)
         );
 
@@ -605,17 +616,23 @@ export class PeopleSelectionDialogComponent
             value: 'manual_entry',
           },
         ]);
-        this.recipientCountChange.emit(emailList.length);
+        this.recipientCountChange.emit(allEmails.length);
         // Store the emails as recipients for the recipient details dialog
-        const recipients = emailList.map((email: string) => ({ email }));
+        const recipients = allEmails.map((email: string) => ({ email }));
         this.recipientsChange.emit(recipients);
+
+        // Pass manual emails as comma-separated string and alias as comma-separated string
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
-          recipients: [formValue.manualEmails, formValue.groupEmailAlias],
+          recipients: [
+            manualEmailList.join(', '), // Manual emails as comma-separated string
+            aliasEmailList.join(', '), // Alias emails as comma-separated string
+          ],
         });
         // Clear date slots when switching to manual entry
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
       } else if (selectedValue === 'specificRsvpResponse') {
         // Handle RSVP response selection
         const responses = this.getSelectedRsvpResponses();
@@ -641,6 +658,7 @@ export class PeopleSelectionDialogComponent
         });
         // Clear date slots when switching to RSVP selection
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.calculateRecipientCountForRsvp();
       } else if (selectedValue === 'peopleWhoSignedUp') {
         // People who have signed up
@@ -652,6 +670,7 @@ export class PeopleSelectionDialogComponent
         ]);
         // Clear date slots when switching to signed up people
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.calculateRecipientCountForSignedUp();
         this.selectedRadioOption.emit({
           selectedValue,
@@ -668,6 +687,7 @@ export class PeopleSelectionDialogComponent
         ]);
         // Clear date slots when switching to waitlist
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.calculateRecipientCountForWaitlist();
         this.selectedRadioOption.emit({
           selectedValue,
@@ -684,6 +704,7 @@ export class PeopleSelectionDialogComponent
         ]);
         // Clear date slots when switching to signed up and waitlist
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.calculateRecipientCountForSignedUpAndWaitlist();
         this.selectedRadioOption.emit({
           selectedValue,
@@ -700,6 +721,7 @@ export class PeopleSelectionDialogComponent
         ]);
         // Clear date slots when switching to not signed up
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.calculateRecipientCountForNotSignedUp();
         this.selectedRadioOption.emit({
           selectedValue,
@@ -709,7 +731,10 @@ export class PeopleSelectionDialogComponent
       } else if (selectedValue === 'sendMessagePeopleIselect') {
         // People I will select - custom selection
         // Validate that at least one slot is selected
-        if (this.selectedDateSlots.length === 0) {
+        if (
+          this.selectedDateSlots.length === 0 &&
+          this.selectedMemberGroups.length === 0
+        ) {
           this.toastr.error(
             'Please select people from groups or sign up',
             'Error'
@@ -719,14 +744,18 @@ export class PeopleSelectionDialogComponent
 
         this.selectedGroupsChange.emit([
           {
-            label: 'Custom selected people',
+            label: 'Custom Selection',
             value: 'sendMessagePeopleIselect',
           },
         ]);
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
-          recipients: this.selectedDateSlots,
+          fromCustomGroup: this.selectedMemberGroups.length > 0,
+          recipients:
+            this.selectedDateSlots.length > 0
+              ? this.selectedDateSlots
+              : this.selectedMemberGroups,
         });
         // Recipient count should already be set from the date slots selection
         // No need to calculate here as it's done in the date slots dialog
@@ -741,6 +770,7 @@ export class PeopleSelectionDialogComponent
         this.recipientCountChange.emit(0);
         // Clear date slots when switching to import from provider
         this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
@@ -768,8 +798,6 @@ export class PeopleSelectionDialogComponent
   }
 
   onRadioChange(): void {
-    const selectedValue = this.peopleDialogForm.get('selectedValue')?.value;
-
     // Skip this radio change if we're programmatically setting the value
     if (this.skipNextRadioChange) {
       this.skipNextRadioChange = false;
@@ -791,17 +819,14 @@ export class PeopleSelectionDialogComponent
       rsvpResponsenoresponse: false,
     });
 
-    // Clear recipient count when switching options
-    // EXCEPT when "People I will select" is chosen AND date slots are already selected
-    if (
-      selectedValue === 'sendMessagePeopleIselect' &&
-      this.selectedDateSlots.length > 0
-    ) {
-      // Don't clear - date slots already set the count
-    } else {
-      this.recipientCountChange.emit(0);
-      this.recipientsChange.emit([]);
-    }
+    // Clear recipient count and recipients when switching options
+    this.recipientCountChange.emit(0);
+    this.recipientsChange.emit([]);
+
+    // Always clear date slots and member groups when switching radio options
+    // This ensures previous selections (including table selections) don't persist
+    this.selectedDateSlotsChange.emit([]);
+    this.selectedMemberGroupsChange.emit([]);
   }
 
   onAliasCheckboxChange(): void {
@@ -1098,13 +1123,25 @@ export class PeopleSelectionDialogComponent
   }
 
   openFromMyGroupsDialog(): void {
-    // TODO: Implement custom people selection from groups
-    // This feature allows selecting specific people from groups manually
+    this.openMyGroupDialog.emit();
   }
 
-  openFromThisSignUpDialog(): void {
+  openFromThisSignUpDialog(member: boolean): void {
     // Emit event to parent to open date slots dialog
-    this.openDateSlotsDialog.emit();
+    if (member) {
+      this.openMyGroupDialog.emit();
+    } else {
+      this.openDateSlotsDialog.emit();
+    }
+  }
+
+  editMemberGroups(): void {
+    // Re-open the "From This Sign Up" dialog to edit selections
+    this.openFromThisSignUpDialog(true);
+  }
+
+  removeSelectedMemberGroup(index: number): void {
+    this.removeMemberGroup.emit(index);
   }
 
   removeSelectedSlot(index: number): void {
@@ -1113,7 +1150,7 @@ export class PeopleSelectionDialogComponent
 
   editSelectedSlots(): void {
     // Re-open the "From This Sign Up" dialog to edit selections
-    this.openFromThisSignUpDialog();
+    this.openFromThisSignUpDialog(false);
   }
 
   openUpdateGroupsDialog(): void {

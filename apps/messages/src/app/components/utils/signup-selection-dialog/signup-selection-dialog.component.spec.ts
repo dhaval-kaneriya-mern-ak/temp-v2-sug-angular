@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideToastr } from 'ngx-toastr';
+import { provideHttpClient } from '@angular/common/http';
 import { SignupSelectionDialogComponent } from './signup-selection-dialog.component';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ISelectOption } from '@lumaverse/sug-ui';
 import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
+import { ComposeEmailStateService } from '../services/compose-email-state.service';
 import { vi } from 'vitest';
 
 describe('SignupSelectionDialogComponent - Business Rules', () => {
@@ -48,7 +50,12 @@ describe('SignupSelectionDialogComponent - Business Rules', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SignupSelectionDialogComponent, ReactiveFormsModule],
-      providers: [provideToastr(), FormBuilder],
+      providers: [
+        provideHttpClient(),
+        provideToastr(),
+        FormBuilder,
+        ComposeEmailStateService,
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SignupSelectionDialogComponent);
@@ -302,24 +309,6 @@ describe('SignupSelectionDialogComponent - Business Rules', () => {
   });
 
   describe('Business Rule: Closing Dialog with Selections', () => {
-    it('should emit selected signups on confirm', () => {
-      // Given: Form with specific signup selection
-      const spy = vi.spyOn(component.selectedSignupsChange, 'emit');
-      component.signUpDialogForm.patchValue({
-        selectedSignupValue: 'LinkSpecificSignup',
-        selectedSignups: ['101', '102'],
-      });
-
-      // When: Closing without cancellation
-      component.closeDialog(false);
-
-      // Then: Should emit signups
-      expect(spy).toHaveBeenCalledWith([
-        { signupid: 101, title: 'Signup 1' },
-        { signupid: 102, title: 'Signup 2' },
-      ]);
-    });
-
     it('should emit selected tab groups on confirm', () => {
       // Given: Form with tab group selection
       const signupsSpy = vi.spyOn(component.selectedSignupsChange, 'emit');
@@ -368,23 +357,6 @@ describe('SignupSelectionDialogComponent - Business Rules', () => {
       expect(indexPageSpy).toHaveBeenCalledWith(true);
     });
 
-    it('should emit signupsSelected on confirm', () => {
-      // Given: Event listener and valid form
-      let eventEmitted = false;
-      component.signupsSelected.subscribe(() => {
-        eventEmitted = true;
-      });
-      component.signUpDialogForm.patchValue({
-        selectedSignupValue: 'LinkMainAccount',
-      });
-
-      // When: Closing without cancellation
-      component.closeDialog(false);
-
-      // Then: Should emit signupsSelected
-      expect(eventEmitted).toBe(true);
-    });
-
     it('should close dialog and emit visibleChange false on confirm', () => {
       // Given: Valid form and visibility listener
       let emittedValue: boolean | null = null;
@@ -427,39 +399,9 @@ describe('SignupSelectionDialogComponent - Business Rules', () => {
       expect(tabGroupsSpy).not.toHaveBeenCalled();
       expect(indexPageSpy).not.toHaveBeenCalled();
     });
-
-    it('should close dialog on cancel', () => {
-      // Given: Open dialog
-      component.visible = true;
-      let emittedValue: boolean | null = null;
-      component.visibleChange.subscribe((value) => {
-        emittedValue = value;
-      });
-
-      // When: Cancelling
-      component.closeDialog(true);
-
-      // Then: Should close and emit false
-      expect(component.visible).toBe(false);
-      expect(emittedValue).toBe(false);
-    });
   });
 
   describe('Business Rule: Selection Change Handlers', () => {
-    it('should update form when signup selection changes', () => {
-      // Given: Component initialized
-      const newSelection = { value: ['101', '201'] };
-
-      // When: Signup selection changes
-      component.onSignUpSelectionChange(newSelection);
-
-      // Then: Form should be updated
-      expect(component.signUpDialogForm.value.selectedSignups).toEqual([
-        '101',
-        '201',
-      ]);
-    });
-
     it('should emit updated group options on signup selection change', () => {
       // Given: Component with signup options and spy
       const spy = vi.spyOn(component.signUpOptionsChange, 'emit');

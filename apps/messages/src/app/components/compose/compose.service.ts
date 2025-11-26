@@ -15,6 +15,7 @@ import {
 } from '@services/interfaces';
 import {
   IMemberIndexPageResponse,
+  IAllGroupsWithMembersResponse,
   IPortalSignupResponse,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
@@ -123,5 +124,9 @@ export class ComposeService {
 
   getMemberIndexPage(id: string): Observable<IMemberIndexPageResponse> {
     return this.sugApiClient.get(`/member/indexpage/${id}`);
+  }
+
+  getAllGroupsWithMembers(): Observable<IAllGroupsWithMembersResponse> {
+    return this.sugApiClient.get(`/groups/members/all`);
   }
 }

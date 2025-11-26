@@ -119,11 +119,10 @@ export interface IPortalSignupResponse {
 export interface IMemberIndexPageResponse {
   message?: string[];
   data?: {
-    url:string
+    url: string;
   };
   success?: boolean;
 }
-
 
 /**
  * Interface for pagination data
@@ -650,6 +649,7 @@ export enum SentTo {
   SIGNED_UP = 'signedup',
   CUSTOM = 'custom',
   ALL = 'all',
+  MEMBERS = 'members',
   ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
   MANUAL = 'manual',
   SPECIFIC_DATE_SLOT = 'specificdateslot',
@@ -724,4 +724,36 @@ export interface ICreateMessageResponse {
   success: boolean;
   message: string[];
   data: number;
+}
+
+// group members with their associated groups response interfaces
+export interface IAllGroupsWithMembersResponse {
+  success: boolean;
+  message: string[];
+  data: IGroupMemberDto[];
+  links: {
+    self: string;
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface IGroupMemberDto {
+  member: IMemberInfoDto;
+  groups: IGroupInfoDto[];
+}
+
+export interface IMemberInfoDto {
+  id: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone?: string; // Optional field
+  displayname?: string;
+  groups?: string;
+}
+
+export interface IGroupInfoDto {
+  id: number;
+  title: string;
 }

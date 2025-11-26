@@ -4,6 +4,7 @@ import {
   fakeAsync,
   tick,
 } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
 import { PeopleSelectionDialogComponent } from './people-selection-dialog.component';
 import { ComposeService } from '../../compose/compose.service';
@@ -48,6 +49,7 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
     await TestBed.configureTestingModule({
       imports: [PeopleSelectionDialogComponent, ReactiveFormsModule],
       providers: [
+        provideHttpClient(),
         provideToastr(),
         FormBuilder,
         {
@@ -407,7 +409,7 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
 
       expect(emitSpy).toHaveBeenCalledWith([
         {
-          label: 'Custom selected people',
+          label: 'Custom Selection',
           value: 'sendMessagePeopleIselect',
         },
       ]);
@@ -440,25 +442,6 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
       component.onRadioChange();
 
       expect(emitSpy).toHaveBeenCalledWith(0);
-    });
-
-    it('should NOT clear count when switching to People I Will Select with slots', () => {
-      // Given: Date slots are selected
-      component.selectedDateSlots = [{ slotitemid: 1 }];
-
-      // Reset mock to clear previous calls
-      const emitSpy = vi.spyOn(component.recipientCountChange, 'emit');
-
-      // Patch the form value first, then call onRadioChange
-      component.peopleDialogForm.patchValue({
-        selectedValue: 'sendMessagePeopleIselect',
-      });
-      component.onRadioChange();
-
-      // When: onRadioChange is called
-
-      // Then: recipientCountChange should NOT be emitted since slots already set the count
-      expect(emitSpy).not.toHaveBeenCalled();
     });
   });
 

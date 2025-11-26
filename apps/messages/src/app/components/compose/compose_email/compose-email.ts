@@ -39,8 +39,10 @@ import {
   MessageStatus,
   SentTo,
   SendToType,
+  ISelectPortalOption,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
+import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
 /**
  * Main Compose Email Component (Refactored)
@@ -63,6 +65,7 @@ import { ToastrService } from 'ngx-toastr';
     RecipientDetailsDialogComponent,
     FileSelectionDialogComponent,
     DateSlotsSelectionComponent,
+    MyGroupSelection,
   ],
   providers: [
     ComposeEmailStateService, // Provide at component level
@@ -87,6 +90,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   selectedRadioOption: {
     selectedValue: string;
     includeNonGroupMembers: boolean;
+    fromCustomGroup?: boolean;
     recipients: any[];
   } = {
     selectedValue: '',
@@ -107,6 +111,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   isRecipientDialogVisible = false;
   isPreviewDialogVisible = false;
   isDateSlotsDialogVisible = false;
+  isMyGroupsDialogVisible = false;
 
   // Radio options for main selection
   radioOptions = [
@@ -231,6 +236,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       .subscribe((selectedDateSlots) => {
         if (selectedDateSlots?.length > 0) {
           updateBothForms({ toPeople: selectedDateSlots });
+        }
+      });
+    // Selected member group subscription
+    this.stateService.selectedMemberGroups$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((selectedMemberGroups) => {
+        if (selectedMemberGroups?.length > 0) {
+          updateBothForms({ toPeople: selectedMemberGroups });
         }
       });
   }
@@ -503,6 +516,27 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     });
   }
 
+  openMyGroupDialog(): void {
+    this.isMyGroupsDialogVisible = false;
+    setTimeout(() => {
+      this.isMyGroupsDialogVisible = true;
+    });
+  }
+
+  closeMyGroupDialog(): void {
+    this.isMyGroupsDialogVisible = false;
+  }
+
+  onMyGroupsSelected(): void {
+    // Called when date slots are selected from dialog
+    this.closeMyGroupDialog();
+
+    // Re-open the people selection dialog to show the selected slots
+    setTimeout(() => {
+      this.isPeopleDialogVisible = true;
+    }, 100);
+  }
+
   /**
    * Opens the preview dialog with proper state reset to avoid dialog stuck issues
    */
@@ -659,11 +693,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             group.value !== 'manual_entry' && !isNaN(Number(group.value))
         )
         .map((group) => Number(group.value)),
-      portals: form.selectedPortalPages.map((pp: any) => ({
-        id: pp.id,
-        title: pp.title,
-        urlkey: pp.urlkey,
-      })),
+      portals: form.selectedPortalPages.map((pp: ISelectPortalOption) => pp.id),
     };
     if (date) {
       payload.senddate = date;
@@ -680,12 +710,33 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
         break;
 
-      case 'ManuallyEnterEmail':
-        payload.alias = this.selectedRadioOption.recipients[1];
-        payload.addEmails = this.selectedRadioOption.recipients[0];
-        payload.sendtotype = SendToType.MANUAL;
+      case 'ManuallyEnterEmail': {
+        const emailsString = this.selectedRadioOption.recipients[0] || '';
+        const aliasString = this.selectedRadioOption.recipients[1] || '';
+
+        // Convert comma-separated string to array of email objects
+        payload.to = emailsString
+          ? emailsString
+              .split(',')
+              .map((email: string) => email.trim())
+              .filter((email: string) => email)
+              .map((email: string) => ({
+                email: email,
+              }))
+          : [];
+
+        // Convert comma-separated alias string to array
+        payload.alias = aliasString
+          ? aliasString
+              .split(',')
+              .map((email: string) => email.trim())
+              .filter((email: string) => email)
+          : [];
+
+        payload.sendtotype = SendToType.CUSTOM;
         payload.sentto = SentTo.MANUAL;
         break;
+      }
 
       case 'specificRsvpResponse':
         payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
@@ -720,21 +771,31 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         break;
 
       case 'sendMessagePeopleIselect':
-        payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
-        payload.sentto = SentTo.ALL;
-        payload.groupids = [];
-        payload.slotids = this.selectedRadioOption.recipients.map(
-          (slot) => 'slot_' + slot.slotid
-        );
-        payload.sendToGroups = this.selectedRadioOption.recipients.map(
-          (slot) => ({
-            id: 'slot_' + slot.slotid,
-            isWaitlistedRow: slot.waitlist,
-          })
-        );
+        if (this.selectedRadioOption.fromCustomGroup === true) {
+          payload.sendtotype = SendToType.CUSTOM;
+          payload.sentto = SentTo.MEMBERS;
+          payload.to = this.selectedRadioOption.recipients.map((slot) => ({
+            memberid: slot.id,
+            firstname: slot.firstname,
+            lastname: slot.lastname,
+            email: slot.email,
+          }));
+        } else {
+          payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+          payload.sentto = SentTo.ALL;
+          payload.groupids = [];
+          payload.slotids = this.selectedRadioOption.recipients.map(
+            (slot) => 'slot_' + slot.slotid
+          );
+          payload.sendToGroups = this.selectedRadioOption.recipients.map(
+            (slot) => ({
+              id: 'slot_' + slot.slotid,
+              isWaitlistedRow: slot.waitlist,
+            })
+          );
+        }
         break;
     }
-
     // Apply non-group members rule after switch (can override sentto)
     if (this.selectedRadioOption.includeNonGroupMembers) {
       payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
@@ -965,7 +1026,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
       case 'sendMessagePeopleIselect': {
         // Requires date slots or custom selection
-        if (this.stateService.selectedDateSlots.length === 0) {
+        if (
+          this.stateService.selectedDateSlots.length === 0 &&
+          this.stateService.selectedMemberGroups.length === 0
+        ) {
           errors.push('Please select specific people or date slots');
         }
         break;
@@ -984,6 +1048,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         if (
           this.stateService.selectedGroups.length === 0 &&
           this.stateService.selectedDateSlots.length === 0 &&
+          this.stateService.selectedMemberGroups.length === 0 &&
           this.stateService.recipientCount === 0
         ) {
           errors.push('Please select people to send the email to');

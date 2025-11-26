@@ -282,8 +282,50 @@
               </sug-ui-button>
             </div>
             }
+            <!-- Show selected slots as chips if any -->
+            @if (selectedMemberGroups.length > 0) {
+            <div class="selected-slots-chips gap-3 d-flex">
+              @for (slot of selectedMemberGroups; track slot.id; let i = $index)
+              { @if (i < 2) {
+              <p-chip
+                [label]="
+                  slot.firstname
+                    ? slot.firstname + ' ' + slot.lastname
+                    : slot.email
+                "
+                [removable]="true"
+                (onRemove)="removeSelectedMemberGroup(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              } } @if (selectedMemberGroups.length > 2) {
+              <p-chip
+                [label]="'+' + (selectedMemberGroups.length - 2) + ' more'"
+                [removable]="false"
+                styleClass="custom-chip more-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="
+                  'Edit ' +
+                  recipientCount +
+                  ' recipient' +
+                  (recipientCount !== 1 ? 's' : '')
+                "
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editMemberGroups()"
+              >
+              </sug-ui-button>
+            </div>
+            }
             <!-- Buttons to select slots -->
-            @if (selectedDateSlots.length === 0) {
+            @if (selectedDateSlots.length === 0 && selectedMemberGroups.length
+            === 0) {
             <div class="btn-wrapper">
               <sug-ui-button
                 type="button"
@@ -300,7 +342,7 @@
                 class="add-link-btn"
                 icon=""
                 label="From this sign up"
-                (buttonClick)="openFromThisSignUpDialog()"
+                (buttonClick)="openFromThisSignUpDialog(false)"
               >
               </sug-ui-button>
               }
