@@ -262,6 +262,16 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       });
     }
 
+    this.composeService
+      .getMemberIndexPage(this.userProfile?.id?.toString() || '')
+      .subscribe({
+        next: (response) => {
+          if (response?.data && response?.data?.url) {
+            this.stateService.setMemberIndexPageUrl(response.data.url);
+          }
+        },
+      });
+
     // Load groups
     this.composeService.getGroupforMembers().subscribe({
       next: (response) => {
@@ -529,28 +539,25 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         urlkey: pp.urlkey,
       }));
     }
-    if (
-      form.value.selectedSignups.length === 0 &&
-      form.value.selectedPortalPages.length === 0
-    ) {
+    if (form.value.isSignUpIndexPageSelected) {
       payload.signUpType = 'acctindex';
-      const signupsFromOptions = (this.stateService.signUpOptions || [])
-        .flatMap((g) => g.items ?? [])
-        .map((item) => {
-          const signupData = (item as any).signupData as
-            | ISignUpItem
-            | undefined;
-          return {
-            id: signupData?.signupid ?? Number(item.value),
-            title: signupData?.title ?? item.label,
-            themeid: signupData?.themeid ?? 1,
-          };
-        });
-      payload.signups = signupsFromOptions;
-      this.availableThemes = [
-        1,
-        ...(signupsFromOptions || []).map((su) => su.themeid),
-      ];
+      // const signupsFromOptions = (this.stateService.signUpOptions || [])
+      //   .flatMap((g) => g.items ?? [])
+      //   .map((item) => {
+      //     const signupData = (item as any).signupData as
+      //       | ISignUpItem
+      //       | undefined;
+      //     return {
+      //       id: signupData?.signupid ?? Number(item.value),
+      //       title: signupData?.title ?? item.label,
+      //       themeid: signupData?.themeid ?? 1,
+      //     };
+      //   });
+      // payload.signups = signupsFromOptions;
+      // this.availableThemes = [
+      //   1,
+      //   ...(signupsFromOptions || []).map((su) => su.themeid),
+      // ];
     }
     if (form.value.toPeople.length > 0) {
       payload.sendTo = form.value.toPeople.map((person: any) => ({
@@ -652,9 +659,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             group.value !== 'manual_entry' && !isNaN(Number(group.value))
         )
         .map((group) => Number(group.value)),
+      portals: form.selectedPortalPages.map((pp: any) => ({
+        id: pp.id,
+        title: pp.title,
+        urlkey: pp.urlkey,
+      })),
     };
     if (date) {
       payload.senddate = date;
+    }
+    if (form.isSignUpIndexPageSelected) {
+      payload.signUpType = 'acctindex';
     }
 
     // Handle radio selection logic

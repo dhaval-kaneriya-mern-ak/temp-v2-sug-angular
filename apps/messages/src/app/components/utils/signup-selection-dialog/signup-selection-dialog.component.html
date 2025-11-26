@@ -41,7 +41,11 @@
       } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
       'LinkMainAccount') {
       <div class="signup-tooltip-content">
-        <a class="link-button"
+        <a
+          class="link-button"
+          (click)="openMemberIndexPage()"
+          (keyup.enter)="openMemberIndexPage()"
+          tabindex="0"
           >Sign Up Index Page
           <sug-ui-tooltip
             [text]="

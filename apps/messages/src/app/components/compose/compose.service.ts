@@ -13,7 +13,10 @@ import {
   ICreateMessageRequest,
   ICreateMessageResponse,
 } from '@services/interfaces';
-import { IPortalSignupResponse } from '@services/interfaces/messages-interface/compose.interface';
+import {
+  IMemberIndexPageResponse,
+  IPortalSignupResponse,
+} from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
 
@@ -116,5 +119,9 @@ export class ComposeService {
 
   getPortalSignup(): Observable<IPortalSignupResponse> {
     return this.sugApiClient.get(`/portals?includeTheme=true`);
+  }
+
+  getMemberIndexPage(id: string): Observable<IMemberIndexPageResponse> {
+    return this.sugApiClient.get(`/member/indexpage/${id}`);
   }
 }

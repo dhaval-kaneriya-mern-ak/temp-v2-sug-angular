@@ -376,4 +376,11 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
 
     this.signUpOptionsChange.emit(updatedOptions);
   }
+
+  openMemberIndexPage(): void {
+    const url = this.composeStateService.getMemberIndexPageUrl;
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
 }

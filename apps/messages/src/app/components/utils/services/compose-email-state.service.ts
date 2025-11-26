@@ -48,6 +48,7 @@ export class ComposeEmailStateService {
     (IGroupMember | IRecipient)[]
   >([]);
   recipients$ = this.recipientsSubject.asObservable();
+  memberIndexPageUrl = '';
 
   // People selection form data (for restoring dialog state)
   private peopleSelectionDataSubject = new BehaviorSubject<{
@@ -170,6 +171,10 @@ export class ComposeEmailStateService {
     return this.subAdminsDataSubject.value;
   }
 
+  get getMemberIndexPageUrl(): string {
+    return this.memberIndexPageUrl;
+  }
+
   // Setters
   setSelectedSignups(signups: ISignUpItem[]): void {
     this.selectedSignupsSubject.next(signups);
@@ -179,6 +184,10 @@ export class ComposeEmailStateService {
 
   setSelectedPortalPages(pages: ISelectPortalOption[]): void {
     this.selectedPortalPagesSubject.next(pages);
+  }
+
+  setMemberIndexPageUrl(url: string): void {
+    this.memberIndexPageUrl = url;
   }
 
   setSelectedTabGroups(tabGroups: ISelectOption[]): void {

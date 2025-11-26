@@ -116,6 +116,14 @@ export interface IPortalSignupResponse {
   success?: boolean;
 }
 
+export interface IMemberIndexPageResponse {
+  message?: string[];
+  data?: {
+    url:string
+  };
+  success?: boolean;
+}
+
 
 /**
  * Interface for pagination data
@@ -688,6 +696,7 @@ export interface ICreateMessageRequest {
   sendastext: boolean;
   contactname?: string;
   replytoids?: number[];
+  signUpType?: string;
   themeid?: number;
   attachmentids?: number[];
   senddate?: string;
