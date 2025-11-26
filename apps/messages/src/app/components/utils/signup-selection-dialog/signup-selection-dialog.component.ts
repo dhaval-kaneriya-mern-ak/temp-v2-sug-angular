@@ -180,6 +180,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
         selectedSignupValue: null,
         selectedSignups: [],
         selectedTabGroups: [],
+        selectedPortalPages: [],
       });
     }
 
@@ -201,7 +202,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
         let selectedSignupIds = formValue.selectedSignups || [];
 
         if (
-          this.userStateService.isBasicUser() &&
+          this.userStateService.isBasicUser(this.userProfile) &&
           selectedSignupIds.length > 1
         ) {
           selectedSignupIds = [selectedSignupIds[selectedSignupIds.length - 1]];
@@ -287,7 +288,10 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   onSignUpSelectionChange(event: { value: string[] }): void {
     let values = event.value || [];
     // Restrict basic users to only one signup selection
-    if (this.userStateService.isBasicUser() && values.length > 1) {
+    if (
+      this.userStateService.isBasicUser(this.userProfile) &&
+      values.length > 1
+    ) {
       values = [values[values.length - 1]];
     }
     this.signUpDialogForm.patchValue({ selectedSignups: values });
@@ -301,7 +305,10 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   onPortalPageSelectionChange(event: { value: string[] }): void {
     let values = event.value || [];
     // Restrict basic users to only one portal page selection
-    if (this.userStateService.isBasicUser() && values.length > 1) {
+    if (
+      this.userStateService.isBasicUser(this.userProfile) &&
+      values.length > 1
+    ) {
       values = [values[values.length - 1]];
     }
     this.signUpDialogForm.patchValue({ selectedPortalPages: values });

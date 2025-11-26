@@ -121,6 +121,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
+    this.loadUserProfile();
     this.initializeForms();
     this.loadInitialData();
   }
@@ -137,7 +138,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // Form for "Invite people to a sign up"
     this.emailFormOne = this.fb.group({
       token: ['', Validators.required],
-      selectedSignups: [[], Validators.required],
+      selectedSignups: [[]],
       selectedTabGroups: [[]],
       selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
@@ -153,7 +154,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // Form for "Email people participating in a sign up"
     this.emailFormTwo = this.fb.group({
       token: ['', Validators.required],
-      selectedSignups: [[], Validators.required],
+      selectedSignups: [[]],
       selectedTabGroups: [[]],
       selectedPortalPages: [[]],
       isSignUpIndexPageSelected: [false],
@@ -251,15 +252,15 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     });
 
     //Load portal signup info
-    // if (this.userProfile?.features?.portalpages) {
-    this.composeService.getPortalSignup().subscribe({
-      next: (response) => {
-        if (response?.data) {
-          this.stateService.setPortalSignUpOptions(response.data);
-        }
-      },
-    });
-    // }
+    if (this.userProfile?.features?.portalpages) {
+      this.composeService.getPortalSignup().subscribe({
+        next: (response) => {
+          if (response?.data) {
+            this.stateService.setPortalSignUpOptions(response.data);
+          }
+        },
+      });
+    }
 
     // Load groups
     this.composeService.getGroupforMembers().subscribe({
@@ -501,18 +502,37 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       fromname: form.value.fromName,
       replyto: this.stateService.subAdminsData
         .filter((su) => form.value.replyTo.includes(String(su.value)))
-        .map((su) => su.label), //this.stateService.subAdminsData.map((admin) => admin.label),
+        .map((su) => su.label),
       subject: form.value.subject,
       message: form.value.message,
       emailType: this.selectedValue === 'emailoptionone' ? '4' : '1',
       themeid: form.value.themeid,
-      signups: form.value.selectedSignups.map((su: ISignUpItem) => ({
+    };
+
+    // Only add portals if there are any selected
+    if (form.value.selectedSignups && form.value.selectedSignups.length >= 1) {
+      payload.signups = form.value.selectedSignups.map((su: any) => ({
         id: su.signupid,
         title: su.title,
         themeid: su.themeid,
-      })),
-    };
-    if (form.value.selectedSignups.length === 0) {
+      }));
+    }
+
+    // Only add portals if there are any selected
+    if (
+      form.value.selectedPortalPages &&
+      form.value.selectedPortalPages.length >= 1
+    ) {
+      payload.portals = form.value.selectedPortalPages.map((pp: any) => ({
+        id: pp.id,
+        title: pp.title,
+        urlkey: pp.urlkey,
+      }));
+    }
+    if (
+      form.value.selectedSignups.length === 0 &&
+      form.value.selectedPortalPages.length === 0
+    ) {
       payload.signUpType = 'acctindex';
       const signupsFromOptions = (this.stateService.signUpOptions || [])
         .flatMap((g) => g.items ?? [])
@@ -557,7 +577,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: (err) => {
+      error: () => {
         this.isLoading = false;
         this.isPreviewDialogVisible = false;
       },

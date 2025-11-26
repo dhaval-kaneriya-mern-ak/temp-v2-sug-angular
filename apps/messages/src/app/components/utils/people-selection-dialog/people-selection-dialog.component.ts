@@ -9,6 +9,7 @@ import {
   SimpleChanges,
   Output,
   ChangeDetectorRef,
+  OnDestroy,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -30,6 +31,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipModule } from 'primeng/chip';
 import { ToastrService } from 'ngx-toastr';
 import { SugUpdateGroupSectionComponent } from '../update-group-section/update-group-section.component';
+import { Subject, takeUntil } from 'rxjs';
+import { MemberProfile } from '@services/interfaces';
 
 @Component({
   selector: 'sug-people-selection-dialog',
@@ -48,7 +51,9 @@ import { SugUpdateGroupSectionComponent } from '../update-group-section/update-g
   templateUrl: './people-selection-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
 })
-export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
+export class PeopleSelectionDialogComponent
+  implements OnInit, OnChanges, OnDestroy
+{
   @Input() visible = false;
   @Input() formType: 'inviteToSignUp' | 'emailParticipants' = 'inviteToSignUp';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,6 +87,8 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Output() peopleSelectionDataChange = new EventEmitter<any>();
   @Output() removeSlot = new EventEmitter<number>();
+  private readonly destroy$ = new Subject<void>();
+  private userProfile: MemberProfile | null = null;
 
   private toastr = inject(ToastrService);
   private cdr = inject(ChangeDetectorRef);
@@ -293,8 +300,20 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.userProfile = profile;
+        },
+      });
     this.initializeForm();
     this.setupSingleSelectionEnforcement();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -424,7 +443,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
       selectedGroupsCtrl.valueChanges.subscribe(
         (values: string[] | undefined) => {
           if (
-            this.userStateService.isBasicUser() &&
+            this.userStateService.isBasicUser(this.userProfile) &&
             Array.isArray(values) &&
             values.length > 1
           ) {
@@ -442,7 +461,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
       manualEmailsGroupCtrl.valueChanges.subscribe(
         (values: string[] | undefined) => {
           if (
-            this.userStateService.isBasicUser() &&
+            this.userStateService.isBasicUser(this.userProfile) &&
             Array.isArray(values) &&
             values.length > 1
           ) {
@@ -463,7 +482,7 @@ export class PeopleSelectionDialogComponent implements OnInit, OnChanges {
       const selectedValue = formValue.selectedValue;
 
       // Final enforcement of single selection for basic users before processing
-      if (this.userStateService.isBasicUser()) {
+      if (this.userStateService.isBasicUser(this.userProfile)) {
         if (
           Array.isArray(formValue.selectedGroups) &&
           formValue.selectedGroups.length > 1

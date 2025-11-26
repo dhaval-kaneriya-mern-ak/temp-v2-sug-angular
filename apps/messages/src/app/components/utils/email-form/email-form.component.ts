@@ -155,6 +155,10 @@ export class EmailFormComponent implements OnInit, OnChanges {
       updateData['toPeople'] = this.selectedDateSlots;
     }
 
+    if (this.selectedPortalPages) {
+      updateData['selectedPortalPages'] = this.selectedPortalPages;
+    }
+
     // Update form with new values
     this.emailForm.patchValue(updateData);
   }

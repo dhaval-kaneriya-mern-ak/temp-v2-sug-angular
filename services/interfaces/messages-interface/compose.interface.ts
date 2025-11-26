@@ -615,10 +615,10 @@ export interface IMessagePreviewRequest {
   message: string;
   emailType: string;
   themeid: number;
-  signups: Array<{ id: number; title: string; themeid: number }>;
+  signups?: Array<{ id: number; title: string; themeid: number }>;
   signUpType?: string;
   tabgroups?: [];
-  portals?: [];
+  portals?: Array<{ id: number; title: string; urlkey: string }>;
   sendTo?: Array<{ id: number; displayName: string; isChecked: boolean }>;
 }
 
