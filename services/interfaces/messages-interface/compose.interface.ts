@@ -751,6 +751,7 @@ export interface IMemberInfoDto {
   phone?: string; // Optional field
   displayname?: string;
   groups?: string;
+  groupsId?: string;
 }
 
 export interface IGroupInfoDto {

@@ -231,6 +231,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
         this.selectedSignupsChange.emit(allSignups);
         this.selectedTabGroupsChange.emit([]);
         this.signUpIndexPageSelectedChange.emit(false);
+        this.selectedPortalPagesChange.emit([]);
       } else if (selectedValue === 'LinkSpecifixTabGroup') {
         const selectedTabGroupIds = formValue.selectedTabGroups || [];
         if (selectedTabGroupIds.length === 0) {
@@ -243,10 +244,12 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
         this.selectedSignupsChange.emit([]);
         this.selectedTabGroupsChange.emit(tabGroups);
         this.signUpIndexPageSelectedChange.emit(false);
+        this.selectedPortalPagesChange.emit([]);
       } else if (selectedValue === 'LinkMainAccount') {
         this.selectedSignupsChange.emit([]);
         this.selectedTabGroupsChange.emit([]);
         this.signUpIndexPageSelectedChange.emit(true);
+        this.selectedPortalPagesChange.emit([]);
       } else if (selectedValue === 'LinkSpecificPortalPage') {
         const selectedPortalPageIds = formValue.selectedPortalPages || [];
 
@@ -316,6 +319,21 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
 
   getSignupLinkRadioValue(value: string): void {
     this.signUpDialogForm.patchValue({ selectedSignupValue: value });
+
+    // Clear form controls and state for options that are not selected
+    if (value !== 'LinkSpecificSignup') {
+      this.signUpDialogForm.patchValue({ selectedSignups: [] });
+      // Reset the signUpOptions state
+      this.updateGroupOptionsState([]);
+    }
+
+    if (value !== 'LinkSpecifixTabGroup') {
+      this.signUpDialogForm.patchValue({ selectedTabGroups: [] });
+    }
+
+    if (value !== 'LinkSpecificPortalPage') {
+      this.signUpDialogForm.patchValue({ selectedPortalPages: [] });
+    }
   }
 
   private updateGroupOptionsState(selectedValues: string[]): void {

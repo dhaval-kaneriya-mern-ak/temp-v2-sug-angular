@@ -741,13 +741,15 @@ export class PeopleSelectionDialogComponent
           );
           return;
         }
-
         this.selectedGroupsChange.emit([
           {
             label: 'Custom Selection',
             value: 'sendMessagePeopleIselect',
           },
         ]);
+        const groupIds = this.selectedMemberGroups
+          .map((group) => group.groupsId)
+          .filter((id): id is string => id !== undefined);
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
@@ -759,6 +761,11 @@ export class PeopleSelectionDialogComponent
         });
         // Recipient count should already be set from the date slots selection
         // No need to calculate here as it's done in the date slots dialog
+        if (this.selectedMemberGroups.length > 0) {
+          this.calculateRecipientCount(groupIds, false);
+        } else {
+          this.calculateRecipientCountForSlots();
+        }
       } else if (selectedValue === 'ImportEmailFromProvider') {
         // Import from provider
         this.selectedGroupsChange.emit([
@@ -887,6 +894,7 @@ export class PeopleSelectionDialogComponent
       messageTypeId: number;
       signupIds?: number[];
       groupIds?: number[];
+      slotItemIds?: number[];
       filters: {
         p_page: number;
         p_limit: number;
@@ -911,6 +919,23 @@ export class PeopleSelectionDialogComponent
         this.isLoading = false;
       },
     });
+  }
+
+  private calculateRecipientCountForSlots(): void {
+    const payload = {
+      sentToType: 'specificdateslot',
+      sentTo: 'specificdateslot',
+      messageTypeId: this.messageTypeId,
+      signupIds: this.selectedSignups.map((s) => s.signupid),
+      slotItemIds: this.selectedDateSlots.map((slot) => slot.slotitemid),
+      filters: {
+        p_page: 1,
+        p_limit: 1000,
+        p_sortBy: 'displayname',
+      },
+    };
+
+    this.fetchRecipients(payload);
   }
 
   private calculateRecipientCount(

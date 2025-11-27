@@ -177,8 +177,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     const payload: ICreateMessageRequest = {
       subject: form.subject,
       body: form.message,
-      sentto: SentTo.CUSTOM,
-      sendtotype: SendToType.CUSTOM,
+      sentto: SentTo.ALL,
+      sendtotype: SendToType.PEOPLE_IN_GROUPS,
       status: status,
       messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
       sendasemail: true,

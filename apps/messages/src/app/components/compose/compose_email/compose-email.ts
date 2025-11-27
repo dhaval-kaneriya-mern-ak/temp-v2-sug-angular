@@ -126,8 +126,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    this.loadUserProfile();
     this.initializeForms();
+    this.loadUserProfile();
     this.loadInitialData();
   }
 
@@ -785,11 +785,11 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           payload.sentto = SentTo.ALL;
           payload.groupids = [];
           payload.slotids = this.selectedRadioOption.recipients.map(
-            (slot) => 'slot_' + slot.slotid
+            (slot) => 'slot_' + slot.slotitemid
           );
           payload.sendToGroups = this.selectedRadioOption.recipients.map(
             (slot) => ({
-              id: 'slot_' + slot.slotid,
+              id: 'slot_' + slot.slotitemid,
               isWaitlistedRow: slot.waitlist,
             })
           );

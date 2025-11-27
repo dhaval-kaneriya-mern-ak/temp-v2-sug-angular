@@ -162,6 +162,13 @@
             <i class="pi pi-pencil"></i>
           </button>
         </div>
+        <button
+          type="button"
+          class="recipient-details-btn"
+          (click)="onShowRecipientDetails()"
+        >
+          {{ recipientCount }} Recipient Details
+        </button>
       </div>
       } @if (selectedMemberGroups.length > 0) {
       <div class="recipient-info-container">
@@ -178,6 +185,13 @@
             <i class="pi pi-pencil"></i>
           </button>
         </div>
+        <button
+          type="button"
+          class="recipient-details-btn"
+          (click)="onShowRecipientDetails()"
+        >
+          {{ recipientCount }} Recipient Details
+        </button>
       </div>
       }
     </div>

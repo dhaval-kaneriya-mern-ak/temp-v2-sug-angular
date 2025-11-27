@@ -346,17 +346,14 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       sendtotype: SendToType.ALL,
       status: status,
       messagetypeid: this.selectedValue === 'textOptionOne' ? 14 : 15,
-      sendasemail: this.selectedValue === 'textOptionTwo' ? true : false,
+      sendasemail: form.includefallback === true,
       sendastext: true,
       themeid: form.themeid,
       contactname: form.fromName || form.emailFrom,
-      replytoids: this.subAdminsApiData
-        .filter((su) =>
-          (form.replyTo ?? form.emailReplyTo).includes(
-            String(su.id || su.email)
-          )
-        )
-        .map((su) => su.id),
+      replytoids: this.filterReplyToAdmins(
+        form.replyTo ?? form.emailReplyTo,
+        'id'
+      ) as number[],
       signupids: form.selectedSignups
         ?.map((signup: string | number | { value: string | number }) => {
           if (
@@ -462,23 +459,23 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
           payload.groupids = [];
           payload.slotids = this.selectedRadioOption.recipients
             .filter(
-              (slot): slot is { slotid: number; waitlist: boolean } =>
+              (slot): slot is { slotitemid: number; waitlist: boolean } =>
                 typeof slot === 'object' &&
                 slot !== null &&
-                'slotid' in slot &&
+                'slotitemid' in slot &&
                 'waitlist' in slot
             )
-            .map((slot) => 'slot_' + slot.slotid);
+            .map((slot) => 'slot_' + slot.slotitemid);
           payload.sendToGroups = this.selectedRadioOption.recipients
             .filter(
-              (slot): slot is { slotid: number; waitlist: boolean } =>
+              (slot): slot is { slotitemid: number; waitlist: boolean } =>
                 typeof slot === 'object' &&
                 slot !== null &&
-                'slotid' in slot &&
+                'slotitemid' in slot &&
                 'waitlist' in slot
             )
             .map((slot) => ({
-              id: 'slot_' + slot.slotid,
+              id: 'slot_' + slot.slotitemid,
               isWaitlistedRow: slot.waitlist,
             }));
         }
@@ -492,7 +489,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
     this.composeService.createMessage(payload).subscribe({
       next: (response) => {
-        if (response.success === true && response.data) {
+        if (response.success === true) {
           this.toastr.success('Message saved successfully', 'Success');
           this.showOptionsAgain();
         }
@@ -517,13 +514,10 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     const payload: IMessagePreviewRequest = {
       fromname: form.value.fromName || form.value.emailFrom,
-      replyto: this.subAdminsApiData
-        .filter((su) =>
-          (form.value.replyTo ?? form.value.emailReplyTo).includes(
-            String(su.id || su.email)
-          )
-        )
-        .map((su) => su.email),
+      replyto: this.filterReplyToAdmins(
+        form.value.replyTo ?? form.value.emailReplyTo,
+        'email'
+      ) as string[],
       subject: form.value.subject || form.value.emailSubject,
       message: form.value.message,
       emailType: this.selectedValue === 'textOptionOne' ? '14' : '15',
@@ -538,7 +532,6 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       1,
       ...this.signupOptionsData.map((su) => su.themeid),
     ];
-
     if (this.getSelectedSignup().length === 0) {
       payload.signUpType = 'acctindex';
     }
@@ -671,8 +664,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             }
             this.sendTextEmailForm.patchValue({
               emailFrom: fullName,
-              message: 'From ' + fullName + ':',
+              message: 'From ' + fullName,
               emailReplyTo: profile.email,
+              includefallback: true,
             });
           }
         },
@@ -771,6 +765,29 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
     });
+  }
+
+  /**
+   * Filter subAdmins based on reply-to value and return their IDs or emails
+   */
+  private filterReplyToAdmins(
+    replyToValue: string | string[] | undefined,
+    returnType: 'id' | 'email' = 'id'
+  ): (number | string)[] {
+    return this.subAdminsApiData
+      .filter((su) => {
+        if (!replyToValue) return false;
+        // Handle both single email string and array of emails/IDs
+        if (Array.isArray(replyToValue)) {
+          return (
+            replyToValue.includes(String(su.id)) ||
+            replyToValue.includes(su.email)
+          );
+        }
+        // Handle single email string
+        return su.email === replyToValue;
+      })
+      .map((su) => (returnType === 'id' ? su.id : su.email));
   }
 
   /**

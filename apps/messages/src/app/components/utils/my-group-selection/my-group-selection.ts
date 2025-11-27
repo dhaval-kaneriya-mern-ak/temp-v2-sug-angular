@@ -173,6 +173,7 @@ export class MyGroupSelection implements OnChanges, OnInit {
         firstname: slot.firstname,
         lastname: slot.lastname,
         groups: slot.groups,
+        groupsId: slot.groupsId,
       }));
 
       // For "People I will select" with date slots, the recipient count is the number of slots selected
@@ -225,6 +226,7 @@ export class MyGroupSelection implements OnChanges, OnInit {
             lastname: member.member.lastname,
             email: member.member.email,
             groups: member.groups.map((g) => g.title).join(', '),
+            groupsId: member.groups.map((g) => g.id).join(', '),
           }));
 
           this.tableData = [];
@@ -237,6 +239,7 @@ export class MyGroupSelection implements OnChanges, OnInit {
               id: member.member.id,
               email: member.member.email,
               groups: member.groups.map((g) => g.title).join(', '),
+              groupsId: member.groups.map((g) => g.id).join(', '),
             });
           });
 

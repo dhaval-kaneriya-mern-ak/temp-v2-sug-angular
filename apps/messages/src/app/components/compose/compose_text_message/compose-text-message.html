@@ -192,6 +192,13 @@
                 <i class="pi pi-pencil"></i>
               </button>
             </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails()"
+            >
+              {{ stateService.recipientCount }} Recipient Details
+            </button>
           </div>
           } @if (stateService.selectedMemberGroups.length > 0) {
           <div class="recipient-info-container">
@@ -208,6 +215,13 @@
                 <i class="pi pi-pencil"></i>
               </button>
             </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails()"
+            >
+              {{ stateService.recipientCount }} Recipient Details
+            </button>
           </div>
           }
         </div>
@@ -245,7 +259,7 @@
                 <i class="pi pi-cog optionone-label"> </i>
               </a>
               <a
-                [ngClass]="{'disabled': sendTextEmailForm.get('includefallback')?.value === false}"
+                [ngClass]="{'disabled': !sendTextEmailForm.get('selectedSignups')?.value || sendTextEmailForm.get('includefallback')?.value === false}"
                 tabindex="-1"
                 (click)="showEmailData()"
                 (keyup)="false"
