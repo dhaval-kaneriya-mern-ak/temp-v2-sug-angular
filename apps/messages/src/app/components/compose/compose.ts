@@ -13,7 +13,12 @@ import { ButtonModule } from 'primeng/button';
 import { Router, RouterOutlet } from '@angular/router';
 import { ComposeService } from './compose.service';
 import { Subject } from 'rxjs';
-
+import { takeUntil } from 'rxjs/operators';
+import { UserStateService } from '@services/user-state.service';
+interface ComposeTab extends Tabs {
+  restricted?: boolean;
+  badge?: string;
+}
 @Component({
   selector: 'sug-compose',
   imports: [
@@ -30,26 +35,51 @@ import { Subject } from 'rxjs';
   styleUrl: './compose.scss',
 })
 export class Compose implements OnInit, OnDestroy {
+  private userStateService = inject(UserStateService);
   composeService = inject(ComposeService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+  public currentActiveTab = '';
+  public isProUser = false;
+  public isTrialUser = false;
+  public isVisible = false;
+  public dialogType: 'template' | 'text' | null = null;
 
   // Navigation tabs
-  navigationComposeTabs: Tabs[] = [
-    { name: 'Email', route: 'messages/compose/email' },
-    { name: 'Email Template', route: 'messages/compose/template' },
-    { name: 'Text Message', route: 'messages/compose/text' },
+  navigationComposeTabs: ComposeTab[] = [
+    {
+      name: 'Email',
+      route: 'messages/compose/email',
+      restricted: false,
+    },
+    {
+      name: 'Email Template',
+      route: 'messages/compose/template',
+      restricted: true,
+    },
+    {
+      name: 'Text Message',
+      route: 'messages/compose/text',
+      restricted: true,
+    },
   ];
 
   // Component properties
-  badgeUrl = 'assets/images/pro.webp';
-  activeTabRoute: string = this.navigationComposeTabs[0].route;
-
-  currentActiveTab = ''; // Don't hardcode this!
+  public badgeUrl = 'assets/images/pro.webp';
+  public activeTabRoute: string = this.navigationComposeTabs[0].route;
 
   ngOnInit() {
-    // Initialize active tab based on current route
     this.initializeActiveTab();
+
+    this.userStateService.userProfile$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((profile) => {
+        if (!profile) return;
+
+        this.isProUser = profile.ispro ?? false;
+        this.isTrialUser = profile.istrial ?? false;
+        this.checkDirectAccess();
+      });
   }
 
   ngOnDestroy() {
@@ -74,20 +104,51 @@ export class Compose implements OnInit, OnDestroy {
     this.currentActiveTab = matchingTab ? matchingTab.route : 'email';
   }
 
-  setActiveTab(tabRoute: string) {
-    this.currentActiveTab = tabRoute;
+  private checkDirectAccess() {
+    const currentUrl = this.router.url;
+    const activeTab = this.navigationComposeTabs.find((tab) =>
+      currentUrl.includes(tab.route)
+    );
+
+    if (!activeTab) return;
+
+    const isAllowed = this.isProUser || this.isTrialUser;
+
+    if (activeTab.restricted && !isAllowed) {
+      if (currentUrl.includes('template')) {
+        this.dialogType = 'template';
+      } else {
+        this.dialogType = 'text';
+      }
+
+      this.isVisible = true;
+    }
   }
 
-  handleTabSelection(event: any): void {
-    let selectedTab: Tabs | null = null;
-
-    if (event && typeof event.route === 'string') {
-      selectedTab = event;
+  handleTabSelection(event: ComposeTab): void {
+    const selectedTab = event as ComposeTab;
+    if (!selectedTab || !selectedTab.route) {
+      this.currentActiveTab = this.activeTabRoute;
+      this.router.navigateByUrl('/' + this.activeTabRoute);
+      return;
     }
 
-    if (selectedTab && selectedTab.route) {
-      this.router.navigate([selectedTab.route]);
+    const isRestricted = selectedTab.restricted ?? false;
+    const isAllowed = this.isProUser || this.isTrialUser;
+
+    if (isRestricted && !isAllowed) {
+      if (selectedTab.route.includes('template')) {
+        this.dialogType = 'template';
+      } else if (selectedTab.route.includes('text')) {
+        this.dialogType = 'text';
+      }
+
+      this.isVisible = true;
+      return;
     }
+
+    this.currentActiveTab = selectedTab.route || this.activeTabRoute;
+    this.router.navigateByUrl('/' + this.currentActiveTab);
   }
 
   dialogConf: DialogConfig = {
@@ -103,5 +164,11 @@ export class Compose implements OnInit, OnDestroy {
     width: '70vw',
   };
 
-  isVisible = false;
+  hideDialog() {
+    this.isVisible = false;
+    this.currentActiveTab = this.activeTabRoute;
+    this.router
+      .navigateByUrl('/', { skipLocationChange: true })
+      .then(() => this.router.navigateByUrl('/' + this.currentActiveTab));
+  }
 }
