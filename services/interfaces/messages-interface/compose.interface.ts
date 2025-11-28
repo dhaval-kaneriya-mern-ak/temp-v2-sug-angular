@@ -627,6 +627,7 @@ export interface IMessagePreviewRequest {
   tabgroups?: [];
   portals?: Array<{ id: number; title: string; urlkey: string }>;
   sendTo?: Array<{ id: number; displayName: string; isChecked: boolean }>;
+  attachmentids?: number[];
 }
 
 /**
@@ -758,3 +759,33 @@ export interface IGroupInfoDto {
   id: number;
   title: string;
 }
+
+export interface IFileItem {
+  id: number;
+  title?: string;
+  parentid?: number;
+  isfolder: boolean;
+  icon?: string;
+  filename?: string;
+  filedescription?: string;
+  filesizekb?: number;
+  folderid?: number;
+}
+
+export interface IParentFolderResponse {
+  success: boolean;
+  message: string[];
+  data: IParentFolder;
+}
+
+export interface IParentFolder {
+  id: number;
+  title?: string;
+  isfolder: boolean;
+  icon?: string;
+  filename?: string;
+  filedescription?: string;
+  filesizekb?: number;
+  folderid?: number;
+  subfolder?: IFileItem[];
+};

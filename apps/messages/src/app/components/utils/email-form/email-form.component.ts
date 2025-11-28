@@ -7,6 +7,7 @@ import {
   OnChanges,
   SimpleChanges,
   Output,
+  inject,
 } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -17,8 +18,10 @@ import {
 } from '@lumaverse/sug-ui';
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
+import { ProgressBarModule } from 'primeng/progressbar';
 import {
   IMemberInfoDto,
+  IFileItem,
   ISelectPortalOption,
   ISignUpItem,
 } from '@services/interfaces/messages-interface/compose.interface';
@@ -37,12 +40,14 @@ import { environment } from '@environments/environment';
     SugUiMultiSelectDropdownComponent,
     ChipModule,
     NgxCaptchaModule,
+    ProgressBarModule,
   ],
   templateUrl: './email-form.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
 })
 export class EmailFormComponent implements OnInit, OnChanges {
   @Input() emailForm!: FormGroup;
+  @Input() isBasicUser = true;
   @Input() formType: 'inviteToSignUp' | 'emailParticipants' = 'inviteToSignUp';
   @Input() title = 'Invite People to Sign Up';
   @Input() readonly siteKey: string = environment.siteKey;
@@ -65,6 +70,8 @@ export class EmailFormComponent implements OnInit, OnChanges {
   }> = [];
   @Input() subAdminsData: ISelectOption[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
+  @Input() selectedAttachments: IFileItem[] = [];
+
   @Output() openSignUpsDialog = new EventEmitter<void>();
   @Output() openPeopleDialog = new EventEmitter<void>();
   @Output() openSelectFileDialog = new EventEmitter<void>();
@@ -78,6 +85,25 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Output() removeTabGroupItem = new EventEmitter<number>();
   @Output() removePortalPageItem = new EventEmitter<number>();
   @Output() removeSignUpIndexPageItem = new EventEmitter<void>();
+
+  // Attachment properties
+  private readonly MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
+  private readonly ALLOWED_TYPES = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'text/csv',
+  ];
+
+  attachmentUploadProgress: Map<string | number, number> = new Map();
+  attachmentUploadError: Map<string | number, string> = new Map();
+  totalAttachmentSize = 0;
 
   get hasSignupSelection(): boolean {
     return (
@@ -144,6 +170,102 @@ export class EmailFormComponent implements OnInit, OnChanges {
         selectedPortalPages: this.selectedPortalPages,
       });
     }
+
+    // Handle attachment changes - simulate upload progress
+    if (changes['selectedAttachments']) {
+      const currentAttachments =
+        changes['selectedAttachments'].currentValue || [];
+      const previousAttachments =
+        changes['selectedAttachments'].previousValue || [];
+
+      // Check if new files were added
+      if (currentAttachments.length > previousAttachments.length) {
+        const newAttachments = currentAttachments.slice(
+          previousAttachments.length
+        );
+
+        newAttachments.forEach((file: IFileItem) => {
+          const fileId = file.id || file.filename || '';
+          const fileSizeBytes = (file.filesizekb || 0) * 1024;
+
+          // Check if file is already in attachments (duplicate)
+          const isDuplicate = previousAttachments.some(
+            (prev: IFileItem) =>
+              prev.id === file.id && prev.filename === file.filename
+          );
+
+          if (isDuplicate) {
+            // Remove the duplicate file from attachments
+            const fileIndex = this.selectedAttachments.findIndex(
+              (f: IFileItem) => f.id === file.id && f.filename === file.filename
+            );
+            if (fileIndex > -1) {
+              this.selectedAttachments.splice(fileIndex, 1);
+              this.selectedAttachments = [...this.selectedAttachments];
+            }
+            return;
+          }
+
+          // Check if adding this file would exceed 7MB limit
+          if (this.totalAttachmentSize + fileSizeBytes > this.MAX_FILE_SIZE) {
+            // Remove the file from attachments
+            const fileIndex = this.selectedAttachments.findIndex(
+              (f: IFileItem) => f.id === file.id
+            );
+            if (fileIndex > -1) {
+              this.selectedAttachments.splice(fileIndex, 1);
+              this.selectedAttachments = [...this.selectedAttachments];
+            }
+            return;
+          }
+
+          if (fileId) {
+            // Start upload progress simulation
+            this.simulateFileUpload(fileId);
+            // Add to total size
+            this.totalAttachmentSize += fileSizeBytes;
+          }
+        });
+      }
+      // Check if files were removed
+      else if (currentAttachments.length < previousAttachments.length) {
+        const removedFile = previousAttachments.find(
+          (prev: IFileItem) =>
+            !currentAttachments.find((curr: IFileItem) => curr.id === prev.id)
+        );
+        if (removedFile) {
+          this.totalAttachmentSize -= (removedFile.filesizekb || 0) * 1024;
+          this.attachmentUploadProgress.delete(
+            removedFile.id || removedFile.filename || 0
+          );
+          this.attachmentUploadError.delete(
+            removedFile.id || removedFile.filename || 0
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Simulate file upload progress
+   */
+  private simulateFileUpload(fileId: string | number): void {
+    const progressIntervals: number[] = [10, 25, 40, 60, 75, 85, 95];
+    let progressIndex = 0;
+
+    const uploadInterval = setInterval(() => {
+      if (progressIndex < progressIntervals.length) {
+        this.attachmentUploadProgress.set(
+          fileId,
+          progressIntervals[progressIndex]
+        );
+        progressIndex++;
+      } else {
+        // Complete the upload
+        this.attachmentUploadProgress.set(fileId, 100);
+        clearInterval(uploadInterval);
+      }
+    }, 200); // Progress update every 200ms
   }
 
   private syncFormWithInputs(): void {
@@ -269,5 +391,113 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   handleSuccess(token: string): void {
     this.emailForm.get('token')?.setValue(token);
+  }
+
+  removeAttachment(index: number): void {
+    if (index < 0 || index >= this.selectedAttachments.length) {
+      return;
+    }
+
+    const attachment = this.selectedAttachments[index];
+    const fileSizeBytes = (attachment.filesizekb || 0) * 1024;
+
+    // Update total attachment size
+    this.totalAttachmentSize = Math.max(
+      0,
+      this.totalAttachmentSize - fileSizeBytes
+    );
+
+    // Clean up progress and error maps
+    const fileId = attachment.id || attachment.filename || index;
+    this.attachmentUploadProgress.delete(fileId);
+    this.attachmentUploadError.delete(fileId);
+
+    // Remove from attachments array
+    this.selectedAttachments.splice(index, 1);
+    this.selectedAttachments = [...this.selectedAttachments];
+  }
+
+  clearAttachments(): void {
+    this.selectedAttachments = [];
+    this.attachmentUploadProgress.clear();
+    this.attachmentUploadError.clear();
+    this.totalAttachmentSize = 0;
+  }
+
+  getAttachmentProgress(fileId: string | number): number {
+    return this.attachmentUploadProgress.get(fileId) || 0;
+  }
+
+  getAttachmentError(fileId: string | number): string | undefined {
+    return this.attachmentUploadError.get(fileId);
+  }
+
+  getFormattedFileSize(bytes: number): string {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  getRemainingStorage(): { used: number; remaining: number } {
+    return {
+      used: this.totalAttachmentSize,
+      remaining: this.MAX_FILE_SIZE - this.totalAttachmentSize,
+    };
+  }
+
+  getTotalAttachmentSizeFormatted(): string {
+    return this.getFormattedFileSize(this.totalAttachmentSize);
+  }
+
+  getMaxAttachmentSizeFormatted(): string {
+    return this.getFormattedFileSize(this.MAX_FILE_SIZE);
+  }
+
+  canAddMoreAttachments(): boolean {
+    return this.totalAttachmentSize < this.MAX_FILE_SIZE;
+  }
+
+  getStoragePercentage(): number {
+    return (this.totalAttachmentSize / this.MAX_FILE_SIZE) * 100;
+  }
+
+  isAllowedFileType(mimeType: string): boolean {
+    return this.ALLOWED_TYPES.includes(mimeType);
+  }
+
+  getFileTypeIcon(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const iconMap: { [key: string]: string } = {
+      pdf: 'pi-file-pdf',
+      doc: 'pi-file-word',
+      docx: 'pi-file-word',
+      xls: 'pi-file-excel',
+      xlsx: 'pi-file-excel',
+      txt: 'pi-file',
+      csv: 'pi-file',
+      jpg: 'pi-image',
+      jpeg: 'pi-image',
+      png: 'pi-image',
+      gif: 'pi-image',
+    };
+    return iconMap[ext] || 'pi-file';
+  }
+
+  updateAttachmentProgress(fileId: string | number, progress: number): void {
+    this.attachmentUploadProgress.set(fileId, progress);
+  }
+
+  setAttachmentError(fileId: string | number, error: string): void {
+    this.attachmentUploadError.set(fileId, error);
+  }
+
+  clearAttachmentError(fileId: string | number): void {
+    this.attachmentUploadError.delete(fileId);
+  }
+
+  downloadFile(file: IFileItem): void {
+    console.log(file);
   }
 }

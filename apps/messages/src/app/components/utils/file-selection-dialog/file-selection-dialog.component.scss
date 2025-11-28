@@ -1,0 +1,259 @@
+// File Selection Dialog Styles
+
+.file-selection-wrap {
+  span {
+    margin-bottom: 10px;
+    display: block;
+    font-size: 16px;
+    i {
+      font-size: 16px;
+      color: #334155;
+    }
+  }
+
+  .btn-wrapper {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.drive-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 0 0 12px 0;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i {
+    font-size: 18px;
+    color: #f68b1c;
+  }
+}
+
+.file-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 400px;
+  overflow: scroll;
+}
+
+.folder-hierarchy {
+  display: flex;
+  flex-direction: column;
+
+  &.subfolder-hierarchy {
+    margin-left: 20px;
+  }
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 6px;
+
+  &:hover {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+
+    .file-name {
+      color: #f68b1c;
+    }
+  }
+
+  &.folder {
+    .file-icon {
+      i {
+        color: #f68b1c;
+        font-size: 18px;
+      }
+    }
+  }
+
+  &.subfolder {
+    .file-icon {
+      i {
+        color: #fbbf24;
+        font-size: 16px;
+      }
+    }
+  }
+
+  &.nested-subfile {
+    padding: 6px 0;
+    background-color: transparent;
+    margin-bottom: 4px;
+    margin-left: 20px;
+
+    .file-icon {
+      i {
+        color: #d97706;
+        font-size: 14px;
+      }
+    }
+
+    .file-name {
+      font-size: 12px;
+    }
+  }
+
+  .chevron-icon {
+    flex: 0 0 16px;
+    color: #9ca3af;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+  }
+
+  .loading-icon {
+    flex: 0 0 16px;
+    color: #f68b1c;
+    font-size: 14px;
+  }
+
+  .file-icon {
+    flex: 0 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 16px;
+      color: #6b7280;
+    }
+  }
+
+  .file-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+}
+
+// Expanded subfolder content
+.subfolder-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 6px 0 6px 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+// Nested subfolder content
+.nested-subfolder-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 4px 0 0 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+// Files section
+.files-section {
+  margin: 8px 0 8px 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+
+  &.subfolder-files-section {
+    margin-left: 20px;
+    background-color: transparent;
+    border: none;
+  }
+
+  &.nested-files-section {
+    margin-left: 40px;
+    background-color: transparent;
+    border: none;
+  }
+}
+
+.file-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  ::ng-deep {
+    .sug-ui-radio-checkbox-button-container {
+      margin-bottom: 0;
+
+      .p-radiobutton {
+        margin-right: 8px;
+      }
+
+      label {
+        font-size: 12px;
+        color: #374151;
+        margin: 0;
+        cursor: pointer;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #f68b1c;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .folder-hierarchy {
+    &.subfolder-hierarchy {
+      margin-left: 12px;
+    }
+  }
+
+  .subfolder-content {
+    margin-left: 0;
+  }
+
+  .nested-subfolder-content {
+    margin-left: 0;
+  }
+
+  .files-section {
+    &.subfolder-files-section {
+      margin-left: 12px;
+    }
+
+    &.nested-files-section {
+      margin-left: 24px;
+    }
+  }
+
+  .file-item {
+    padding: 6px 0;
+
+    .file-name {
+      font-size: 12px;
+    }
+
+    &.nested-subfile {
+      margin-left: 12px;
+    }
+  }
+}

@@ -227,6 +227,7 @@
     </div>
 
     <!-- Attachments -->
+    @if (!isBasicUser) {
     <div class="form-wrapper">
       <label for="attachments">Attachments</label>
       <sug-ui-button
@@ -234,12 +235,102 @@
         class="add-link-btn"
         icon="pi pi-paperclip"
         label="Add Attachments"
-        [disabled]="!hasSignupSelection"
+        [disabled]="!canAddMoreAttachments()"
         (buttonClick)="onOpenSelectFileDialog()"
       >
       </sug-ui-button>
     </div>
+    }
 
+    <div class="form-wrapper">
+      <label for="attachments-list"></label>
+      <!-- Storage Progress Bar -->
+      @if (selectedAttachments.length > 0) {
+      <div class="attachments-container">
+        <!-- Storage Usage Section -->
+        <div class="storage-info">
+          <div class="storage-header">
+            <span class="storage-label">Storage Used</span>
+            <span class="storage-size"
+              >{{ getTotalAttachmentSizeFormatted() }} /
+              {{ getMaxAttachmentSizeFormatted() }}</span
+            >
+          </div>
+          <p-progressBar
+            [value]="getStoragePercentage()"
+            [showValue]="false"
+            class="storage-bar"
+            [ngClass]="{
+              'storage-warning': getStoragePercentage() > 70,
+              'storage-critical': getStoragePercentage() >= 95
+            }"
+          >
+          </p-progressBar>
+        </div>
+
+        <!-- Attachments List -->
+        <div class="attachments-list">
+          @for (file of selectedAttachments; track file.id || $index; let i =
+          $index) {
+          <div class="attachment-item">
+            <!-- File Icon and Info -->
+            <div class="attachment-content">
+              <div class="file-icon-wrapper">
+                <i
+                  [class]="
+                    'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                  "
+                ></i>
+              </div>
+              <div class="file-details">
+                <div class="file-header">
+                  <span
+                    class="file-name"
+                    [title]="file.title || file.filename"
+                    >{{ file.title || file.filename }}</span
+                  >
+                  <span class="file-size">{{
+                    getFormattedFileSize((file.filesizekb || 0) * 1024)
+                  }}</span>
+                </div>
+
+                <!-- Error Message -->
+                @if (getAttachmentError(file.id || i)) {
+                <div class="error-message-attachment">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  {{ getAttachmentError(file.id || i) }}
+                </div>
+                }
+              </div>
+            </div>
+
+            <!-- Download Button -->
+            <button
+              type="button"
+              class="download-attachment-btn ml-1"
+              (click)="downloadFile(file)"
+              aria-label="Download attachment"
+              title="Download attachment"
+            >
+              <i class="pi pi-download"></i>
+            </button>
+
+            <!-- Remove Button -->
+            <button
+              type="button"
+              class="remove-attachment-btn ml-1"
+              (click)="removeAttachment(i)"
+              aria-label="Remove attachment"
+              title="Remove attachment"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
     <!-- Captcha -->
     <div class="form-wrapper">
       <label for="captcha"></label>

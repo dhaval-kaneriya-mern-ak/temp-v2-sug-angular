@@ -3,86 +3,155 @@
     <div class="account-overview">
       <h3>
         Compose Message
-        <sug-ui-tooltip [text]="'Click to learn more about composing messages.'" [position]="'bottom'"
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
           [tooltipClass]="'custom-tooltip'"
-          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }">
-          <p-button variant="text" size="small" (onClick)="isVisible = true"><i
-              class="pi pi-question-circle info-icon"></i>
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (onClick)="isVisible = true"
+            ><i class="pi pi-question-circle info-icon"></i>
           </p-button>
         </sug-ui-tooltip>
         @if (dialogType === 'template') {
-        <sug-ui-dialog [config]="dialogConf" [(visible)]="isVisible" [showFooter]="true" (hide)="hideDialog()">
+        <sug-ui-dialog
+          [config]="dialogConf"
+          [(visible)]="isVisible"
+          [showFooter]="true"
+          (hide)="hideDialog()"
+        >
           <div slot="header">
-            <h2 class="d-inline gap-2 align-items-center">Custom Email Template
-              <span><img [src]="badgeUrl" alt="badge" class="badge-icon" /></span>
+            <h2 class="d-inline gap-2 align-items-center">
+              Custom Email Template
+              <span
+                ><img [src]="badgeUrl" alt="badge" class="badge-icon"
+              /></span>
             </h2>
-            <p class="compose-subtext mb-0">This feature is available with premium plans.</p>
+            <p class="compose-subtext mb-0">
+              This feature is available with premium plans.
+            </p>
           </div>
           <span class="spacer"></span>
           <h4>Create a Custom Reminder Email Template</h4>
           <p>
-            With our premium plans, you can compose a custom reminder message that takes place of the standard reminder
-            message. Build a template and assign it to one or more sign ups in your account. Additionally, you can add
-            attachments to the email message.
+            With our premium plans, you can compose a custom reminder message
+            that takes place of the standard reminder message. Build a template
+            and assign it to one or more sign ups in your account. Additionally,
+            you can add attachments to the email message.
 
-            <a href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm" target="_blank">Learn
-              More</a>
+            <a
+              href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm"
+              target="_blank"
+              >Learn More</a
+            >
           </p>
           <h4>Create a Custom Confirmation Email Template</h4>
           <p>
-            A confirmation email is sent to participants immediately after they sign up. With our premium plans, the
-            sign up creator can create a custom confirmation email. Selecting this option allows you to build a template
-            and assign it to one or more sign ups in your account. To edit your confirmation template later, look for it
-            in the "Drafts & Templates" tab of the Messages area.
+            A confirmation email is sent to participants immediately after they
+            sign up. With our premium plans, the sign up creator can create a
+            custom confirmation email. Selecting this option allows you to build
+            a template and assign it to one or more sign ups in your account. To
+            edit your confirmation template later, look for it in the "Drafts &
+            Templates" tab of the Messages area.
 
-            <a href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm" target="_blank">Learn
-              More</a>
+            <a
+              href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm"
+              target="_blank"
+              >Learn More</a
+            >
           </p>
 
-          <div slot="footer" class="d-flex justify-content-center align-items-center w-100 mt-4">
-            <a href="/pricing?utm_source=oldbuilder&utm_medium=learnmore&utm_campaign=emailtemplate" target="_blank">
-              <sug-ui-button label="Upgrade Now" icon="" [rounded]="false" [size]="'large'" [severity]="'success'"
-                [outlined]="false" (onClick)="isVisible = false"></sug-ui-button>
+          <div
+            slot="footer"
+            class="d-flex justify-content-center align-items-center w-100 mt-4"
+          >
+            <a
+              href="/pricing?utm_source=oldbuilder&utm_medium=learnmore&utm_campaign=emailtemplate"
+              target="_blank"
+            >
+              <sug-ui-button
+                label="Upgrade Now"
+                icon=""
+                [rounded]="false"
+                [size]="'large'"
+                [severity]="'success'"
+                [outlined]="false"
+                (onClick)="isVisible = false"
+              ></sug-ui-button>
             </a>
           </div>
-
         </sug-ui-dialog>
-        }
-        @if (dialogType === 'text') {
-        <sug-ui-dialog [config]="dialogConf" [(visible)]="isVisible" [showFooter]="true" (hide)="hideDialog()">
+        } @if (dialogType === 'text') {
+        <sug-ui-dialog
+          [config]="dialogConf"
+          [(visible)]="isVisible"
+          [showFooter]="true"
+          (hide)="hideDialog()"
+        >
           <div slot="header">
-            <h2 class="d-inline gap-2 align-items-center">Send Text Messages
-              <span><img [src]="badgeUrl" alt="badge" class="badge-icon" /></span>
+            <h2 class="d-inline gap-2 align-items-center">
+              Send Text Messages
+              <span
+                ><img [src]="badgeUrl" alt="badge" class="badge-icon"
+              /></span>
             </h2>
-            <p class="compose-subtext mb-0">This feature is available with premium plans.</p>
+            <p class="compose-subtext mb-0">
+              This feature is available with premium plans.
+            </p>
           </div>
           <span class="spacer"></span>
 
           <p>
-            With our premium plans, you can send text messages to your group members. To begin sending text messages,
-            you must ask your group members to opt in to text messages from SignUpGenius. After your group members have
-            opted in you can send text invites or other messages about your sign up event.
+            With our premium plans, you can send text messages to your group
+            members. To begin sending text messages, you must ask your group
+            members to opt in to text messages from SignUpGenius. After your
+            group members have opted in you can send text invites or other
+            messages about your sign up event.
           </p>
           <span class="w-50 text-center d-block mx-auto">
-            <img src="assets/images/invite-by-text.jpg" alt="badge" width="500px" />
+            <img
+              src="assets/images/invite-by-text.jpg"
+              alt="badge"
+              width="500px"
+            />
           </span>
 
-          <div slot="footer" class="d-flex justify-content-center align-items-center w-100 mt-4 gap-4">
-            <a href="/pricing?utm_source=newbuilder&utm_medium=learnmore&utm_campaign=sendtext" target="_blank">
-              <sug-ui-button label="Upgrade Now" icon="" [rounded]="false" [size]="'large'" [severity]="'success'"
-                [outlined]="false" (onClick)="isVisible = false"></sug-ui-button>
+          <div
+            slot="footer"
+            class="d-flex justify-content-center align-items-center w-100 mt-4 gap-4"
+          >
+            <a
+              href="/pricing?utm_source=newbuilder&utm_medium=learnmore&utm_campaign=sendtext"
+              target="_blank"
+            >
+              <sug-ui-button
+                label="Upgrade Now"
+                icon=""
+                [rounded]="false"
+                [size]="'large'"
+                [severity]="'success'"
+                [outlined]="false"
+                (onClick)="isVisible = false"
+              ></sug-ui-button>
             </a>
-            <a href="https://www.signupgenius.com/blog/feature-text-messaging.cfm" target="_blank">
-              <sug-ui-button label="Learn More" icon="" [rounded]="false" [size]="'large'" [severity]="'secondary'"
-                [outlined]="false" (onClick)="isVisible = false"></sug-ui-button>
+            <a
+              href="https://www.signupgenius.com/blog/feature-text-messaging.cfm"
+              target="_blank"
+            >
+              <sug-ui-button
+                label="Learn More"
+                icon=""
+                [rounded]="false"
+                [size]="'large'"
+                [severity]="'secondary'"
+                [outlined]="false"
+                (onClick)="isVisible = false"
+              ></sug-ui-button>
             </a>
-
           </div>
         </sug-ui-dialog>
 
         }
-
-
       </h3>
     </div>
     <p class="compose-subtext">
@@ -90,8 +159,11 @@
     </p>
   </div>
   <div class="compose-tab">
-    <sug-ui-menu-tabs [tabs]="navigationComposeTabs" [activeTab]="currentActiveTab"
-      (selectionChange)="handleTabSelection($event)">
+    <sug-ui-menu-tabs
+      [tabs]="navigationComposeTabs"
+      [activeTab]="currentActiveTab"
+      (selectionChange)="handleTabSelection($event)"
+    >
     </sug-ui-menu-tabs>
   </div>
   <div class="compose-content">

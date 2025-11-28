@@ -7,6 +7,7 @@ import {
   IRecipient,
   ISelectPortalOption,
   IMemberInfoDto,
+  IFileItem,
 } from '@services/interfaces/messages-interface/compose.interface';
 
 /**
@@ -33,6 +34,9 @@ export class ComposeEmailStateService {
   // Selected groups (people) state
   private selectedGroupsSubject = new BehaviorSubject<ISelectOption[]>([]);
   selectedGroups$ = this.selectedGroupsSubject.asObservable();
+
+  private selectedAttachmentSubject = new BehaviorSubject<IFileItem[]>([]);
+  selectedAttachment$ = this.selectedAttachmentSubject.asObservable();
 
   //selected portal pages state
   private selectedPortalPagesSubject = new BehaviorSubject<
@@ -137,6 +141,10 @@ export class ComposeEmailStateService {
     return this.selectedGroupsSubject.value;
   }
 
+  get selectedAttachment(): IFileItem[] {
+    return this.selectedAttachmentSubject.value;
+  }
+
   get recipientCount(): number {
     return this.recipientCountSubject.value;
   }
@@ -190,6 +198,10 @@ export class ComposeEmailStateService {
     this.selectedSignupsSubject.next(signups);
     // Reset people selection when signups change
     this.resetPeopleSelection();
+  }
+
+  setSelectedAttachment(attachments: IFileItem[]): void {
+    this.selectedAttachmentSubject.next(attachments);
   }
 
   setSelectedPortalPages(pages: ISelectPortalOption[]): void {

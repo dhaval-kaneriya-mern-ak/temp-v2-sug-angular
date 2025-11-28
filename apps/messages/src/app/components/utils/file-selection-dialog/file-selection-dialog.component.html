@@ -2,22 +2,180 @@
   [config]="dialogConfig"
   [(visible)]="visible"
   [showFooter]="false"
+  (hide)="hideDialog()"
 >
   <h2 slot="header">Select File</h2>
   <div class="dialog-content">
     <div class="file-selection-wrap">
-      <span
-        ><i class="pi pi-folder-open" aria-hidden="true"></i> GeniusDrive</span
-      >
-      <sug-ui-radio-checkbox-button
-        type="radio"
-        name="fileSelectionRadio"
-        [options]="selectFileRadioOptions"
-        inputId="file-selection-radio"
-        [(value)]="selectedValue"
-        (changeEvent)="handleSelection($event)"
-      >
-      </sug-ui-radio-checkbox-button>
+      <div class="drive-header">
+        <i class="pi pi-folder-open" aria-hidden="true"></i>
+        <span>{{ rootTitle }}</span>
+      </div>
+
+      @if (isLoadingParentFolder) {
+      <sug-ui-loading-spinner
+        [isLoading]="true"
+        [isFullPageLoader]="false"
+      ></sug-ui-loading-spinner>
+      } @else if (parentFolderData) {
+      <div class="file-tree">
+        <!-- Root folders with expandable contents -->
+        @for (folder of folders; track folder.id) {
+        <div class="folder-hierarchy">
+          <!-- Folder item with chevron -->
+          <div
+            class="file-item folder"
+            (click)="onFolderClick(folder)"
+            (keyup.enter)="onFolderClick(folder)"
+            (keyup.space)="onFolderClick(folder)"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'Expand folder: ' + folder.title"
+          >
+            @if (isLoadingFolder(folder.id)) {
+            <i
+              class="pi pi-spin pi-spinner loading-icon"
+              aria-hidden="true"
+            ></i>
+            } @else {
+            <i
+              class="pi chevron-icon"
+              [ngClass]="
+                isFolderExpanded(folder.id)
+                  ? 'pi-chevron-down'
+                  : 'pi-chevron-right'
+              "
+              aria-hidden="true"
+            ></i>
+            }
+            <div class="file-icon">
+              <i class="pi pi-folder" aria-hidden="true"></i>
+            </div>
+            <div class="file-name">{{ folder.title }}</div>
+          </div>
+
+          <!-- Expanded folder contents -->
+          @if (isFolderExpanded(folder.id)) {
+          <div class="subfolder-content">
+            <!-- Subfolders -->
+            @for (subfolder of getSubFolders(folder.id); track subfolder.id) {
+            <div class="folder-hierarchy subfolder-hierarchy">
+              <!-- Subfolder item with chevron -->
+              <div
+                class="file-item subfolder"
+                (click)="onFolderClick(subfolder, folder.id)"
+                (keyup.enter)="onFolderClick(subfolder, folder.id)"
+                (keyup.space)="onFolderClick(subfolder, folder.id)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Expand subfolder: ' + subfolder.title"
+              >
+                @if (isLoadingNestedFolder(getNestedFolderKey(folder.id,
+                subfolder.id))) {
+                <i
+                  class="pi pi-spin pi-spinner loading-icon"
+                  aria-hidden="true"
+                ></i>
+                } @else {
+                <i
+                  class="pi chevron-icon"
+                  [ngClass]="
+                    isNestedFolderExpanded(
+                      getNestedFolderKey(folder.id, subfolder.id)
+                    )
+                      ? 'pi-chevron-down'
+                      : 'pi-chevron-right'
+                  "
+                  aria-hidden="true"
+                ></i>
+                }
+                <div class="file-icon">
+                  <i class="pi pi-folder" aria-hidden="true"></i>
+                </div>
+                <div class="file-name">{{ subfolder.title }}</div>
+              </div>
+
+              <!-- Nested subfolder contents -->
+              @if (isNestedFolderExpanded(getNestedFolderKey(folder.id,
+              subfolder.id))) {
+              <div class="nested-subfolder-content">
+                <!-- Nested subfolders -->
+                @for (nestedSubfolder of getNestedSubFolders(folder.id,
+                getNestedFolderKey(folder.id, subfolder.id)); track
+                nestedSubfolder.id) {
+                <div class="file-item nested-subfile">
+                  <div class="file-icon">
+                    <i class="pi pi-folder" aria-hidden="true"></i>
+                  </div>
+                  <div class="file-name">{{ nestedSubfolder.title }}</div>
+                </div>
+                }
+                <!-- Nested files with radio buttons -->
+                @if (getNestedSubFolderFiles(getNestedFolderKey(folder.id,
+                subfolder.id)).length > 0) {
+                <div
+                  class="files-section nested-files-section"
+                  [attr.data-version]="selectedFileVersion"
+                >
+                  <sug-ui-radio-checkbox-button
+                    type="radio"
+                    [name]="
+                      'nestedFile_' +
+                      getNestedFolderKey(folder.id, subfolder.id)
+                    "
+                    [options]="
+                      getNestedSubFolderFileOptions(
+                        getNestedFolderKey(folder.id, subfolder.id)
+                      )
+                    "
+                    [value]="selectedFile?.id"
+                    (changeEvent)="onFileSelectionChange($event)"
+                    class="file-radio-list"
+                  ></sug-ui-radio-checkbox-button>
+                </div>
+                }
+              </div>
+              }
+            </div>
+            }
+
+            <!-- Subfiles with radio buttons -->
+            @if (getSubFolderFiles(folder.id).length > 0) {
+            <div
+              class="files-section subfolder-files-section"
+              [attr.data-version]="selectedFileVersion"
+            >
+              <sug-ui-radio-checkbox-button
+                type="radio"
+                [name]="'subfolderFile_' + folder.id"
+                [options]="getSubFolderFileOptions(folder.id)"
+                [value]="selectedFile?.id"
+                (changeEvent)="onFileSelectionChange($event)"
+                class="file-radio-list"
+              ></sug-ui-radio-checkbox-button>
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Root level files -->
+        @if (files.length > 0) {
+        <div class="files-section" [attr.data-version]="selectedFileVersion">
+          <sug-ui-radio-checkbox-button
+            type="radio"
+            name="rootFileSelection"
+            [options]="fileOptions"
+            [value]="selectedFile?.id"
+            (changeEvent)="onFileSelectionChange($event)"
+            class="file-radio-list"
+          ></sug-ui-radio-checkbox-button>
+        </div>
+        }
+      </div>
+      }
+
       <div class="btn-wrapper">
         <sug-ui-button
           severity="success"
@@ -25,6 +183,7 @@
           class="send-btn"
           icon=""
           label="Select"
+          [disabled]="!selectedFile"
           (buttonClick)="selectFile()"
         ></sug-ui-button>
       </div>

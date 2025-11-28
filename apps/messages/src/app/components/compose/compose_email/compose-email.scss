@@ -35,23 +35,17 @@
   color: #f68b1c;
   flex: 0 0 26px;
   margin-left: 0;
-
   &:hover {
     background-color: rgba(106, 90, 205, 0.1);
   }
-
   &:focus {
     outline: 2px solid slateblue;
     outline-offset: 2px;
   }
-
   &:active {
     transform: scale(0.95);
   }
-
-  i {
-    font-size: 16px;
-  }
+  i,
   .pi {
     font-size: 16px;
   }
@@ -107,10 +101,8 @@
       @media (max-width: 767px) {
         width: 100%;
       }
-      ::ng-deep {
-        .p-button {
-          width: 100%;
-        }
+      ::ng-deep .p-button {
+        width: 100%;
       }
     }
     .error-message {
@@ -123,7 +115,6 @@
         margin-left: 0;
       }
     }
-
     ::ng-deep {
       .pi {
         font-size: 16px;
@@ -235,8 +226,6 @@
       .select-wrapper {
         width: 100%;
       }
-
-      // Styling for buttons in second radio option
       .link-button {
         background: none;
         border: none;
@@ -332,12 +321,10 @@
   align-items: center;
   gap: 16px;
   width: 70%;
-
   @media (max-width: 767px) {
     width: 100%;
     flex-wrap: wrap;
   }
-
   .recipient-text {
     display: inline-flex;
     align-items: center;
@@ -345,14 +332,11 @@
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 5px 10px;
-    align-items: center;
-
     .recipient-label {
       font-size: 14px;
       color: #334155;
       font-weight: 400;
     }
-
     .edit-icon-btn {
       background: none;
       border: none;
@@ -364,22 +348,18 @@
       transition: all 0.2s ease;
       border-radius: 4px;
       margin-left: 4px;
-
       &:hover {
         background-color: rgba(99, 102, 241, 0.08);
       }
-
       &:active {
         transform: scale(0.95);
       }
-
       i {
         color: #f68b1c;
         font-size: 14px;
       }
     }
   }
-
   .recipient-details-btn {
     background-color: #ff6b35;
     color: white;
@@ -392,17 +372,14 @@
     transition: all 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
-
     &:hover {
       background-color: #ff5722;
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
     }
-
     &:active {
       transform: translateY(0);
     }
-
     &:focus {
       outline: 2px solid #ff6b35;
       outline-offset: 2px;
@@ -414,24 +391,19 @@
 .preview-email-content {
   padding: 0;
   max-height: calc(90vh - 250px);
-
   .email-preview-wrapper {
-    margin-bottom: 0; // Remove bottom margin
+    margin-bottom: 0;
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
     max-height: calc(90vh - 250px);
-
     .email-preview-container {
       background-color: #ffffff;
       padding: 20px;
-
-      // Ensure email content scales properly
       ::ng-deep {
         img {
           max-width: 100%;
           height: auto;
         }
-
         table {
           max-width: 100%;
           margin: 0 auto;
@@ -443,45 +415,40 @@
 
 .preview-dialog-footer {
   display: flex;
-  flex-direction: column; // Stack vertically
-  gap: 20px; // Space between theme section and buttons
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
   padding: 20px;
   background-color: #ffffff;
-  border-top: none; // No border
-
-  // Theme Section - Horizontal Row (Label + Icons)
+  border-top: none;
   .theme-section-footer {
     display: flex;
     align-items: center;
-    gap: 20px; // Gap between "Choose Theme:" text and icons
+    gap: 20px;
     justify-content: space-between;
     overflow: auto;
     .theme-label {
       font-size: 15px;
-      font-weight: 400; // Normal weight
+      font-weight: 400;
       color: #333;
       white-space: nowrap;
     }
-
     .theme-icons {
       display: flex;
-      gap: 12px; // Spacing between the two circular icons
+      gap: 12px;
       align-items: center;
-
       .theme-icon-item {
         width: 56px;
         height: 56px;
         border-radius: 50%;
         overflow: hidden;
-        border: 2px solid #e0e0e0; // Lighter border
+        border: 3px solid transparent;
         cursor: pointer;
         transition: all 0.2s ease;
         background-color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 3px solid transparent;
         opacity: 0.65;
         &.selected {
           border: 3px solid orange;
@@ -490,7 +457,6 @@
         .blank {
           background: linear-gradient(180deg, #f8ce61 0, #f9ae3d);
         }
-
         img {
           width: 100%;
           height: 100%;
@@ -500,13 +466,10 @@
       }
     }
   }
-
-  // Button Group - Below Theme Section
   .button-group {
     display: flex;
     gap: 10px;
     align-items: center;
-
     .send-now-btn {
       background-color: #a8c939;
       color: white;
@@ -517,15 +480,12 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
-
       &:hover:not(:disabled) {
         background-color: #96b532;
       }
-
       &:active:not(:disabled) {
         transform: scale(0.98);
       }
-
       &:disabled {
         background-color: #cccccc;
         color: #666666;
@@ -566,7 +526,6 @@
   padding: 15px 0;
   margin-top: 15px;
   border-top: 1px solid #e5e7eb;
-
   .counter-badge {
     background-color: #86bc24;
     color: white;
@@ -579,7 +538,6 @@
     font-weight: 600;
     font-size: 14px;
   }
-
   span {
     font-size: 14px;
     color: #374151;
@@ -592,4 +550,231 @@
   border-radius: 16px;
   box-shadow: 15px 30px 100px -30px rgba(34, 34, 34, 0.35);
   animation-fill-mode: forwards;
+}
+
+// Modern Attachments Section Styles
+.attachments-container {
+  width: 70%;
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  .storage-info {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #d1d5db;
+    .storage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      .storage-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .storage-size {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+      }
+    }
+    .storage-bar {
+      ::ng-deep .p-progressbar {
+        background-color: #e5e7eb;
+        height: 6px;
+        border-radius: 3px;
+        .p-progressbar-value {
+          background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+      }
+      &.storage-warning ::ng-deep .p-progressbar .p-progressbar-value {
+        background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+      }
+      &.storage-critical ::ng-deep .p-progressbar .p-progressbar-value {
+        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      }
+    }
+  }
+  .attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    gap: 5px;
+    &:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .attachment-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      .file-icon-wrapper {
+        flex: 0 0 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 6px;
+        height: 36px;
+        i {
+          font-size: 18px;
+          color: #6b7280;
+        }
+        &.pdf-icon {
+          background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+          i {
+            color: #dc2626;
+          }
+        }
+        &.word-icon {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          i {
+            color: #2563eb;
+          }
+        }
+        &.excel-icon {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          i {
+            color: #16a34a;
+          }
+        }
+        &.image-icon {
+          background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+          i {
+            color: #db2777;
+          }
+        }
+      }
+      .file-details {
+        flex: 1;
+        min-width: 0;
+        .file-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .file-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #111827;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+        }
+        .file-size {
+          font-size: 12px;
+          color: #9ca3af;
+          white-space: nowrap;
+          flex: 0 0 auto;
+        }
+        .upload-progress {
+          margin-bottom: 6px;
+          ::ng-deep .p-progressbar {
+            background-color: #e5e7eb;
+            height: 4px;
+            border-radius: 2px;
+            .p-progressbar-value {
+              background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+              border-radius: 2px;
+              transition: width 0.3s ease;
+            }
+          }
+        }
+        .error-message-attachment {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 10px;
+          background-color: #fee2e2;
+          border-radius: 4px;
+          font-size: 11px;
+          color: #991b1b;
+          i {
+            font-size: 12px;
+            flex: 0 0 12px;
+          }
+        }
+        .success-indicator {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 8px;
+          background-color: #f0fdf4;
+          border-radius: 4px;
+          font-size: 11px;
+          color: #166534;
+          font-weight: 500;
+          i {
+            font-size: 12px;
+            color: #16a34a;
+          }
+        }
+      }
+    }
+    .remove-attachment-btn,
+    .download-attachment-btn {
+      flex: 0 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #d1d5db;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      &:active {
+        transform: scale(0.95);
+      }
+      i {
+        font-size: 16px;
+      }
+    }
+    .remove-attachment-btn {
+      &:hover {
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+    }
+    .download-attachment-btn {
+      &:hover {
+        background-color: #dcfce7;
+        color: #16a34a;
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .attachments-container .attachment-item {
+    flex-wrap: wrap;
+    .attachment-content {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+    .remove-attachment-btn,
+    .download-attachment-btn {
+      align-self: flex-start;
+    }
+  }
 }

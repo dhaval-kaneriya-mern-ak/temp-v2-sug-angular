@@ -51,6 +51,8 @@
       (removePortalPageItem)="stateService.removePortalPage($event)"
       (removeSignUpIndexPageItem)="stateService.setSignUpIndexPageSelected(false)"
       [selectedPortalPages]="stateService.selectedPortalPages"
+      [selectedAttachments]="stateService.selectedAttachment"
+      [isBasicUser]="getIsBasicUser()"
     >
     </sug-email-form>
 
@@ -200,7 +202,10 @@
 </sug-recipient-details-dialog>
 
 <!-- File Selection Dialog -->
-<sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
+<sug-file-selection-dialog
+  [(visible)]="isSelectFileDialogVisible"
+  (fileSelected)="onFileSelected($event)"
+>
 </sug-file-selection-dialog>
 
 <!-- Preview Email Dialog -->

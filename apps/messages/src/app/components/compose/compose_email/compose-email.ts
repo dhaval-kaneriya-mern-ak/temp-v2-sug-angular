@@ -40,6 +40,7 @@ import {
   SentTo,
   SendToType,
   ISelectPortalOption,
+  IFileItem,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
@@ -76,7 +77,7 @@ import { MyGroupSelection } from '../../utils/my-group-selection/my-group-select
 export class ComposeEmailComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private composeService = inject(ComposeService);
-  private userStateService = inject(UserStateService);
+  protected userStateService = inject(UserStateService);
   private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);
   protected stateService = inject(ComposeEmailStateService);
@@ -457,6 +458,12 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.toggleFormControls();
   }
 
+  getIsBasicUser(): boolean {
+    return (
+      this.userProfile?.ispro === false && this.userProfile?.istrial === false
+    );
+  }
+
   /**
    * Dialog handlers
    */
@@ -560,6 +567,13 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         title: su.title,
         themeid: su.themeid,
       }));
+    }
+
+    //add attachments
+    if (this.stateService.selectedAttachment.length > 0) {
+      payload.attachmentids = this.stateService.selectedAttachment.map(
+        (file) => file.id
+      );
     }
 
     // Only add portals if there are any selected
@@ -694,6 +708,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         )
         .map((group) => Number(group.value)),
       portals: form.selectedPortalPages.map((pp: ISelectPortalOption) => pp.id),
+      attachmentids: this.stateService.selectedAttachment.map(
+        (file) => file.id
+      ),
     };
     if (date) {
       payload.senddate = date;
@@ -1058,5 +1075,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     }
 
     return { isValid: errors.length === 0, errors };
+  }
+
+  onFileSelected(file: IFileItem) {
+    // Handle the selected file here
+    console.log('File selected:', file);
+    this.stateService.setSelectedAttachment([
+      ...this.stateService.selectedAttachment,
+      file,
+    ]);
   }
 }

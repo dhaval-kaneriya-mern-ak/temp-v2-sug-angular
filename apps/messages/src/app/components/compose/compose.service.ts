@@ -16,6 +16,7 @@ import {
 import {
   IMemberIndexPageResponse,
   IAllGroupsWithMembersResponse,
+  IParentFolderResponse,
   IPortalSignupResponse,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
@@ -128,5 +129,13 @@ export class ComposeService {
 
   getAllGroupsWithMembers(): Observable<IAllGroupsWithMembersResponse> {
     return this.sugApiClient.get(`/groups/members/all`);
+  }
+
+  getParentFolderData(): Observable<IParentFolderResponse> {
+    return this.sugApiClient.get(`/geniusdrive/parent-folder`);
+  }
+
+  getFolderContents(folderId: number): Observable<IParentFolderResponse> {
+    return this.sugApiClient.get(`/geniusdrive/folder/${folderId}`);
   }
 }
