@@ -64,7 +64,6 @@ export class ComposeEmailStateService {
     groupEmailAlias: string;
     useGroupAlias: boolean;
     includeNonGroupMembers: boolean;
-    includeNonGroupMembersForPeople: boolean;
     manualEmailsGroup: string[];
     rsvpResponseyes: boolean;
     rsvpResponseno: boolean;
@@ -78,7 +77,6 @@ export class ComposeEmailStateService {
     groupEmailAlias: '',
     useGroupAlias: false,
     includeNonGroupMembers: false,
-    includeNonGroupMembersForPeople: false,
     manualEmailsGroup: [],
     rsvpResponseyes: false,
     rsvpResponseno: false,
@@ -375,7 +373,6 @@ export class ComposeEmailStateService {
       groupEmailAlias: '',
       useGroupAlias: false,
       includeNonGroupMembers: false,
-      includeNonGroupMembersForPeople: false,
       manualEmailsGroup: [],
       rsvpResponseyes: false,
       rsvpResponseno: false,
@@ -407,6 +404,7 @@ export class ComposeEmailStateService {
     this.recipientsSubject.next([]);
     this.selectedDateSlotsSubject.next([]);
     this.selectedMemberGroupsSubject.next([]);
+    this.selectedPortalPagesSubject.next([]);
     this.peopleSelectionDataSubject.next({
       selectedValue: null,
       selectedGroups: [],
@@ -415,7 +413,6 @@ export class ComposeEmailStateService {
       groupEmailAlias: '',
       useGroupAlias: false,
       includeNonGroupMembers: false,
-      includeNonGroupMembersForPeople: false,
       manualEmailsGroup: [],
       rsvpResponseyes: false,
       rsvpResponseno: false,

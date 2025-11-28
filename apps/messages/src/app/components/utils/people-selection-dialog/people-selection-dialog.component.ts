@@ -354,7 +354,6 @@ export class PeopleSelectionDialogComponent
             manualEmailsGroup: [],
             useGroupAlias: false,
             groupEmailAlias: '',
-            includeNonGroupMembersForPeople: false,
             rsvpResponseyes: false,
             rsvpResponseno: false,
             rsvpResponsemaybe: false,
@@ -431,8 +430,6 @@ export class PeopleSelectionDialogComponent
       manualEmailsGroup: [[]],
       useGroupAlias: [false],
       groupEmailAlias: ['', Validators.email],
-      // Form Two specific
-      includeNonGroupMembersForPeople: [false],
       rsvpResponseyes: [false],
       rsvpResponseno: [false],
       rsvpResponsemaybe: [false],
@@ -523,13 +520,9 @@ export class PeopleSelectionDialogComponent
         const selectedGroupOptions = this.groupOptions.filter((g) =>
           groupIds.includes(g.value)
         );
-
         // Check if "include non-group members" is selected
         // Handle both boolean and array formats from the checkbox component
-        const includeNonGroupMembersValue =
-          this.formType === 'inviteToSignUp'
-            ? formValue.includeNonGroupMembers
-            : formValue.includeNonGroupMembersForPeople;
+        const includeNonGroupMembersValue = formValue.includeNonGroupMembers;
 
         // Convert to boolean - handle both true/false and array ['includenongroup']
         const includeNonGroupMembers = Array.isArray(
@@ -576,7 +569,6 @@ export class PeopleSelectionDialogComponent
         // Handle manual email entry
         const manualEmails = formValue.manualEmails || '';
         const groupEmailAlias = formValue.groupEmailAlias || '';
-
         // Parse emails from the manual entry textarea
         const manualEmailList = manualEmails
           .split(/[,\n]/)
@@ -628,6 +620,7 @@ export class PeopleSelectionDialogComponent
           recipients: [
             manualEmailList.join(', '), // Manual emails as comma-separated string
             aliasEmailList.join(', '), // Alias emails as comma-separated string
+            formValue.manualEmailsGroup,
           ],
         });
         // Clear date slots when switching to manual entry
@@ -815,7 +808,6 @@ export class PeopleSelectionDialogComponent
     this.peopleDialogForm.patchValue({
       selectedGroups: [],
       includeNonGroupMembers: false,
-      includeNonGroupMembersForPeople: false, // Form Two checkbox
       manualEmails: '',
       manualEmailsGroup: [], // Clear the "Assign to" dropdown
       useGroupAlias: false,
@@ -856,11 +848,10 @@ export class PeopleSelectionDialogComponent
     const responses: string[] = [];
     const form = this.peopleDialogForm;
 
-    if (form.get('rsvpResponseyes')?.value) responses.push('Yes');
-    if (form.get('rsvpResponseno')?.value) responses.push('No');
-    if (form.get('rsvpResponsemaybe')?.value) responses.push('Maybe');
-    if (form.get('rsvpResponsenoresponse')?.value)
-      responses.push('No Response');
+    if (form.get('rsvpResponseyes')?.value) responses.push('yes');
+    if (form.get('rsvpResponseno')?.value) responses.push('no');
+    if (form.get('rsvpResponsemaybe')?.value) responses.push('maybe');
+    if (form.get('rsvpResponsenoresponse')?.value) responses.push('nr');
 
     return responses;
   }

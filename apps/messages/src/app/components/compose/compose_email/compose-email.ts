@@ -41,6 +41,7 @@ import {
   SendToType,
   ISelectPortalOption,
   IFileItem,
+  SignUPType,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
@@ -588,7 +589,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       }));
     }
     if (form.value.isSignUpIndexPageSelected) {
-      payload.signUpType = 'acctindex';
+      payload.signUpType = SignUPType.ACCIDEX;
       // const signupsFromOptions = (this.stateService.signUpOptions || [])
       //   .flatMap((g) => g.items ?? [])
       //   .map((item) => {
@@ -689,8 +690,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     const payload: ICreateMessageRequest = {
       subject: form.subject,
       body: form.message,
-      sentto: SentTo.SIGNED_UP,
-      sendtotype: SendToType.SIGNED_UP,
+      signuptype: SignUPType.SIGNUP,
       status: status,
       messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
       sendasemail: true,
@@ -712,11 +712,25 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         (file) => file.id
       ),
     };
+
     if (date) {
       payload.senddate = date;
     }
     if (form.isSignUpIndexPageSelected) {
-      payload.signUpType = 'acctindex';
+      payload.signuptype = SignUPType.ACCIDEX;
+      payload.sentto = SentTo.MANUAL;
+      payload.sendtotype = SendToType.CUSTOM;
+    }
+
+    if (form.selectedPortalPages.length > 0) {
+      payload.signuptype = SignUPType.PORTALS;
+    }
+
+    if (form.selectedTabGroups.length > 0) {
+      payload.signuptype = SignUPType.TABGROUP;
+      payload.tabgroupids = form.selectedTabGroups.map(
+        (pp: ISelectPortalOption) => pp.id
+      );
     }
 
     // Handle radio selection logic
@@ -730,6 +744,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       case 'ManuallyEnterEmail': {
         const emailsString = this.selectedRadioOption.recipients[0] || '';
         const aliasString = this.selectedRadioOption.recipients[1] || '';
+        const aliasGroup = this.selectedRadioOption.recipients[2] || '';
 
         // Convert comma-separated string to array of email objects
         payload.to = emailsString
@@ -741,7 +756,6 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                 email: email,
               }))
           : [];
-
         // Convert comma-separated alias string to array
         payload.alias = aliasString
           ? aliasString
@@ -749,9 +763,25 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               .map((email: string) => email.trim())
               .filter((email: string) => email)
           : [];
-
+        // Handle aliasGroup - can be array or comma-separated string
+        payload.groupids = aliasGroup
+          ? Array.isArray(aliasGroup)
+            ? aliasGroup
+                .map((id: string) => Number(id))
+                .filter((id: number) => !isNaN(id))
+            : aliasGroup
+                .split(',')
+                .map((id: string) => Number(id.trim()))
+                .filter((id: number) => !isNaN(id))
+          : [];
         payload.sendtotype = SendToType.CUSTOM;
         payload.sentto = SentTo.MANUAL;
+        break;
+      }
+
+      case 'ImportEmailFromProvider': {
+        payload.sentto = SentTo.IMPORT;
+        payload.sendtotype = SendToType.CUSTOM;
         break;
       }
 
@@ -815,7 +845,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     }
     // Apply non-group members rule after switch (can override sentto)
     if (this.selectedRadioOption.includeNonGroupMembers) {
-      payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+      payload.sentto = SentTo.PEOPLE_IN_GROUPS;
+      payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
     }
 
     this.composeService.createMessage(payload).subscribe({
@@ -829,7 +860,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading = false;
         this.toastr.error(err.error.message[0]?.details, 'Error');
-        this.openPreviewDialog(this.currentForm);
+        if (status !== MessageStatus.DRAFT) {
+          this.openPreviewDialog(this.currentForm);
+        }
       },
     });
   }

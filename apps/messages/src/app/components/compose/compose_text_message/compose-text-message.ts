@@ -7,6 +7,8 @@ import {
   SendToType,
   ICreateMessageRequest,
   IMessagePreviewRequest,
+  IGroupMember,
+  IRecipient,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { CommonModule } from '@angular/common';
 import {
@@ -89,6 +91,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   sendTextEmailForm!: FormGroup;
   isDateSlotsDialogVisible = false;
   isRecipientDialogVisible = false;
+  showTextRecipients = true;
   isLoading = false;
   showProfile = false;
   showEmail = false;
@@ -142,6 +145,8 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     recipients: [],
   };
   isMyGroupsDialogVisible = false;
+  textRecipientsCount = 0;
+  emailRecipientsCount = 0;
   ngOnInit() {
     this.initializeForms();
     // Listen for changes on selectedSignups
@@ -286,9 +291,22 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     return selectedSignup;
   }
 
-  showRecipientDetails(): void {
-    // Reset dialog state to ensure clean reopening
-    this.isRecipientDialogVisible = true;
+  showRecipientsCount(recipients: (IGroupMember | IRecipient)[]): void {
+    this.stateService.setRecipients(recipients);
+    this.textRecipientsCount = this.stateService.recipients.filter(
+      (r) => 'smsoptin' in r && r.smsoptin === true
+    ).length;
+    this.emailRecipientsCount = this.stateService.recipients.filter(
+      (r) => 'smsoptin' in r && r.smsoptin === false
+    ).length;
+  }
+
+  showRecipientDetails(showTextRecipients: boolean): void {
+    this.showTextRecipients = showTextRecipients;
+    this.isRecipientDialogVisible = false;
+    setTimeout(() => {
+      this.isRecipientDialogVisible = true;
+    });
   }
 
   // Get current form based on selected template type
@@ -386,6 +404,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       case 'ManuallyEnterEmail': {
         const emailsString = this.selectedRadioOption.recipients[0] || '';
         const aliasString = this.selectedRadioOption.recipients[1] || '';
+        const aliasGroup = this.selectedRadioOption.recipients[2] || '';
 
         // Convert comma-separated string to array of email objects
         payload.to = emailsString
@@ -397,7 +416,6 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
                 email: email,
               }))
           : [];
-
         // Convert comma-separated alias string to array
         payload.alias = aliasString
           ? aliasString
@@ -405,9 +423,25 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               .map((email: string) => email.trim())
               .filter((email: string) => email)
           : [];
-
+        // Handle aliasGroup - can be array or comma-separated string
+        payload.groupids = aliasGroup
+          ? Array.isArray(aliasGroup)
+            ? aliasGroup
+                .map((id: string) => Number(id))
+                .filter((id: number) => !isNaN(id))
+            : aliasGroup
+                .split(',')
+                .map((id: string) => Number(id.trim()))
+                .filter((id: number) => !isNaN(id))
+          : [];
         payload.sendtotype = SendToType.CUSTOM;
         payload.sentto = SentTo.MANUAL;
+        break;
+      }
+
+      case 'ImportEmailFromProvider': {
+        payload.sentto = SentTo.IMPORT;
+        payload.sendtotype = SendToType.CUSTOM;
         break;
       }
 
@@ -481,10 +515,10 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         }
         break;
     }
-
     // Apply non-group members rule after switch (can override sentto)
     if (this.selectedRadioOption.includeNonGroupMembers) {
-      payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+      payload.sentto = SentTo.PEOPLE_IN_GROUPS;
+      payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
     }
 
     this.composeService.createMessage(payload).subscribe({
@@ -498,7 +532,10 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading = false;
         this.toastr.error(err.error.message[0]?.details, 'Error');
-        if (this.sendTextEmailForm.get('includefallback')?.value === true) {
+        if (
+          this.sendTextEmailForm.get('includefallback')?.value === true &&
+          status !== MessageStatus.DRAFT
+        ) {
           this.onPreviewAndSend(this.currentEmailForm);
         }
       },

@@ -651,6 +651,7 @@ export enum SentTo {
   CUSTOM = 'custom',
   ALL = 'all',
   MEMBERS = 'members',
+  IMPORT = 'import',
   ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
   MANUAL = 'manual',
   SPECIFIC_DATE_SLOT = 'specificdateslot',
@@ -671,6 +672,7 @@ export enum SendToType {
   WAITLIST = 'waitlist',
   ALL = 'all',
   SIGNUP_WAITLIST = 'signedupandwaitlist',
+  ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
 }
 
 /**
@@ -680,6 +682,16 @@ export enum MessageStatus {
   DRAFT = 'draft',
   SCHEDULED = 'scheduled',
   SEND = 'send',
+}
+
+/**
+ * Enum for message status values
+ */
+export enum SignUPType {
+  ACCIDEX = 'acctindex',
+  PORTALS = 'portals',
+  TABGROUP = 'tabgroups',
+  SIGNUP = 'signup',
 }
 
 /**
@@ -697,7 +709,7 @@ export interface ICreateMessageRequest {
   sendastext: boolean;
   contactname?: string;
   replytoids?: number[];
-  signUpType?: string;
+  signuptype?: string;
   themeid?: number;
   attachmentids?: number[];
   senddate?: string;

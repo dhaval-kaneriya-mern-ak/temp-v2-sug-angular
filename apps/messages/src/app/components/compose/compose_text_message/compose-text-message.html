@@ -172,9 +172,16 @@
             <button
               type="button"
               class="recipient-details-btn"
-              (click)="showRecipientDetails()"
+              (click)="showRecipientDetails(true)"
             >
-              {{ stateService.recipientCount }} Recipient Details
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
             </button>
           </div>
           } @if (stateService.selectedDateSlots.length > 0) {
@@ -195,9 +202,16 @@
             <button
               type="button"
               class="recipient-details-btn"
-              (click)="showRecipientDetails()"
+              (click)="showRecipientDetails(true)"
             >
-              {{ stateService.recipientCount }} Recipient Details
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
             </button>
           </div>
           } @if (stateService.selectedMemberGroups.length > 0) {
@@ -218,9 +232,16 @@
             <button
               type="button"
               class="recipient-details-btn"
-              (click)="showRecipientDetails()"
+              (click)="showRecipientDetails(true)"
             >
-              {{ stateService.recipientCount }} Recipient Details
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
             </button>
           </div>
           }
@@ -408,7 +429,7 @@
   [recipientCount]="stateService.recipientCount"
   [peopleSelectionData]="stateService.peopleSelectionData"
   (selectedGroupsChange)="stateService.setSelectedGroups($event)"
-  (recipientsChange)="stateService.setRecipients($event)"
+  (recipientsChange)="showRecipientsCount($event)"
   (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
   (recipientCountChange)="stateService.setRecipientCount($event)"
   (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
@@ -429,7 +450,7 @@
   [selectedDateSlots]="stateService.selectedDateSlots"
   (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
   (recipientCountChange)="stateService.setRecipientCount($event)"
-  (recipientsChange)="stateService.setRecipients($event)"
+  (recipientsChange)="showRecipientsCount($event)"
   (slotsSelected)="onDateSlotsSelected()"
 >
 </sug-date-slots-selection>
@@ -440,12 +461,13 @@
   [selectedMemberGroups]="stateService.selectedMemberGroups"
   (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
   (recipientCountChange)="stateService.setRecipientCount($event)"
-  (recipientsChange)="stateService.setRecipients($event)"
+  (recipientsChange)="showRecipientsCount($event)"
   (groupMemberSelected)="onMyGroupsSelected()"
 ></sug-my-group-selection>
 
 <!-- Recipient Details Dialog -->
 <sug-recipient-details-dialog
+  [textOption]="showTextRecipients"
   [(visible)]="isRecipientDialogVisible"
   [recipients]="stateService.recipients"
 >

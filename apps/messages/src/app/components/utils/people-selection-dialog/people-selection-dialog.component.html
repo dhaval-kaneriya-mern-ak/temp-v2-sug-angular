@@ -232,15 +232,16 @@
             <!-- Only show "include non-group members" checkbox when specific signups are selected AND they are standard (not RSVP) -->
             @if (selectedSignups.length > 0 && !isSignUpIndexPageSelected &&
             selectedTabGroups.length === 0 && isStandardSignup) { @for (item of
-            nonGroupMemberOption; track item) {
-            <div class="d-flex gap-2 mt-3">
+            nonGroupMemberOption; track item.value) {
+            <div class="d-flex gap-2">
               <sug-ui-radio-checkbox-button
+                type="checkbox"
                 formControlName="includeNonGroupMembers"
                 [binary]="true"
-                type="checkbox"
-                [options]="[item]"
+                [inputId]="item.value"
               >
               </sug-ui-radio-checkbox-button>
+              <label [for]="item.value"> {{ item.label }} </label>
             </div>
             } }
           </div>
