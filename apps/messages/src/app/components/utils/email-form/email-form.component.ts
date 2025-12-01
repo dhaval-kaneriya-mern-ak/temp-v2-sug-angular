@@ -27,6 +27,7 @@ import {
 } from '@services/interfaces/messages-interface/compose.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
+import { ComposeEmailStateService } from '../services/compose-email-state.service';
 
 @Component({
   selector: 'sug-email-form',
@@ -85,6 +86,9 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Output() removeTabGroupItem = new EventEmitter<number>();
   @Output() removePortalPageItem = new EventEmitter<number>();
   @Output() removeSignUpIndexPageItem = new EventEmitter<void>();
+  @Output() attachmentValidationError = new EventEmitter<string>();
+
+  private stateService = inject(ComposeEmailStateService);
 
   // Attachment properties
   private readonly MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
@@ -101,8 +105,6 @@ export class EmailFormComponent implements OnInit, OnChanges {
     'text/csv',
   ];
 
-  attachmentUploadProgress: Map<string | number, number> = new Map();
-  attachmentUploadError: Map<string | number, string> = new Map();
   totalAttachmentSize = 0;
 
   get hasSignupSelection(): boolean {
@@ -171,101 +173,26 @@ export class EmailFormComponent implements OnInit, OnChanges {
       });
     }
 
-    // Handle attachment changes - simulate upload progress
-    if (changes['selectedAttachments']) {
+    // Handle attachment changes
+    if (
+      changes['selectedAttachments'] &&
+      !changes['selectedAttachments'].firstChange
+    ) {
       const currentAttachments =
         changes['selectedAttachments'].currentValue || [];
       const previousAttachments =
         changes['selectedAttachments'].previousValue || [];
 
-      // Check if new files were added
-      if (currentAttachments.length > previousAttachments.length) {
-        const newAttachments = currentAttachments.slice(
-          previousAttachments.length
-        );
-
-        newAttachments.forEach((file: IFileItem) => {
-          const fileId = file.id || file.filename || '';
-          const fileSizeBytes = (file.filesizekb || 0) * 1024;
-
-          // Check if file is already in attachments (duplicate)
-          const isDuplicate = previousAttachments.some(
-            (prev: IFileItem) =>
-              prev.id === file.id && prev.filename === file.filename
-          );
-
-          if (isDuplicate) {
-            // Remove the duplicate file from attachments
-            const fileIndex = this.selectedAttachments.findIndex(
-              (f: IFileItem) => f.id === file.id && f.filename === file.filename
-            );
-            if (fileIndex > -1) {
-              this.selectedAttachments.splice(fileIndex, 1);
-              this.selectedAttachments = [...this.selectedAttachments];
-            }
-            return;
-          }
-
-          // Check if adding this file would exceed 7MB limit
-          if (this.totalAttachmentSize + fileSizeBytes > this.MAX_FILE_SIZE) {
-            // Remove the file from attachments
-            const fileIndex = this.selectedAttachments.findIndex(
-              (f: IFileItem) => f.id === file.id
-            );
-            if (fileIndex > -1) {
-              this.selectedAttachments.splice(fileIndex, 1);
-              this.selectedAttachments = [...this.selectedAttachments];
-            }
-            return;
-          }
-
-          if (fileId) {
-            // Start upload progress simulation
-            this.simulateFileUpload(fileId);
-            // Add to total size
-            this.totalAttachmentSize += fileSizeBytes;
-          }
-        });
+      // If attachments were completely cleared
+      if (currentAttachments.length === 0 && previousAttachments.length > 0) {
+        this.totalAttachmentSize = 0;
+        return;
       }
-      // Check if files were removed
-      else if (currentAttachments.length < previousAttachments.length) {
-        const removedFile = previousAttachments.find(
-          (prev: IFileItem) =>
-            !currentAttachments.find((curr: IFileItem) => curr.id === prev.id)
-        );
-        if (removedFile) {
-          this.totalAttachmentSize -= (removedFile.filesizekb || 0) * 1024;
-          this.attachmentUploadProgress.delete(
-            removedFile.id || removedFile.filename || 0
-          );
-          this.attachmentUploadError.delete(
-            removedFile.id || removedFile.filename || 0
-          );
-        }
-      }
+
+      // Update total size based on current attachments
+      this.totalAttachmentSize =
+        this.stateService.calculateTotalSize(currentAttachments);
     }
-  }
-
-  /**
-   * Simulate file upload progress
-   */
-  private simulateFileUpload(fileId: string | number): void {
-    const progressIntervals: number[] = [10, 25, 40, 60, 75, 85, 95];
-    let progressIndex = 0;
-
-    const uploadInterval = setInterval(() => {
-      if (progressIndex < progressIntervals.length) {
-        this.attachmentUploadProgress.set(
-          fileId,
-          progressIntervals[progressIndex]
-        );
-        progressIndex++;
-      } else {
-        // Complete the upload
-        this.attachmentUploadProgress.set(fileId, 100);
-        clearInterval(uploadInterval);
-      }
-    }, 200); // Progress update every 200ms
   }
 
   private syncFormWithInputs(): void {
@@ -407,29 +334,11 @@ export class EmailFormComponent implements OnInit, OnChanges {
       this.totalAttachmentSize - fileSizeBytes
     );
 
-    // Clean up progress and error maps
-    const fileId = attachment.id || attachment.filename || index;
-    this.attachmentUploadProgress.delete(fileId);
-    this.attachmentUploadError.delete(fileId);
-
-    // Remove from attachments array
-    this.selectedAttachments.splice(index, 1);
-    this.selectedAttachments = [...this.selectedAttachments];
-  }
-
-  clearAttachments(): void {
-    this.selectedAttachments = [];
-    this.attachmentUploadProgress.clear();
-    this.attachmentUploadError.clear();
-    this.totalAttachmentSize = 0;
-  }
-
-  getAttachmentProgress(fileId: string | number): number {
-    return this.attachmentUploadProgress.get(fileId) || 0;
-  }
-
-  getAttachmentError(fileId: string | number): string | undefined {
-    return this.attachmentUploadError.get(fileId);
+    // Notify parent component to remove attachment via state service
+    const updatedAttachments = this.selectedAttachments.filter(
+      (_, i) => i !== index
+    );
+    this.stateService.setSelectedAttachment(updatedAttachments);
   }
 
   getFormattedFileSize(bytes: number): string {
@@ -459,10 +368,6 @@ export class EmailFormComponent implements OnInit, OnChanges {
     return this.totalAttachmentSize < this.MAX_FILE_SIZE;
   }
 
-  getStoragePercentage(): number {
-    return (this.totalAttachmentSize / this.MAX_FILE_SIZE) * 100;
-  }
-
   isAllowedFileType(mimeType: string): boolean {
     return this.ALLOWED_TYPES.includes(mimeType);
   }
@@ -483,18 +388,6 @@ export class EmailFormComponent implements OnInit, OnChanges {
       gif: 'pi-image',
     };
     return iconMap[ext] || 'pi-file';
-  }
-
-  updateAttachmentProgress(fileId: string | number, progress: number): void {
-    this.attachmentUploadProgress.set(fileId, progress);
-  }
-
-  setAttachmentError(fileId: string | number, error: string): void {
-    this.attachmentUploadError.set(fileId, error);
-  }
-
-  clearAttachmentError(fileId: string | number): void {
-    this.attachmentUploadError.delete(fileId);
   }
 
   downloadFile(file: IFileItem): void {

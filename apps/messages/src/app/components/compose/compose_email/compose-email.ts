@@ -1111,11 +1111,21 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   }
 
   onFileSelected(file: IFileItem) {
-    // Handle the selected file here
-    console.log('File selected:', file);
-    this.stateService.setSelectedAttachment([
-      ...this.stateService.selectedAttachment,
+    // Use state service validation
+    const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
+    const validationResult = this.stateService.validateAndAddAttachment(
       file,
-    ]);
+      MAX_FILE_SIZE
+    );
+
+    if (validationResult.success) {
+      this.stateService.setSelectedAttachment([
+        ...this.stateService.selectedAttachment,
+        file,
+      ]);
+    } else if (validationResult.error) {
+      // Validation failed - could log or emit error
+      console.warn('Attachment validation failed:', validationResult.error);
+    }
   }
 }

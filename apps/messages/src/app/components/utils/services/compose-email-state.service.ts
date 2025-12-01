@@ -426,4 +426,59 @@ export class ComposeEmailStateService {
   reset(): void {
     this.clearAllSelections();
   }
+
+  /**
+   * Validate and add attachment with size checking
+   * Returns validation result with error message if validation fails
+   */
+  validateAndAddAttachment(
+    file: IFileItem,
+    maxFileSize: number
+  ): { success: boolean; error?: string } {
+    const currentAttachments = this.selectedAttachmentSubject.value;
+
+    // Check for duplicates
+    const isDuplicate = currentAttachments.some(
+      (attachment) => attachment.id === file.id
+    );
+    if (isDuplicate) {
+      return { success: false, error: 'File already added' };
+    }
+
+    // Check file size against total limit
+    const totalSize = this.calculateTotalSize(currentAttachments);
+    const fileSizeBytes = (file.filesizekb || 0) * 1024;
+
+    if (totalSize + fileSizeBytes > maxFileSize) {
+      return {
+        success: false,
+        error: `Adding this file would exceed the ${this.formatBytes(
+          maxFileSize
+        )} limit`,
+      };
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Calculate total size of all attachments in bytes
+   */
+  calculateTotalSize(attachments: IFileItem[]): number {
+    return attachments.reduce(
+      (total, file) => total + (file.filesizekb || 0) * 1024,
+      0
+    );
+  }
+
+  /**
+   * Format bytes to human-readable size
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
 }

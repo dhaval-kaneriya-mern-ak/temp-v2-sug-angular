@@ -3,6 +3,7 @@ import {
   Component,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
+  DestroyRef,
   EventEmitter,
   effect,
   inject,
@@ -12,6 +13,7 @@ import {
   signal,
   SimpleChanges,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   SugUiDialogComponent,
   SugUiButtonComponent,
@@ -44,6 +46,7 @@ export class FileSelectionDialogComponent implements OnChanges {
 
   protected composeService = inject(ComposeService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   parentFolderData: IParentFolder | null = null;
 
@@ -102,32 +105,42 @@ export class FileSelectionDialogComponent implements OnChanges {
 
   loadParentFolder(): void {
     this.isLoadingParentFolder = true;
-    this.composeService.getParentFolderData().subscribe({
-      next: (response) => {
-        if (response?.data && response.success) {
-          this.parentFolderData = response?.data;
-        }
-        this.isLoadingParentFolder = false;
-      },
-      error: () => {
-        this.isLoadingParentFolder = false;
-      },
-    });
+    this.composeService
+      .getParentFolderData()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (response?.data && response.success) {
+            this.parentFolderData = response?.data;
+          }
+          this.isLoadingParentFolder = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.isLoadingParentFolder = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   loadSubFolderData(id: number): void {
     this.loadingFolders.add(id);
-    this.composeService.getFolderContents(id).subscribe({
-      next: (response) => {
-        if (response?.data && response.success) {
-          this.expandedFolders.set(id, response.data);
-        }
-        this.loadingFolders.delete(id);
-      },
-      error: () => {
-        this.loadingFolders.delete(id);
-      },
-    });
+    this.composeService
+      .getFolderContents(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (response?.data && response.success) {
+            this.expandedFolders.set(id, response.data);
+          }
+          this.loadingFolders.delete(id);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.loadingFolders.delete(id);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   get folders(): IFileItem[] {
@@ -182,10 +195,6 @@ export class FileSelectionDialogComponent implements OnChanges {
     this.selectedFile = file;
     this.selectedFileVersion++;
     this.cdr.markForCheck();
-    // Force detectChanges to ensure radio buttons sync properly
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 0);
   }
 
   onFileSelectionChange(event: RadioCheckboxChangeEvent): void {
@@ -213,17 +222,7 @@ export class FileSelectionDialogComponent implements OnChanges {
     }
 
     if (selectedFile) {
-      // Temporarily set to null to force all radio buttons to reset and re-render
-      this.selectedFile = null;
-      this.selectedFileVersion++;
-      this.cdr.detectChanges();
-
-      // Then set the new file after a delay
-      if (selectedFile) {
-        setTimeout(() => {
-          this.onFileSelection(selectedFile);
-        }, 10);
-      }
+      this.onFileSelection(selectedFile);
     }
   }
 
@@ -305,17 +304,22 @@ export class FileSelectionDialogComponent implements OnChanges {
 
   loadNestedSubFolderData(id: number, key: string): void {
     this.loadingNestedFolders.add(key);
-    this.composeService.getFolderContents(id).subscribe({
-      next: (response) => {
-        if (response?.data && response.success) {
-          this.expandedSubfolders.set(key, response.data);
-        }
-        this.loadingNestedFolders.delete(key);
-      },
-      error: () => {
-        this.loadingNestedFolders.delete(key);
-      },
-    });
+    this.composeService
+      .getFolderContents(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (response?.data && response.success) {
+            this.expandedSubfolders.set(key, response.data);
+          }
+          this.loadingNestedFolders.delete(key);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.loadingNestedFolders.delete(key);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   getNestedSubFolders(parentFolderId: number, key: string): IFileItem[] {

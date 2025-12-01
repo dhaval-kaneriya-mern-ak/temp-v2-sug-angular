@@ -247,25 +247,8 @@
       <!-- Storage Progress Bar -->
       @if (selectedAttachments.length > 0) {
       <div class="attachments-container">
-        <!-- Storage Usage Section -->
-        <div class="storage-info">
-          <div class="storage-header">
-            <span class="storage-label">Storage Used</span>
-            <span class="storage-size"
-              >{{ getTotalAttachmentSizeFormatted() }} /
-              {{ getMaxAttachmentSizeFormatted() }}</span
-            >
-          </div>
-          <p-progressBar
-            [value]="getStoragePercentage()"
-            [showValue]="false"
-            class="storage-bar"
-            [ngClass]="{
-              'storage-warning': getStoragePercentage() > 70,
-              'storage-critical': getStoragePercentage() >= 95
-            }"
-          >
-          </p-progressBar>
+        <div class="storage-header">
+          <h3>Attachments</h3>
         </div>
 
         <!-- Attachments List -->
@@ -293,14 +276,6 @@
                     getFormattedFileSize((file.filesizekb || 0) * 1024)
                   }}</span>
                 </div>
-
-                <!-- Error Message -->
-                @if (getAttachmentError(file.id || i)) {
-                <div class="error-message-attachment">
-                  <i class="pi pi-exclamation-triangle"></i>
-                  {{ getAttachmentError(file.id || i) }}
-                </div>
-                }
               </div>
             </div>
 
@@ -327,6 +302,15 @@
             </button>
           </div>
           }
+        </div>
+
+        <div class="storage-info">
+          <div class="storage-header">
+            <span class="storage-size"
+              >{{ getTotalAttachmentSizeFormatted() }} /
+              {{ getMaxAttachmentSizeFormatted() }}</span
+            >
+          </div>
         </div>
       </div>
       }
