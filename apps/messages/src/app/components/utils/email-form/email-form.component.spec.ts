@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailFormComponent } from './email-form.component';
+import { ComposeEmailStateService } from '../services/compose-email-state.service';
 
 describe('EmailFormComponent - Business Rules', () => {
   let component: EmailFormComponent;
@@ -19,7 +20,7 @@ describe('EmailFormComponent - Business Rules', () => {
 
     await TestBed.configureTestingModule({
       imports: [EmailFormComponent],
-      providers: [provideHttpClient(), FormBuilder],
+      providers: [provideHttpClient(), FormBuilder, ComposeEmailStateService],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EmailFormComponent);

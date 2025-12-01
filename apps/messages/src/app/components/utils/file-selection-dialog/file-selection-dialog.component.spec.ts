@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FileSelectionDialogComponent } from './file-selection-dialog.component';
-import { RadioCheckboxChangeEvent } from '@lumaverse/sug-ui';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('FileSelectionDialogComponent - Business Rules', () => {
   let component: FileSelectionDialogComponent;
@@ -9,6 +10,7 @@ describe('FileSelectionDialogComponent - Business Rules', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FileSelectionDialogComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FileSelectionDialogComponent);
@@ -25,17 +27,16 @@ describe('FileSelectionDialogComponent - Business Rules', () => {
       expect(component.visible).toBe(false);
     });
 
-    it('should initialize with null selected value', () => {
-      expect(component.selectedValue).toBeNull();
+    it('should initialize with null selected file', () => {
+      expect(component.selectedFile).toBeNull();
     });
 
     it('should have dialog configuration defined', () => {
       expect(component.dialogConfig).toBeDefined();
     });
 
-    it('should have predefined file selection options', () => {
-      expect(component.selectFileRadioOptions).toBeDefined();
-      expect(component.selectFileRadioOptions.length).toBeGreaterThan(0);
+    it('should have parent folder data as null initially', () => {
+      expect(component.parentFolderData).toBeNull();
     });
   });
 
@@ -60,239 +61,146 @@ describe('FileSelectionDialogComponent - Business Rules', () => {
       expect(component.dialogConfig.position).toBe('center');
     });
 
-    it('should set dialog width to 500px', () => {
-      expect(component.dialogConfig.width).toBe('500px');
+    it('should set dialog width to 600px', () => {
+      expect(component.dialogConfig.width).toBe('600px');
     });
   });
 
-  describe('Business Rule: File Selection Options', () => {
-    it('should have uploadcomputer option', () => {
-      const option = component.selectFileRadioOptions.find(
-        (opt) => opt.value === 'uploadcomputer'
-      );
-      expect(option).toBeDefined();
+  describe('Business Rule: File Selection', () => {
+    it('should update selected file when onFileSelection is called', () => {
+      const mockFile = { id: 1, filename: 'test.pdf', isfolder: false };
+      component.onFileSelection(mockFile);
+      expect(component.selectedFile).toBe(mockFile);
     });
 
-    it('should have geniusdrive option', () => {
-      const option = component.selectFileRadioOptions.find(
-        (opt) => opt.value === 'geniusdrive'
-      );
-      expect(option).toBeDefined();
-    });
-
-    it('should have cloudstorage option', () => {
-      const option = component.selectFileRadioOptions.find(
-        (opt) => opt.value === 'cloudstorage'
-      );
-      expect(option).toBeDefined();
-    });
-
-    it('should have three selection options', () => {
-      expect(component.selectFileRadioOptions.length).toBe(3);
-    });
-  });
-
-  describe('Business Rule: Handle File Selection', () => {
-    it('should update selected value when handleSelection is called', () => {
-      // When: Handling selection
-      component.handleSelection({
-        value: 'uploadcomputer',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Selected value should be updated
-      expect(component.selectedValue).toBe('uploadcomputer');
-    });
-
-    it('should handle geniusdrive selection', () => {
-      // When: Selecting geniusdrive
-      component.handleSelection({
-        value: 'geniusdrive',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Selected value should be geniusdrive
-      expect(component.selectedValue).toBe('geniusdrive');
-    });
-
-    it('should handle cloudstorage selection', () => {
-      // When: Selecting cloudstorage
-      component.handleSelection({
-        value: 'cloudstorage',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Selected value should be cloudstorage
-      expect(component.selectedValue).toBe('cloudstorage');
-    });
-
-    it('should change selection when different option is selected', () => {
-      // Given: Initial selection
-      component.handleSelection({
-        value: 'uploadcomputer',
-      } as RadioCheckboxChangeEvent);
-
-      // When: Changing selection
-      component.handleSelection({
-        value: 'geniusdrive',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Should update to new selection
-      expect(component.selectedValue).toBe('geniusdrive');
+    it('should increment selectedFileVersion when file is selected', () => {
+      const initialVersion = component.selectedFileVersion;
+      const mockFile = { id: 1, filename: 'test.pdf', isfolder: false };
+      component.onFileSelection(mockFile);
+      expect(component.selectedFileVersion).toBe(initialVersion + 1);
     });
   });
 
   describe('Business Rule: Select File Action', () => {
-    it('should emit fileSelected event with selected value', () => {
-      // Given: File is selected
-      component.selectedValue = 'uploadcomputer';
-      let emittedValue: string | undefined;
+    it('should emit fileSelected event with selected file', () => {
+      const mockFile = { id: 1, filename: 'test.pdf', isfolder: false };
+      component.selectedFile = mockFile;
+      let emittedValue;
       component.fileSelected.subscribe((value) => {
         emittedValue = value;
       });
 
-      // When: Confirming selection
       component.selectFile();
 
-      // Then: Event should be emitted with value
-      expect(emittedValue).toBe('uploadcomputer');
-    });
-
-    it('should not emit event if no selection made', () => {
-      // Given: No selection
-      component.selectedValue = null;
-      let eventEmitted = false;
-      component.fileSelected.subscribe(() => {
-        eventEmitted = true;
-      });
-
-      // When: Attempting to select file
-      component.selectFile();
-
-      // Then: Event should not be emitted
-      expect(eventEmitted).toBe(false);
+      expect(emittedValue).toBe(mockFile);
     });
 
     it('should close dialog after selecting file', () => {
-      // Given: File is selected and dialog is visible
-      component.selectedValue = 'geniusdrive';
+      const mockFile = { id: 1, filename: 'test.pdf', isfolder: false };
+      component.selectedFile = mockFile;
       component.visible = true;
 
-      // When: Confirming selection
       component.selectFile();
 
-      // Then: Dialog should be closed
       expect(component.visible).toBe(false);
     });
 
     it('should close dialog even without selection', () => {
-      // Given: No selection but dialog is visible
-      component.selectedValue = null;
+      component.selectedFile = null;
       component.visible = true;
 
-      // When: Confirming selection
       component.selectFile();
 
-      // Then: Dialog should be closed
       expect(component.visible).toBe(false);
     });
   });
 
-  describe('Business Rule: Close Dialog Functionality', () => {
-    it('should set visible to false when closeDialog is called', () => {
-      // Given: Dialog is visible
+  describe('Business Rule: Hide Dialog Functionality', () => {
+    it('should set visible to false when hideDialog is called', () => {
       component.visible = true;
-
-      // When: Closing dialog
-      component.closeDialog();
-
-      // Then: Dialog should be hidden
+      component.hideDialog();
       expect(component.visible).toBe(false);
     });
 
-    it('should emit visibleChange event when closing', () => {
-      // Given: Dialog is visible
+    it('should emit visibleChange event when hiding', () => {
       component.visible = true;
       let emittedValue: boolean | undefined;
       component.visibleChange.subscribe((value) => {
         emittedValue = value;
       });
 
-      // When: Closing dialog
-      component.closeDialog();
+      component.hideDialog();
 
-      // Then: Event should emit false
       expect(emittedValue).toBe(false);
     });
 
-    it('should reset selected value when closing', () => {
-      // Given: File is selected
-      component.selectedValue = 'uploadcomputer';
+    it('should reset selected file when hiding', () => {
+      const mockFile = { id: 1, filename: 'test.pdf', isfolder: false };
+      component.selectedFile = mockFile;
 
-      // When: Closing dialog
-      component.closeDialog();
+      component.hideDialog();
 
-      // Then: Selected value should be reset
-      expect(component.selectedValue).toBeNull();
+      expect(component.selectedFile).toBeNull();
     });
 
-    it('should reset selection when dialog is cancelled', () => {
-      // Given: Dialog with selection
-      component.selectedValue = 'geniusdrive';
-      component.visible = true;
+    it('should reset parent folder data when hiding', () => {
+      component.parentFolderData = {
+        id: 1,
+        title: 'Test',
+        isfolder: true,
+        subfolder: [],
+      };
 
-      // When: Closing without confirming
-      component.closeDialog();
+      component.hideDialog();
 
-      // Then: Selection should be cleared
-      expect(component.selectedValue).toBeNull();
+      expect(component.parentFolderData).toBeNull();
     });
   });
 
-  describe('Business Rule: Dialog State Management', () => {
-    it('should maintain selection until confirmed or cancelled', () => {
-      // When: Making selection
-      component.handleSelection({
-        value: 'uploadcomputer',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Selection should persist
-      expect(component.selectedValue).toBe('uploadcomputer');
-
-      // When: Changing mind
-      component.handleSelection({
-        value: 'cloudstorage',
-      } as RadioCheckboxChangeEvent);
-
-      // Then: Selection should update
-      expect(component.selectedValue).toBe('cloudstorage');
+  describe('Business Rule: Folder Management', () => {
+    it('should track expanded folders', () => {
+      expect(component.expandedFolders).toBeDefined();
+      expect(component.expandedFolders.size).toBe(0);
     });
 
-    it('should clear state on close', () => {
-      // Given: Dialog with state
-      component.selectedValue = 'uploadcomputer';
-      component.visible = true;
+    it('should track loading folders', () => {
+      expect(component.loadingFolders).toBeDefined();
+      expect(component.loadingFolders.size).toBe(0);
+    });
 
-      // When: Closing
-      component.closeDialog();
+    it('should check if folder is expanded', () => {
+      const folderId = 123;
+      expect(component.isFolderExpanded(folderId)).toBe(false);
+    });
 
-      // Then: State should be cleared
-      expect(component.selectedValue).toBeNull();
-      expect(component.visible).toBe(false);
+    it('should check if folder is loading', () => {
+      const folderId = 123;
+      expect(component.isLoadingFolder(folderId)).toBe(false);
+    });
+  });
+
+  describe('Business Rule: File Size Formatting', () => {
+    it('should format KB correctly', () => {
+      expect(component.formatFileSize(500)).toBe('500 KB');
+    });
+
+    it('should format MB correctly', () => {
+      expect(component.formatFileSize(2048)).toBe('2.0 MB');
+    });
+
+    it('should handle zero size', () => {
+      expect(component.formatFileSize(0)).toBe('0 KB');
     });
   });
 
   describe('Business Rule: Visibility Management', () => {
     it('should show dialog when visible is true', () => {
-      // When: Setting visible
       component.visible = true;
-
-      // Then: Dialog should be visible
       expect(component.visible).toBe(true);
     });
 
     it('should hide dialog when visible is false', () => {
-      // When: Setting not visible
       component.visible = false;
-
-      // Then: Dialog should be hidden
       expect(component.visible).toBe(false);
     });
   });

@@ -16,6 +16,7 @@ export interface MemberProfile {
   profilepicture: ProfilePicture;
   issubadmin: boolean;
   zonename: string;
+  mobile: string;
   subscription: Subscription;
   features: Features;
   selecteddateformat: DateFormat;
@@ -123,4 +124,73 @@ export interface UserRole {
   id: string;
   name: string;
   permissions?: string[];
+}
+
+/**
+ * Phone type for user update
+ */
+export type PhoneType = 'home' | 'work' | 'mobile';
+
+/**
+ * Phone object for user update payload
+ */
+export interface IUpdateUserPhone {
+  type: PhoneType;
+  value: string;
+  preferred: boolean;
+  carrierid?: number;
+}
+
+/**
+ * Address object for user update payload
+ */
+export interface IUpdateUserAddress {
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  postalcode?: string;
+  countryid?: number;
+}
+
+/**
+ * Organization object for user update payload
+ */
+export interface IUpdateUserOrganization {
+  name?: string;
+  title?: string;
+  orgsizeid?: number;
+  orgtypeid?: number;
+  orgsubtypeid?: number;
+}
+
+/**
+ * Profile picture object for user update payload
+ */
+export interface IUpdateUserProfilePicture {
+  type?: string;
+  value?: string;
+}
+
+/**
+ * User update API payload interface
+ */
+export interface IUpdateUserPayload {
+  firstname: string;
+  lastname: string;
+  email: string;
+  address?: IUpdateUserAddress;
+  phone?: IUpdateUserPhone[];
+  organization?: IUpdateUserOrganization;
+  profilepicture?: IUpdateUserProfilePicture;
+  emaildomainid?: number;
+}
+
+/**
+ * User update API response interface
+ */
+export interface IUpdateUserApiResponse {
+  success: boolean;
+  message: string[];
+  data: boolean;
 }

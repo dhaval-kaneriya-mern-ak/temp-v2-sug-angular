@@ -18,6 +18,7 @@ import {
   IAllGroupsWithMembersResponse,
   IParentFolderResponse,
   IPortalSignupResponse,
+  IShortUrlResponse,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
@@ -137,5 +138,9 @@ export class ComposeService {
 
   getFolderContents(folderId: number): Observable<IParentFolderResponse> {
     return this.sugApiClient.get(`/geniusdrive/folder/${folderId}`);
+  }
+
+  getShortUrl(urlPath: string): Observable<IShortUrlResponse> {
+    return this.sugApiClient.get(`/signups/shorturl?urlpath=${urlPath}`);
   }
 }

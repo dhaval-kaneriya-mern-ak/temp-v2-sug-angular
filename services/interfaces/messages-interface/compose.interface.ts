@@ -800,4 +800,12 @@ export interface IParentFolder {
   filesizekb?: number;
   folderid?: number;
   subfolder?: IFileItem[];
-};
+}
+
+export interface IShortUrlResponse {
+  success: boolean;
+  message: string[];
+  data: {
+    url: string;
+  };
+}

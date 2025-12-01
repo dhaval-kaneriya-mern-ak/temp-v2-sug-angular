@@ -1,6 +1,11 @@
 import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { SugApiService } from './sug-api.service';
-import { ApiResponse, MemberProfile } from './interfaces';
+import {
+  ApiResponse,
+  IUpdateUserApiResponse,
+  IUpdateUserPayload,
+  MemberProfile,
+} from './interfaces';
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
@@ -190,13 +195,22 @@ export class UserStateService implements OnDestroy {
     return emailRegex.test(email.trim());
   }
 
-
   isBasicUser(userProfile?: MemberProfile | null): boolean {
     const profile = userProfile ?? this._userProfile();
     if (!profile) return true; // Treat null profile as basic user
 
     const isBasic = profile.istrial === false && profile.ispro === false;
     return isBasic;
+  }
+
+  /**
+   * Update user profile
+   */
+
+  updateUserProfile(
+    payload: IUpdateUserPayload
+  ): Observable<IUpdateUserApiResponse> {
+    return this.sugApiService.patch(`/member/profile`, payload);
   }
 
   /**

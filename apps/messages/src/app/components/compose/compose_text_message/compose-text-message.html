@@ -290,9 +290,14 @@
             </div>
             @if (showProfile) {
             <div class="check-option-form check-option-form-profile">
-              <input type="text" id="from-email" />
+              <input
+                type="text"
+                id="from-user-mobile"
+                formControlName="userMobile"
+              />
               <sug-ui-button
                 severity="primary"
+                (buttonClick)="updateUserMobileNumber()"
                 [outlined]="false"
                 class="send-btn"
                 icon=""

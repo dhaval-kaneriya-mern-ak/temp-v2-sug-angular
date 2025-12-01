@@ -40,7 +40,10 @@ import {
 import { ComposeService } from '../compose.service';
 import { Subject, takeUntil } from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
-import { MemberProfile } from '@services/interfaces/member-profile.interface';
+import {
+  IUpdateUserPayload,
+  MemberProfile,
+} from '@services/interfaces/member-profile.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
@@ -147,6 +150,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   isMyGroupsDialogVisible = false;
   textRecipientsCount = 0;
   emailRecipientsCount = 0;
+  shortUrl = '';
   ngOnInit() {
     this.initializeForms();
     // Listen for changes on selectedSignups
@@ -155,6 +159,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       'attachments',
       'includeOption',
       'emailSubject',
+      'userMobile',
       'emailFrom',
       'emailReplyTo',
       'includefallback',
@@ -162,14 +167,28 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     ];
     this.sendTextEmailForm
       .get('includefallback')
-      ?.valueChanges.subscribe((val) => {
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((val) => {
         if (val === false) {
           this.showEmail = false;
         }
       });
     this.sendTextEmailForm
+      .get('includereply')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((shouldInclude) => {
+        this.handleReplyTextToggle(shouldInclude);
+      });
+    this.sendTextEmailForm
+      .get('includelink')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((shouldInclude) => {
+        this.handleShortUrlToggle(shouldInclude);
+      });
+    this.sendTextEmailForm
       .get('selectedSignups')
-      ?.valueChanges.subscribe((value) => {
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
         if (!value || value.length === 0) {
           controlsToToggle.forEach(
             (ctrl) => this.sendTextEmailForm.get(ctrl)?.disable(),
@@ -521,25 +540,28 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
     }
 
-    this.composeService.createMessage(payload).subscribe({
-      next: (response) => {
-        if (response.success === true) {
-          this.toastr.success('Message saved successfully', 'Success');
-          this.showOptionsAgain();
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.toastr.error(err.error.message[0]?.details, 'Error');
-        if (
-          this.sendTextEmailForm.get('includefallback')?.value === true &&
-          status !== MessageStatus.DRAFT
-        ) {
-          this.onPreviewAndSend(this.currentEmailForm);
-        }
-      },
-    });
+    this.composeService
+      .createMessage(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success === true) {
+            this.toastr.success('Message saved successfully', 'Success');
+            this.showOptionsAgain();
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.toastr.error(err.error.message[0]?.details, 'Error');
+          if (
+            this.sendTextEmailForm.get('includefallback')?.value === true &&
+            status !== MessageStatus.DRAFT
+          ) {
+            this.onPreviewAndSend(this.currentEmailForm);
+          }
+        },
+      });
   }
 
   onThemeChange(themeId: number): void {
@@ -593,30 +615,33 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       );
     }
     // Load signups
-    this.composeService.messagePreview(payload).subscribe({
-      next: (response) => {
-        if (
-          response?.success &&
-          response.data &&
-          response.data.textpreview.length > 0
-        ) {
-          this.emailHtmlPreview = response.data.htmlpreview;
-          this.currentEmailForm
-            .get('token')
-            ?.removeValidators(Validators.required);
-          this.currentEmailForm.get('token')?.updateValueAndValidity();
-          setTimeout(() => {
-            this.isPreviewVisible = true;
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        }
-      },
-      error: () => {
-        this.isLoading = false;
-        this.isPreviewVisible = false;
-      },
-    });
+    this.composeService
+      .messagePreview(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (
+            response?.success &&
+            response.data &&
+            response.data.textpreview.length > 0
+          ) {
+            this.emailHtmlPreview = response.data.htmlpreview;
+            this.currentEmailForm
+              .get('token')
+              ?.removeValidators(Validators.required);
+            this.currentEmailForm.get('token')?.updateValueAndValidity();
+            setTimeout(() => {
+              this.isPreviewVisible = true;
+              this.isLoading = false;
+              this.cdr.detectChanges();
+            });
+          }
+        },
+        error: () => {
+          this.isLoading = false;
+          this.isPreviewVisible = false;
+        },
+      });
   }
 
   /**
@@ -671,6 +696,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       includereply: false,
       includelink: false,
       emailSubject: '',
+      userMobile: '',
       emailFrom: '',
       emailReplyTo: '',
       themeid: [1],
@@ -702,6 +728,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             this.sendTextEmailForm.patchValue({
               emailFrom: fullName,
               message: 'From ' + fullName,
+              userMobile: profile.mobile,
               emailReplyTo: profile.email,
               includefallback: true,
             });
@@ -720,45 +747,51 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
   getGroups() {
     this.isLoading = true;
-    this.composeService.getGroupforMembers().subscribe({
-      next: (response) => {
-        if (response?.data) {
-          this.grooupApiResponse = response.data;
-          const groupOptions = response.data.map((group) => ({
-            label: group.title || 'Unnamed Group',
-            value: group.id.toString(),
-          }));
-          this.stateService.setGroupOptions(groupOptions);
-          this.groupData = groupOptions;
-        }
-        this.getSignups();
-      },
-      error: () => {
-        this.isLoading = false;
-        this.groupData = [];
-      },
-    });
+    this.composeService
+      .getGroupforMembers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response?.data) {
+            this.grooupApiResponse = response.data;
+            const groupOptions = response.data.map((group) => ({
+              label: group.title || 'Unnamed Group',
+              value: group.id.toString(),
+            }));
+            this.stateService.setGroupOptions(groupOptions);
+            this.groupData = groupOptions;
+          }
+          this.getSignups();
+        },
+        error: () => {
+          this.isLoading = false;
+          this.groupData = [];
+        },
+      });
   }
 
   getSignups() {
     this.isLoading = true;
-    this.composeService.getSignUpList().subscribe({
-      next: (response) => {
-        if (response?.data) {
-          this.signupOptionsData = response.data;
-          const signupOptions = response?.data.map((signup) => ({
-            label: signup.title,
-            value: signup.signupid?.toString() || '',
-          }));
-          this.signupOptions = signupOptions;
-        }
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        this.signupOptions = [];
-      },
-    });
+    this.composeService
+      .getSignUpList()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response?.data) {
+            this.signupOptionsData = response.data;
+            const signupOptions = response?.data.map((signup) => ({
+              label: signup.title,
+              value: signup.signupid?.toString() || '',
+            }));
+            this.signupOptions = signupOptions;
+          }
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
+          this.signupOptions = [];
+        },
+      });
   }
 
   getSubAdmins() {
@@ -790,18 +823,78 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     const payload = {
       includeSignedUpMembers: true,
     };
-    this.composeService.getDateSlots(signupId, payload).subscribe({
-      next: (response) => {
-        if (response && response.success && response.data) {
-          this.isFromTextMessage =
-            response.data.filter((item) => item.waitlist === true).length > 0;
-        }
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-      },
-    });
+    this.composeService
+      .getDateSlots(signupId, payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response && response.success && response.data) {
+            this.isFromTextMessage =
+              response.data.filter((item) => item.waitlist === true).length > 0;
+          }
+          this.isLoading = false;
+          const urlPath = this.getSelectedSignup()[0]?.urlid?.split('go/')[1];
+          if (urlPath) {
+            this.getShortUrl(urlPath);
+          }
+        },
+        error: () => {
+          this.isLoading = false;
+        },
+      });
+  }
+
+  getShortUrl(urlPath: string): void {
+    this.isLoading = true;
+    this.composeService
+      .getShortUrl(urlPath)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response && response.success && response.data) {
+            this.shortUrl = response.data.url;
+          }
+          this.isLoading = false;
+        },
+        error: () => {
+          this.shortUrl = '';
+          this.isLoading = false;
+        },
+      });
+  }
+
+  updateUserMobileNumber() {
+    const mobile = this.sendTextEmailForm?.value.userMobile || '';
+    if (!mobile || mobile === '') {
+      return;
+    }
+    this.isLoading = true;
+    this.userStateService
+      .updateUserProfile({
+        phone: [
+          { type: 'mobile', value: mobile, preferred: true, carrierid: 2 },
+        ],
+        email: this.userProfile?.email || '',
+        firstname: this.userProfile?.firstname || '',
+        lastname: this.userProfile?.lastname || '',
+      } as IUpdateUserPayload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastr.success('Profile updated successfully', 'Success');
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.isLoading = false;
+          const errorMessage =
+            error.error?.message?.[0]?.details ||
+            error.message ||
+            'Failed to update profile';
+          this.toastr.error(errorMessage, 'Error');
+        },
+      });
   }
 
   /**
@@ -825,6 +918,91 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
         return su.email === replyToValue;
       })
       .map((su) => (returnType === 'id' ? su.id : su.email));
+  }
+
+  /**
+   * Handle toggling reply text in the message
+   * @param shouldInclude - Whether to include or remove reply text
+   */
+  private handleReplyTextToggle(shouldInclude: boolean): void {
+    const currentMessage = this.sendTextEmailForm.value.message;
+    if (!currentMessage) return;
+
+    const mobile = this.getMobileNumber();
+    const updatedMessage = shouldInclude
+      ? this.addReplyText(currentMessage, mobile)
+      : this.removeReplyText(currentMessage, mobile);
+
+    this.sendTextEmailForm.patchValue({ message: updatedMessage });
+  }
+
+  /**
+   * Handle toggling short URL in the message
+   * @param shouldInclude - Whether to include or remove short URL
+   */
+  private handleShortUrlToggle(shouldInclude: boolean): void {
+    const currentMessage = this.sendTextEmailForm.value.message;
+    if (!currentMessage) return;
+
+    const updatedMessage = shouldInclude
+      ? this.addShortUrl(currentMessage, this.shortUrl)
+      : this.removeShortUrl(currentMessage, this.shortUrl);
+
+    this.sendTextEmailForm.patchValue({ message: updatedMessage });
+  }
+
+  /**
+   * Get mobile number from form or user profile
+   */
+  private getMobileNumber(): string {
+    return (
+      this.sendTextEmailForm.value.userMobile ?? this.userProfile?.mobile ?? ''
+    );
+  }
+
+  /**
+   * Add reply text to message
+   * @param message - Current message
+   * @param mobile - Mobile number
+   * @returns Updated message with reply text
+   */
+  private addReplyText(message: string, mobile: string): string {
+    if (!mobile) return message;
+    const replyText = `To reply ${mobile}`;
+    if (message.includes(replyText)) return message;
+    return `${message} ${replyText}`.trim();
+  }
+
+  /**
+   * Remove reply text from message
+   * @param message - Current message
+   * @param mobile - Mobile number
+   * @returns Updated message without reply text
+   */
+  private removeReplyText(message: string, mobile: string): string {
+    const replyText = `To reply ${mobile}`;
+    return message.replace(replyText, '').trim();
+  }
+
+  /**
+   * Add short URL to message
+   * @param message - Current message
+   * @param url - Short URL to add
+   * @returns Updated message with URL
+   */
+  private addShortUrl(message: string, url: string): string {
+    if (!url || message.includes(url)) return message;
+    return `${message} ${url}`.trim();
+  }
+
+  /**
+   * Remove short URL from message
+   * @param message - Current message
+   * @param url - Short URL to remove
+   * @returns Updated message without URL
+   */
+  private removeShortUrl(message: string, url: string): string {
+    return message.replace(url, '').trim();
   }
 
   /**
