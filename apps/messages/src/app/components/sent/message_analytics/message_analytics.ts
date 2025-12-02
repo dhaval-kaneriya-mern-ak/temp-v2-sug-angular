@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ISugTableConfig,
@@ -10,7 +10,17 @@ import {
 } from '@lumaverse/sug-ui';
 import { ActivatedRoute } from '@angular/router';
 import { MessageAnalyticsService } from './message-analytics.service';
-import { MessageStatsResponse, SentDetails } from '@services/interfaces';
+import {
+  MessageStatsResponse,
+  SentDetails,
+  CHART_COLORS,
+  PERCENTAGE_THRESHOLDS,
+  LABEL_RADIUS_MULTIPLIER,
+  CHART_LABELS,
+} from '@services/interfaces';
+import { ChartModule } from 'primeng/chart';
+import { ChartConfiguration, Plugin } from 'chart.js';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'sug-message-analytics',
@@ -19,16 +29,28 @@ import { MessageStatsResponse, SentDetails } from '@services/interfaces';
     SugUiDeliveryStatsComponent,
     SugUiTableComponent,
     SugUiLoadingSpinnerComponent,
+    ChartModule,
   ],
   templateUrl: './message_analytics.html',
   styleUrl: './message_analytics.scss',
 })
-export class MessageAnalyticsComponent {
+export class MessageAnalyticsComponent implements OnInit, OnDestroy {
+  // Cleanup
+  private readonly destroy$ = new Subject<void>();
   messageAnalyticsService = inject(MessageAnalyticsService);
   activatedRoute = inject(ActivatedRoute);
   deliveryStats: DeliveryStatsItem[] = [];
   responseStats: DeliveryStatsItem[] = [];
   tableConfig: ISugTableConfig = {};
+
+  // Chart configuration
+  chartData: ChartConfiguration<'pie'>['data'] | null = null;
+  chartOptions: ChartConfiguration<'pie'>['options'] | null = null;
+  chartPlugins: Plugin<'pie'>[] = [];
+  spamPercent = 0;
+  spamPercentClass = 'green';
+  bouncePercent = 0;
+  bouncePercentClass = 'green';
   tableColumns: ISugTableColumn[] = [
     {
       field: 'email',
@@ -64,13 +86,109 @@ export class MessageAnalyticsComponent {
   sortOrder = 'desc';
   messageId = 0;
   isLoading = false;
-  constructor() {
+
+  ngOnInit(): void {
+    // Initialize chart configuration
+    this.initializeChart();
+    this.initializeChartPlugins();
+
     // Get ID from parent route params
     this.messageId = this.activatedRoute.parent?.snapshot.params['id'];
     if (this.messageId) {
-      this.getMessageAnalytics(this.messageId); // Convert string to number
+      this.getMessageAnalytics(this.messageId);
     }
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeChartPlugins(): void {
+    // Custom plugin to draw percentage labels on pie slices
+    const percentagePlugin: Plugin<'pie'> = {
+      id: 'percentageLabels',
+      afterDatasetDraw: (chart) => {
+        const ctx = chart.ctx;
+        const dataset = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        const total = dataset.data.reduce(
+          (acc: number, val: number) => acc + val,
+          0
+        );
+
+        meta.data.forEach((arc, index) => {
+          const value = dataset.data[index];
+          const percentage = ((value / total) * 100).toFixed(0);
+
+          // Only draw label if value is greater than 0
+          if (value > 0) {
+            // Type assertion for arc element properties
+            const arcElement = arc as unknown as {
+              x: number;
+              y: number;
+              startAngle: number;
+              endAngle: number;
+              outerRadius: number;
+            };
+
+            // Calculate position for label
+            const midAngle = (arcElement.startAngle + arcElement.endAngle) / 2;
+            const x =
+              arcElement.x +
+              Math.cos(midAngle) *
+                (arcElement.outerRadius * LABEL_RADIUS_MULTIPLIER);
+            const y =
+              arcElement.y +
+              Math.sin(midAngle) *
+                (arcElement.outerRadius * LABEL_RADIUS_MULTIPLIER);
+
+            // Draw percentage text
+            ctx.save();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${percentage}%`, x, y);
+            ctx.restore();
+          }
+        });
+      },
+    };
+
+    this.chartPlugins = [percentagePlugin];
+  }
+
+  private initializeChart(): void {
+    this.chartOptions = {
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce(
+                (acc: number, curr: number) => acc + curr,
+                0
+              );
+              const percentage = ((value / total) * 100).toFixed(2);
+              return `${label}: ${value} (${percentage}%)`;
+            },
+          },
+        },
+      },
+      elements: {
+        arc: {
+          borderWidth: 2,
+          borderColor: '#fff',
+        },
+      },
+    };
+  }
+
   onSort(event: { field: string; order: number }) {
     this.sortField = event.field;
     this.sortOrder = event.order === 1 ? 'asc' : 'desc';
@@ -98,6 +216,7 @@ export class MessageAnalyticsComponent {
         this.sortField,
         this.sortOrder
       )
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: MessageStatsResponse) => {
           // Map API response to stats array
@@ -105,10 +224,12 @@ export class MessageAnalyticsComponent {
             const deliveryStats = response.data.deliverystats;
             const responseStats = response.data.responsestats;
             const sentDetails = response.data.sentdetails;
+            const totalSent = deliveryStats.totalsent;
+
             this.deliveryStats = [
               {
                 label: 'Total Sent',
-                value: deliveryStats.totalsent,
+                value: totalSent,
                 badgeColor: 'black',
               },
               {
@@ -128,6 +249,13 @@ export class MessageAnalyticsComponent {
               },
               { label: 'Spam', value: deliveryStats.spam, badgeColor: 'red' },
             ];
+
+            // Calculate percentages and set warning classes
+            this.calculateSpamPercentage(deliveryStats.spam, totalSent);
+            this.calculateBouncePercentage(deliveryStats.bounced, totalSent);
+
+            // Setup chart data (excluding Total Sent from chart)
+            this.setupChartData(deliveryStats);
             this.responseStats = [
               {
                 label: 'Delivered',
@@ -178,5 +306,69 @@ export class MessageAnalyticsComponent {
           this.isLoading = false;
         },
       });
+  }
+
+  private setupChartData(deliveryStats: {
+    delivered: number;
+    bounced: number;
+    dropped: number;
+    spam: number;
+  }): void {
+    // Create pie chart data (exclude Total Sent, only show breakdown)
+    const colors = [
+      CHART_COLORS.DELIVERED,
+      CHART_COLORS.BOUNCED,
+      CHART_COLORS.DROPPED,
+      CHART_COLORS.SPAM,
+    ];
+
+    this.chartData = {
+      labels: [...CHART_LABELS],
+      datasets: [
+        {
+          data: [
+            deliveryStats.delivered,
+            deliveryStats.bounced,
+            deliveryStats.dropped,
+            deliveryStats.spam,
+          ],
+          backgroundColor: colors,
+          hoverBackgroundColor: colors,
+        },
+      ],
+    };
+  }
+
+  private calculateSpamPercentage(spam: number, totalSent: number): void {
+    const result = this.calculatePercentageValue(spam, totalSent);
+    this.spamPercent = result.percentage;
+    this.spamPercentClass = result.class;
+  }
+
+  private calculateBouncePercentage(bounced: number, totalSent: number): void {
+    const result = this.calculatePercentageValue(bounced, totalSent);
+    this.bouncePercent = result.percentage;
+    this.bouncePercentClass = result.class;
+  }
+
+  private calculatePercentageValue(
+    value: number,
+    total: number
+  ): { percentage: number; class: 'green' | 'orange' | 'red' } {
+    if (value > 0 && total > 0) {
+      const percentage = Number(((value / total) * 100).toFixed(2));
+      const colorClass = this.getPercentageClass(percentage);
+      return { percentage, class: colorClass };
+    }
+    return { percentage: 0, class: 'green' };
+  }
+
+  private getPercentageClass(percentage: number): 'green' | 'orange' | 'red' {
+    if (percentage >= PERCENTAGE_THRESHOLDS.WARNING) {
+      return 'red';
+    } else if (percentage > 0 && percentage < PERCENTAGE_THRESHOLDS.WARNING) {
+      return 'orange';
+    }
+    return 'green';
   }
 }

@@ -105,3 +105,24 @@ export interface ResponseStats {
   uniqueclicks: number;
   signedup: number;
 }
+
+// Chart configuration constants
+export const CHART_COLORS = {
+  DELIVERED: '#acc034',
+  BOUNCED: '#fff590',
+  DROPPED: '#f68b1c',
+  SPAM: '#ca3c3b',
+} as const;
+
+export const PERCENTAGE_THRESHOLDS = {
+  WARNING: 20,
+} as const;
+
+export const LABEL_RADIUS_MULTIPLIER = 0.6;
+
+export const CHART_LABELS = [
+  'Delivered',
+  'Bounced',
+  'Dropped',
+  'Spam',
+] as const;

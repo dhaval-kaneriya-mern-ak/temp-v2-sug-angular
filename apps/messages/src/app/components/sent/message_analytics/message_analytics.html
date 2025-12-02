@@ -6,11 +6,54 @@
   <div class="stats-wrapper">
     <h3>Delivery Stats</h3>
     <div class="row">
-      <sug-ui-delivery-stats
-        [deliveryStats]="deliveryStats"
-        columnClass="col-xs-12 col-sm-6 col-md-4"
-      >
-      </sug-ui-delivery-stats>
+      <div class="col-xs-12 col-sm-6 col-md-4">
+        <sug-ui-delivery-stats
+          [deliveryStats]="deliveryStats"
+          columnClass="col-xs-12"
+        >
+        </sug-ui-delivery-stats>
+      </div>
+      <div class="col-xs-12 col-sm-6 col-md-4">
+        @if (chartData) {
+        <div class="chart-container">
+          <p-chart
+            type="pie"
+            [data]="chartData"
+            [options]="chartOptions"
+            [plugins]="chartPlugins"
+          ></p-chart>
+        </div>
+        }
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <div class="percentage-warnings">
+          @if (spamPercent > 0) {
+          <div class="warning-card" [ngClass]="spamPercentClass">
+            <div class="warning-icon">⚠</div>
+            <div class="warning-content">
+              <h4>{{ spamPercent }}%</h4>
+              <p class="warning-title">Spam rate</p>
+              <p class="warning-text">
+                To improve the spam rate, please inform your members not to mark
+                the messages as spam.
+              </p>
+            </div>
+          </div>
+          } @if (bouncePercent > 0) {
+          <div class="warning-card" [ngClass]="bouncePercentClass">
+            <div class="warning-icon">⚠</div>
+            <div class="warning-content">
+              <h4>{{ bouncePercent }}%</h4>
+              <p class="warning-title">Bounce rate</p>
+              <p class="warning-text">
+                To improve the bounce rate, review the email in your group(s)
+                and remove/replace invalid and outdated emails.
+              </p>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
     </div>
   </div>
   <div class="stats-wrapper">
