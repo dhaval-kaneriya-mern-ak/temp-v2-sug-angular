@@ -28,4 +28,8 @@ export class DraftService {
     });
     return this.sugApiClient.get(`/messages/drafts?${params.toString()}`);
   }
+
+  deleteDraftMessage(messageId: number): Observable<DraftMessagesResponse> {
+    return this.sugApiClient.delete(`/messages/${messageId}`);
+  }
 }

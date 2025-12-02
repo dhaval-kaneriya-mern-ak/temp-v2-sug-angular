@@ -30,6 +30,7 @@ import {
   catchError,
   finalize,
 } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'sug-draft',
@@ -47,6 +48,7 @@ import {
   styleUrl: './draft.scss',
 })
 export class Draft implements OnDestroy, OnInit {
+  private toastr = inject(ToastrService);
   dialogConf: DialogConfig = {
     modal: true,
     draggable: true,
@@ -140,8 +142,41 @@ export class Draft implements OnDestroy, OnInit {
   }
 
   closeDeleteDialog() {
-    this.isVisible = false;
-    this.selectedItem = null;
+    const messageId = this.selectedItem?.messageid;
+    this.isLoading = true;
+
+    if (messageId) {
+      this.draftService.deleteDraftMessage(messageId).subscribe({
+        next: (response) => {
+          if (response.success === true) {
+            this.isLoading = false;
+            this.selectedItem = null;
+            this.isVisible = false;
+            this.toastr.success('Message deleted successfully');
+            this.getDraftMessages();
+          } else {
+            this.toastr.error(
+              'Failed to delete the message. Please try again.'
+            );
+            this.isLoading = false;
+            this.selectedItem = null;
+            this.isVisible = false;
+          }
+        },
+
+        error: (error) => {
+          console.error('Delete API Error:', error);
+
+          this.isLoading = false;
+          this.isVisible = false;
+          this.selectedItem = null;
+
+          this.toastr.error('Failed to delete the message. Please try again.');
+        },
+      });
+    } else {
+      this.toastr.error('Message not selected yet.');
+    }
   }
 
   getDraftMessages() {
@@ -213,8 +248,29 @@ export class Draft implements OnDestroy, OnInit {
     this.getDraftMessages();
   }
 
-  editDraft() {
-    this.router.navigate([`/messages/compose/email`]);
+  editDraft(item: DraftMessage) {
+    const messageId = item.messageid;
+
+    // 1 - bulk
+    // 2 - Custom Confirmation
+    // 8 - Custom Reminder
+    // 4 - Invite
+    // 14 - Text Opt-in
+    // 15 - Text
+
+    if (item.messagetypeid == 2 || item.messagetypeid == 8) {
+      this.router.navigate([`/messages/compose/template`], {
+        queryParams: { id: messageId },
+      });
+    } else if (item.messagetypeid == 4 || item.messagetypeid == 1) {
+      this.router.navigate([`/messages/compose/email`], {
+        queryParams: { id: messageId },
+      });
+    } else if (item.messagetypeid == 14 || item.messagetypeid == 15) {
+      this.router.navigate([`/messages/compose/text`], {
+        queryParams: { id: messageId },
+      });
+    }
   }
 
   deleteItem(item: DraftMessage) {

@@ -615,6 +615,69 @@ export interface SignupOptionGroup {
   }>;
 }
 
+/**
+ * Error message can be either a string or an object with details
+ */
+export type MessageErrorItem = string | { details: string; message?: string };
+
+export interface MessageResponse {
+  success: boolean;
+  message: MessageErrorItem[];
+  data: MessageByIdData;
+}
+
+export interface MessageByIdData {
+  messageid: number;
+  memberid: number;
+  subject: string;
+  body: string;
+  replyto: [];
+  messagetype: string;
+  messagetypeid: number;
+  contactname: string;
+  fromemail: string;
+  zonename: string;
+  status: string;
+  createdby: number;
+  themeid: number;
+  theme: string;
+  sentto: string;
+  scheduled: boolean;
+  sendastext?: boolean;
+  sendasemail?: boolean;
+
+  signups?: {
+    signupid: number;
+    signuptitle: string;
+  }[];
+
+  themes?: {
+    themeid: number;
+    themetitle: string;
+  }[];
+
+  groups?: {
+    groupid: number;
+    groupname: string;
+  }[];
+
+  portals?: {
+    portalid: number;
+    portaltitle: string;
+    portalurl: string;
+  }[];
+
+  tabgroups?: {
+    tabgroupid: number;
+    tabgroupname: string;
+  }[];
+
+  addEmails?: string;
+
+  sendtotype: string;
+  signUpType?: string;
+}
+
 export interface IMessagePreviewRequest {
   fromname: string;
   replyto?: string[];
@@ -671,7 +734,7 @@ export enum SendToType {
   MANUAL = 'manual',
   WAITLIST = 'waitlist',
   ALL = 'all',
-  SIGNUP_WAITLIST = 'signedupandwaitlist',
+  SIGNUP_WAITLIST = 'waitlistwithsignedup',
   ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
 }
 
@@ -802,6 +865,106 @@ export interface IParentFolder {
   subfolder?: IFileItem[];
 }
 
+/**
+ * Interface for Save Draft Message Payload
+ * Extends ICreateMessageRequest with additional fields for draft messages
+ */
+export interface ISaveDraftMessagePayload {
+  subject: string;
+  body: string;
+  sentto: string;
+  sendtotype: string;
+  messagetypeid: number;
+  status: string;
+  sendastext: boolean;
+  sendasemail: boolean;
+  replytoids?: number[];
+  contactname?: string;
+  themeid?: number;
+  attachmentids?: number[];
+  signupids?: number[];
+  groupids?: number[];
+  portals?: Array<{
+    id: number | undefined;
+    title: string | undefined;
+    urlkey: string | undefined;
+  }>;
+  signUpType?: string;
+  addEmails?: string;
+  to?: Array<{
+    memberid?: number;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    isgroupemail?: boolean;
+  }>;
+  slotids?: string[];
+  sendToGroups?: Array<{
+    id: string;
+    isWaitlistedRow?: boolean;
+  }>;
+  groups?: Array<{
+    groupid: number;
+    groupname: string;
+  }>;
+  senddate?: string;
+}
+
+/**
+ * Interface for Save Draft Message Response
+ */
+export interface ISaveDraftMessageResponse {
+  success: boolean;
+  message: string[];
+  data: {
+    data: number; // The message ID
+  };
+}
+
+/**
+ * Interface for Recipients Data from fetchRecipients API
+ * Properly typed version of the response data
+ */
+export interface IRecipientsResponseData {
+  recipients: Array<{
+    memberid: number;
+    email: string;
+    mobile?: string;
+    displayname: string;
+    smsoptin?: boolean;
+    firstname?: string;
+    lastname?: string;
+  }>;
+  sentto?: string;
+}
+
+/**
+ * Type alias for recipient array from API response
+ * Matches the structure of IRecipientsResponseData.recipients
+ */
+export type RecipientFromApi = {
+  memberid: number;
+  email: string;
+  mobile?: string;
+  displayname: string;
+  smsoptin?: boolean;
+  firstname?: string;
+  lastname?: string;
+};
+
+/**
+ * Interface for MessageByIdData with properly typed optional fields
+ * Extends MessageByIdData with additional typed fields
+ */
+export interface IMessageByIdDataExtended extends MessageByIdData {
+  to?: Array<{
+    memberid: number;
+    firstname: string;
+    lastname: string;
+    email: string;
+    isgroupemail?: boolean;
+  }>;
+}
 export interface IShortUrlResponse {
   success: boolean;
   message: string[];

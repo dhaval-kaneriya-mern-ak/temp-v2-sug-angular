@@ -70,6 +70,8 @@ export class PeopleSelectionDialogComponent
   @Input() messageTypeId = 4;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() peopleSelectionData: any = {};
+  @Input() sendtotype = '';
+  @Input() selectedCustomUserIds: string[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
 
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -120,23 +122,36 @@ export class PeopleSelectionDialogComponent
   };
 
   // Form One radio options
-  formOneRadioOptions = [
-    {
-      label: 'Members in the following group(s)',
-      value: 'peopleingroups',
-      hasCustomContent: true,
-    },
-    {
-      label: 'Manually enter emails',
-      value: 'ManuallyEnterEmail',
-      hasCustomContent: true,
-    },
-    {
-      label: 'Import emails from my provider',
-      value: 'ImportEmailFromProvider',
-      hasCustomContent: true,
-    },
-  ];
+  get formOneRadioOptions() {
+    const options = [
+      {
+        label: 'Members in the following group(s)',
+        value: 'peopleingroups',
+        hasCustomContent: true,
+      },
+      {
+        label: 'Manually enter emails',
+        value: 'ManuallyEnterEmail',
+        hasCustomContent: true,
+      },
+      {
+        label: 'Import emails from my provider',
+        value: 'ImportEmailFromProvider',
+        hasCustomContent: true,
+      },
+    ];
+
+    // Add "People I will select" option when sendtotype is "custom"
+    if (this.sendtotype?.toLowerCase() === 'custom') {
+      options.push({
+        label: 'People I will select',
+        value: 'sendMessagePeopleIselect',
+        hasCustomContent: true,
+      });
+    }
+
+    return options;
+  }
 
   // Form Two radio options
   get formTwoRadioOptions() {
@@ -333,10 +348,13 @@ export class PeopleSelectionDialogComponent
       setTimeout(() => {
         const savedData = this.peopleSelectionData;
 
-        // Check if we should preserve recipient count (when editing slots)
+        // Check if we should preserve recipient count (when editing slots or member groups)
         const shouldPreserveRecipientCount =
-          this.formType === 'emailParticipants' &&
-          (this.selectedDateSlots.length > 0 ||
+          (this.formType === 'emailParticipants' &&
+            (this.selectedDateSlots.length > 0 ||
+              this.selectedMemberGroups.length > 0)) ||
+          (this.formType === 'inviteToSignUp' &&
+            this.sendtotype?.toLowerCase() === 'custom' &&
             this.selectedMemberGroups.length > 0);
 
         // Set flag before reset if we're going to restore state with slots
@@ -389,7 +407,7 @@ export class PeopleSelectionDialogComponent
           }
         }
 
-        // If date slots are selected and form is formTwo, auto-select "People I will select"
+        // If date slots or member groups are selected and form is formTwo, auto-select "People I will select"
         if (shouldPreserveRecipientCount && this.peopleDialogForm) {
           // Keep flag set to skip the next radio change event too
           this.skipNextRadioChange = true;
@@ -403,8 +421,12 @@ export class PeopleSelectionDialogComponent
           // Manually trigger change detection to update the view
           this.cdr.detectChanges();
         }
-        // Only restore if there's a valid saved state
-        else if (savedData.selectedValue && this.peopleDialogForm) {
+        // Only restore if there's a valid saved state AND we're not preserving slots/members
+        else if (
+          savedData.selectedValue &&
+          this.peopleDialogForm &&
+          !shouldPreserveRecipientCount
+        ) {
           // Set flag to skip the radio change event
           this.skipNextRadioChange = true;
           // Set flag to skip alias reset if useGroupAlias is true in saved data
@@ -723,17 +745,28 @@ export class PeopleSelectionDialogComponent
         });
       } else if (selectedValue === 'sendMessagePeopleIselect') {
         // People I will select - custom selection
-        // Validate that at least one slot is selected
-        if (
-          this.selectedDateSlots.length === 0 &&
-          this.selectedMemberGroups.length === 0
-        ) {
-          this.toastr.error(
-            'Please select people from groups or sign up',
-            'Error'
-          );
-          return;
+        // For messageTypeId = 4, only validate member groups (no date slots)
+        // For other message types, validate both date slots and member groups
+        if (this.messageTypeId === 4) {
+          // For messageTypeId = 4, only check member groups
+          if (this.selectedMemberGroups.length === 0) {
+            this.toastr.error('Please select people from groups', 'Error');
+            return;
+          }
+        } else {
+          // For other message types, check both date slots and member groups
+          if (
+            this.selectedDateSlots.length === 0 &&
+            this.selectedMemberGroups.length === 0
+          ) {
+            this.toastr.error(
+              'Please select people from groups or sign up',
+              'Error'
+            );
+            return;
+          }
         }
+
         this.selectedGroupsChange.emit([
           {
             label: 'Custom Selection',
@@ -748,15 +781,24 @@ export class PeopleSelectionDialogComponent
           includeNonGroupMembers: false,
           fromCustomGroup: this.selectedMemberGroups.length > 0,
           recipients:
-            this.selectedDateSlots.length > 0
+            this.messageTypeId === 4
+              ? this.selectedMemberGroups
+              : this.selectedDateSlots.length > 0
               ? this.selectedDateSlots
               : this.selectedMemberGroups,
         });
         // Recipient count should already be set from the date slots selection
         // No need to calculate here as it's done in the date slots dialog
         if (this.selectedMemberGroups.length > 0) {
-          this.calculateRecipientCount(groupIds, false);
-        } else {
+          // For messageTypeId = 4, just count the selected members without API call
+          if (this.messageTypeId === 4) {
+            this.recipientCountChange.emit(this.selectedMemberGroups.length);
+            this.recipientsChange.emit(this.selectedMemberGroups);
+          } else {
+            this.calculateRecipientCount(groupIds, false);
+          }
+        } else if (this.messageTypeId !== 4) {
+          // Only calculate for slots if not messageTypeId = 4
           this.calculateRecipientCountForSlots();
         }
       } else if (selectedValue === 'ImportEmailFromProvider') {
@@ -874,44 +916,6 @@ export class PeopleSelectionDialogComponent
     return signupIds;
   }
 
-  /**
-   * Generic method to fetch recipients based on payload configuration
-   * Eliminates code duplication across all recipient calculation methods
-   */
-  private fetchRecipients(
-    payload: {
-      sentToType: string;
-      sentTo: string;
-      messageTypeId: number;
-      signupIds?: number[];
-      groupIds?: number[];
-      slotItemIds?: number[];
-      filters: {
-        p_page: number;
-        p_limit: number;
-        p_sortBy: string;
-      };
-    },
-    errorMessage?: string
-  ): void {
-    this.isLoading = true;
-
-    this.composeService.getGroupMembers(payload).subscribe({
-      next: (response) => {
-        this.handleRecipientCount(response);
-        this.isLoading = false;
-      },
-      error: () => {
-        if (errorMessage) {
-          this.toastr.error(errorMessage, 'Error');
-        }
-        this.recipientCountChange.emit(0);
-        this.recipientsChange.emit([]);
-        this.isLoading = false;
-      },
-    });
-  }
-
   private calculateRecipientCountForSlots(): void {
     const payload = {
       sentToType: 'specificdateslot',
@@ -926,7 +930,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCount(
@@ -964,7 +979,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCountForRsvp(): void {
@@ -1017,7 +1043,18 @@ export class PeopleSelectionDialogComponent
       payload.groupIds = groupIds;
     }
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCountForSignedUp(): void {
@@ -1036,7 +1073,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCountForNotSignedUp(): void {
@@ -1055,7 +1103,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCountForWaitlist(): void {
@@ -1074,7 +1133,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   private calculateRecipientCountForSignedUpAndWaitlist(): void {
@@ -1082,8 +1152,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'signedupandwaitlist',
-      sentTo: 'signedupandwaitlist',
+      sentToType: 'waitlistwithsignedup',
+      sentTo: 'waitlist',
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {
@@ -1093,7 +1163,18 @@ export class PeopleSelectionDialogComponent
       },
     };
 
-    this.fetchRecipients(payload);
+    this.isLoading = true;
+    this.composeService.fetchRecipients(payload).subscribe({
+      next: (response) => {
+        this.handleRecipientCount(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+        this.isLoading = false;
+      },
+    });
   }
 
   /**

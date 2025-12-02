@@ -17,7 +17,7 @@
   </div>
   } @if (!showRadioButtons) {
   <div>
-    @switch (selectedValue) { @case ('textOptionOne') {
+    @switch (selectedValue) { @case ('emailoptionone') {
     <div class="email-form-section">
       <h3>
         Invite People to Opt In to Text Messages
@@ -107,12 +107,12 @@
             class="draft-btn"
             icon=""
             label="Save Draft"
-            (buttonClick)="saveDraft(messageStatus.DRAFT)"
+            (click)="onSaveDraft(messageStatus.DRAFT,'inviteToSignUp')"
           ></sug-ui-button>
         </div>
       </form>
     </div>
-    } @case ('textOptionTwo') {
+    } @case ('emailoptiontwo') {
     <div class="email-form-section email-form-people">
       <h3>
         Send a Text Message to People Participating in a Sign Up
@@ -351,7 +351,7 @@
             severity="success"
             [disabled]="sendTextEmailForm.invalid"
             (buttonClick)="sendTextEmailForm
-      .get('includefallback')?.value === true ? onPreviewAndSend(currentEmailForm) : saveDraft(messageStatus.SEND)"
+      .get('includefallback')?.value === true ? onPreviewAndSend(currentEmailForm) : onSaveDraft(messageStatus.SEND)"
             [outlined]="false"
             class="send-btn"
             icon=""
@@ -364,7 +364,7 @@
             class="draft-btn"
             icon=""
             label="Save Draft"
-            (buttonClick)="saveDraft(messageStatus.DRAFT)"
+            (click)="onSaveDraft(messageStatus.DRAFT,'emailParticipants')"
           ></sug-ui-button>
         </div>
       </form>
@@ -378,7 +378,7 @@
 </div>
 <sug-help-dialog
   [(visible)]="isHelpDialogVisible"
-  [title]="selectedValue === 'textOptionOne' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"
+  [title]="selectedValue === 'emailoptionone' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"
 >
   <p>
     Before you can send text messages to your group members, they must first opt
@@ -425,7 +425,7 @@
 <sug-people-selection-dialog
   [(visible)]="isPeopleDialogVisible"
   [isFromTextMessage]="isFromTextMessage"
-  [messageTypeId]="selectedValue === 'textOptionOne' ? 14 : 15"
+  [messageTypeId]="selectedValue === 'emailoptionone' ? 14 : 15"
   [formType]="'emailParticipants'"
   [groupOptions]="groupData"
   [selectedSignups]="getSelectedSignup()"
@@ -433,6 +433,7 @@
   [selectedDateSlots]="stateService.selectedDateSlots"
   [recipientCount]="stateService.recipientCount"
   [peopleSelectionData]="stateService.peopleSelectionData"
+  [sendtotype]="selectedRadioOption.selectedValue"
   (selectedGroupsChange)="stateService.setSelectedGroups($event)"
   (recipientsChange)="showRecipientsCount($event)"
   (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
@@ -483,10 +484,10 @@
 <!-- Preview Email Dialog -->
 <sug-preview-email
   [(visible)]="isPreviewVisible"
-  [showTextPreview]="selectedValue === 'textOptionTwo'"
+  [showTextPreview]="selectedValue === 'emailoptiontwo'"
   [textMessage]="currentEmailForm.get('message')?.value"
   (scheduleEmail)="scheduleEmail($event)"
-  (sendNow)="saveDraft(messageStatus.SEND)"
+  (sendNow)="onSaveDraft(messageStatus.SEND)"
   (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   [emailHtmlPreview]="emailHtmlPreview"

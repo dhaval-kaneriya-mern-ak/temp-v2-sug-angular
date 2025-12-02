@@ -49,12 +49,125 @@ export class ComposeService {
     messageTypeId: number;
     groupIds?: number[];
     signupIds?: number[];
+    slotItemIds?: number[];
     filters: {
       p_page: number;
       p_limit: number;
+      p_sortBy?: string;
     };
   }): Observable<IGroupMembersResponse> {
     return this.sugApiClient.post(`/messages/recipients`, payload);
+  }
+
+  /**
+   * Generalized function to fetch recipients for any scenario
+   * Determines which parameters to send based on sentToType and sentTo
+   *
+   * @param options - Configuration object
+   * @param options.sentToType - The type of recipient selection (e.g., 'signedup', 'peopleingroups', 'manual')
+   * @param options.sentTo - The specific recipient group (e.g., 'signedup', 'notsignedup', 'all')
+   * @param options.messageTypeId - The message type ID (1, 4, 14, or 15)
+   * @param options.signupIds - Optional array of signup IDs
+   * @param options.slotItemIds - Optional array of slot item IDs (for specific date slots)
+   * @param options.groupIds - Optional array of group IDs
+   * @param options.filters - Optional pagination filters (defaults to page 1, limit 1000, sortBy displayname)
+   * @returns Observable of recipient data
+   */
+  fetchRecipients(options: {
+    sentToType: string;
+    sentTo: string;
+    messageTypeId: number;
+    signupIds?: number[];
+    slotItemIds?: number[];
+    groupIds?: number[];
+    filters?: {
+      p_page: number;
+      p_limit: number;
+      p_sortBy?: string;
+    };
+  }): Observable<IGroupMembersResponse> {
+    const sentToTypeLower = options.sentToType?.toLowerCase() || '';
+    const sentToLower = options.sentTo?.toLowerCase() || '';
+
+    const payload: {
+      sentToType: string;
+      sentTo: string;
+      messageTypeId: number;
+      groupIds?: number[];
+      signupIds?: number[];
+      slotItemIds?: number[];
+      filters: {
+        p_page: number;
+        p_limit: number;
+        p_sortBy?: string;
+      };
+    } = {
+      sentToType: options.sentToType,
+      sentTo: options.sentTo,
+      messageTypeId: options.messageTypeId,
+      slotItemIds: options.slotItemIds,
+      filters: options.filters || {
+        p_page: 1,
+        p_limit: 1000,
+        p_sortBy: 'displayname',
+      },
+    };
+
+    if (sentToTypeLower === 'signedup' && sentToLower === 'signedup') {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (
+      sentToTypeLower === 'peopleingroups' &&
+      sentToLower === 'notsignedup'
+    ) {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (sentToTypeLower === 'peopleingroups' && sentToLower === 'all') {
+      if (options.groupIds && options.groupIds.length > 0) {
+        payload.groupIds = options.groupIds;
+      }
+    } else if (
+      sentToTypeLower === 'peopleingroups' &&
+      sentToLower === 'includenongroupmembers'
+    ) {
+      if (options.groupIds && options.groupIds.length > 0) {
+        payload.groupIds = options.groupIds;
+      }
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (sentToTypeLower === 'waitlist') {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (sentToTypeLower === 'waitlistwithsignedup') {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (sentToTypeLower === 'specificrsvp') {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+      if (options.groupIds && options.groupIds.length > 0) {
+        payload.groupIds = options.groupIds;
+      }
+    } else if (sentToTypeLower === 'specificdateslot') {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+        payload.slotItemIds = options.slotItemIds;
+      }
+    } else {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+      if (options.groupIds && options.groupIds.length > 0) {
+        payload.groupIds = options.groupIds;
+      }
+    }
+
+    return this.getGroupMembers(payload);
   }
 
   getSubAdmins(): Observable<ISubAdminsResponse> {
@@ -106,6 +219,20 @@ export class ComposeService {
     return this.sugApiClient.patch(`/groups/${groupId}`, {
       title: title,
     });
+  }
+
+  getMessageById(id: number): Observable<any> {
+    return this.sugApiClient.get(`/messages/${id}`);
+  }
+
+  /**
+   * Save/Update draft message
+   * @param id - The message ID to update
+   * @param payload - The message data payload
+   * @returns Observable of the API response
+   */
+  saveDraftMessage(id: number, payload: any): Observable<any> {
+    return this.sugApiClient.patch(`/messages/${id}`, payload);
   }
 
   createMessage(

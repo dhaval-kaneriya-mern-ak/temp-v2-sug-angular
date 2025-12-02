@@ -107,6 +107,9 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   totalAttachmentSize = 0;
 
+  attachmentUploadProgress: Map<string | number, number> = new Map();
+  attachmentUploadError: Map<string | number, string> = new Map();
+
   get hasSignupSelection(): boolean {
     return (
       this.selectedSignups.length > 0 ||
@@ -126,11 +129,28 @@ export class EmailFormComponent implements OnInit, OnChanges {
       console.warn('Email form not provided to email-form component');
     }
 
+    if (this.emailForm.invalid) {
+      console.log('some fields are invalid');
+    }
+
     // Set initial disabled state based on signup selection
     this.updateFormControlsState();
 
     // Initialize form with current input values
     this.syncFormWithInputs();
+
+    this.logInvalidControls(this.emailForm);
+  }
+
+  private logInvalidControls(form: FormGroup) {
+    const invalid: any = {};
+    Object.keys(form.controls).forEach((key) => {
+      const control = form.get(key);
+      if (control && control.invalid) {
+        invalid[key] = control.errors;
+      }
+    });
+    console.log('Invalid Controls:', invalid);
   }
 
   ngOnChanges(changes: SimpleChanges): void {

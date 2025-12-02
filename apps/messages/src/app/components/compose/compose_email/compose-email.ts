@@ -29,11 +29,13 @@ import { RecipientDetailsDialogComponent } from '../../utils/recipient-details-d
 import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
 import { DateSlotsSelectionComponent } from '../../utils/date-slots-selection/date-slots-selection.component';
 import { UserStateService } from '@services/user-state.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, switchMap, of, catchError, tap } from 'rxjs';
 import {
   MemberProfile,
   ISignUpItem,
   SignupOptionGroup,
+  MessageResponse,
+  IRecipientsData,
   IMessagePreviewRequest,
   ICreateMessageRequest,
   MessageStatus,
@@ -41,9 +43,27 @@ import {
   SendToType,
   ISelectPortalOption,
   IFileItem,
+  ISaveDraftMessagePayload,
+  IRecipientsResponseData,
+  IMessageByIdDataExtended,
+  IRecipient,
   SignUPType,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  mapApiToSelectedValue,
+  extractPeopleSelectionData,
+  mapSelectedValueToApi,
+  stripHtml,
+  getLabelForSelectedValue,
+  parseManualEmails,
+  applyBackendWorkarounds,
+  buildPeopleSelectionData,
+  saveDraftMessage,
+  handleDraftLoadError,
+  initializeDraftEditMode,
+} from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
 /**
@@ -82,6 +102,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);
   protected stateService = inject(ComposeEmailStateService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   @ViewChild(SignupSelectionDialogComponent)
   signupDialog!: SignupSelectionDialogComponent;
@@ -106,6 +128,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   isLoading = false;
   userProfile: MemberProfile | null = null;
 
+  // Track if we're editing an existing draft (has messageId in URL)
+  isEditingExistingDraft = false;
+  currentDraftMessageId: number | null = null;
+  currentSendToType = '';
+  selectedCustomUserIds: string[] = [];
+  originalSendAsText: boolean | undefined;
+  originalSendAsEmail: boolean | undefined;
+
   // Dialog visibility flags
   isHelpDialogVisible = false;
   isPeopleDialogVisible = false;
@@ -126,11 +156,27 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   emailHtmlPreview = '';
   availableThemes: Array<number> = [1];
   private readonly destroy$ = new Subject<void>();
+  private isRestoringDateSlots = false;
 
   ngOnInit(): void {
     this.initializeForms();
     this.loadUserProfile();
     this.loadInitialData();
+
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        const messageId = Number(params['id']);
+
+        if (!isNaN(messageId) && messageId > 0) {
+          this.isEditingExistingDraft = true;
+          this.currentDraftMessageId = messageId;
+
+          this.ensureSubAdminsLoaded().then(() => {
+            this.getMessageById(messageId);
+          });
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -344,6 +390,35 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           this.stateService.setSubAdminsData(subAdminOptions);
         }
       },
+    });
+  }
+
+  /**
+   * Ensure sub-admins are loaded before proceeding
+   * Returns a promise that resolves when sub-admins are loaded
+   */
+  private ensureSubAdminsLoaded(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.stateService.subAdminsData.length > 0) {
+        resolve();
+        return;
+      }
+
+      this.composeService.getSubAdmins().subscribe({
+        next: (response) => {
+          if (response?.success && response.data) {
+            const subAdminOptions = response.data.map((admin) => ({
+              label: admin.email,
+              value: admin.id.toString(),
+            }));
+            this.stateService.setSubAdminsData(subAdminOptions);
+          }
+          resolve();
+        },
+        error: () => {
+          resolve();
+        },
+      });
     });
   }
 
@@ -671,6 +746,28 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.openPreviewDialog(form);
   }
 
+  /**
+   * Call the save draft API
+   */
+  private saveDraftToApi(
+    messageId: number,
+    payload: ISaveDraftMessagePayload
+  ): void {
+    saveDraftMessage({
+      messageId,
+      payload,
+      composeService: this.composeService,
+      toastr: this.toastr,
+      destroy$: this.destroy$,
+      onSuccess: (returnedMessageId) => {
+        this.currentDraftMessageId = returnedMessageId;
+      },
+      onLoadingChange: (isLoading) => {
+        this.isLoading = isLoading;
+      },
+    });
+  }
+
   scheduleEmail(event: string): void {
     this.onSaveDraft(this.messageStatus.SCHEDULED, event);
   }
@@ -683,188 +780,504 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.selectedRadioOption = event;
   }
 
-  onSaveDraft(status: MessageStatus, date?: string): void {
-    this.isLoading = true;
-    const groups = this.stateService.selectedGroups;
-    const form = this.currentForm.value;
-    const payload: ICreateMessageRequest = {
-      subject: form.subject,
-      body: form.message,
-      signuptype: SignUPType.SIGNUP,
-      status: status,
-      messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
-      sendasemail: true,
-      sendastext: false,
-      themeid: form.themeid,
-      contactname: form.fromName,
-      replytoids: form.replyTo.map((id: string) => Number(id)),
-      signupids: this.stateService.selectedSignups.map(
-        (signup) => signup.signupid
-      ),
-      groupids: groups
-        .filter(
-          (group) =>
-            group.value !== 'manual_entry' && !isNaN(Number(group.value))
-        )
-        .map((group) => Number(group.value)),
-      portals: form.selectedPortalPages.map((pp: ISelectPortalOption) => pp.id),
-      attachmentids: this.stateService.selectedAttachment.map(
-        (file) => file.id
-      ),
-    };
+  onSaveDraft(
+    status: MessageStatus,
+    date?: string,
+    formType?: 'inviteToSignUp' | 'emailParticipants'
+  ): void {
+    if (this.isEditingExistingDraft && this.currentDraftMessageId) {
+      const form =
+        formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
 
-    if (date) {
-      payload.senddate = date;
-    }
-    if (form.isSignUpIndexPageSelected) {
-      payload.signuptype = SignUPType.ACCIDEX;
-      payload.sentto = SentTo.MANUAL;
-      payload.sendtotype = SendToType.CUSTOM;
-    }
+      const formValue = form.getRawValue();
 
-    if (form.selectedPortalPages.length > 0) {
-      payload.signuptype = SignUPType.PORTALS;
-    }
+      const peopleSelectionData = this.stateService.peopleSelectionData;
 
-    if (form.selectedTabGroups.length > 0) {
-      payload.signuptype = SignUPType.TABGROUP;
-      payload.tabgroupids = form.selectedTabGroups.map(
-        (pp: ISelectPortalOption) => pp.id
-      );
-    }
-
-    // Handle radio selection logic
-    switch (this.selectedRadioOption.selectedValue) {
-      case 'peopleingroups':
-      case 'sendMessagePeopleRadio':
-        payload.sentto = SentTo.ALL;
-        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-        break;
-
-      case 'ManuallyEnterEmail': {
-        const emailsString = this.selectedRadioOption.recipients[0] || '';
-        const aliasString = this.selectedRadioOption.recipients[1] || '';
-        const aliasGroup = this.selectedRadioOption.recipients[2] || '';
-
-        // Convert comma-separated string to array of email objects
-        payload.to = emailsString
-          ? emailsString
-              .split(',')
-              .map((email: string) => email.trim())
-              .filter((email: string) => email)
-              .map((email: string) => ({
-                email: email,
-              }))
-          : [];
-        // Convert comma-separated alias string to array
-        payload.alias = aliasString
-          ? aliasString
-              .split(',')
-              .map((email: string) => email.trim())
-              .filter((email: string) => email)
-          : [];
-        // Handle aliasGroup - can be array or comma-separated string
-        payload.groupids = aliasGroup
-          ? Array.isArray(aliasGroup)
-            ? aliasGroup
-                .map((id: string) => Number(id))
-                .filter((id: number) => !isNaN(id))
-            : aliasGroup
-                .split(',')
-                .map((id: string) => Number(id.trim()))
-                .filter((id: number) => !isNaN(id))
-          : [];
-        payload.sendtotype = SendToType.CUSTOM;
-        payload.sentto = SentTo.MANUAL;
-        break;
+      if (!peopleSelectionData.selectedValue) {
+        this.toastr.error(
+          'Please select recipients in the "To" field',
+          'Validation Error'
+        );
+        return;
       }
 
-      case 'ImportEmailFromProvider': {
-        payload.sentto = SentTo.IMPORT;
-        payload.sendtotype = SendToType.CUSTOM;
-        break;
+      let sentto: string;
+      let sendtotype: string;
+
+      const hasSelectedMemberGroups =
+        this.stateService.selectedMemberGroups.length > 0;
+
+      if (
+        this.isEditingExistingDraft &&
+        this.currentSendToType.toLowerCase() === 'custom' &&
+        hasSelectedMemberGroups
+      ) {
+        sendtotype = 'custom';
+        sentto = 'members';
+      } else if (
+        this.isEditingExistingDraft &&
+        this.currentSendToType.toLowerCase() === 'custom' &&
+        this.selectedCustomUserIds.length > 0
+      ) {
+        sendtotype = 'custom';
+        sentto = this.selectedCustomUserIds.join(',');
+      } else {
+        const mapped = mapSelectedValueToApi(
+          peopleSelectionData.selectedValue,
+          peopleSelectionData.includeNonGroupMembers
+          // || peopleSelectionData.includeNonGroupMembersForPeople
+        );
+        sentto = mapped.sentto;
+        sendtotype = mapped.sendtotype;
       }
 
-      case 'specificRsvpResponse':
-        payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
-        payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
-          ','
-        )}`;
-        payload.groupids = [];
-        break;
+      const messagetypeid = formType === 'inviteToSignUp' ? 4 : 1;
 
-      case 'peopleWhoSignedUp':
-        payload.sendtotype = SendToType.SIGNED_UP;
-        payload.sentto = SentTo.SIGNED_UP;
-        payload.groupids = [];
-        break;
+      const payload: ISaveDraftMessagePayload = {
+        subject: formValue.subject || '',
+        body: formValue.message || '',
+        sentto: sentto,
+        sendtotype: sendtotype,
+        messagetypeid: messagetypeid,
+        status: 'draft',
+        sendastext:
+          this.isEditingExistingDraft && this.originalSendAsText !== undefined
+            ? this.originalSendAsText
+            : false,
+        sendasemail:
+          this.isEditingExistingDraft && this.originalSendAsEmail !== undefined
+            ? this.originalSendAsEmail
+            : true,
+      };
 
-      case 'peopleOnWaitlist':
-        payload.sendtotype = SendToType.WAITLIST;
-        payload.sentto = SentTo.NOT_SIGNED_UP;
-        payload.groupids = [];
-        break;
+      if (formValue.attachments && formValue.attachments.length > 0) {
+        payload.attachmentids = formValue.attachments;
+      }
 
-      case 'peopleSignedUpAndWaitlist':
-        payload.sendtotype = SendToType.WAITLIST;
-        payload.sentto = SentTo.SIGNED_UP;
-        payload.groupids = [];
-        break;
+      if (this.isEditingExistingDraft) {
+        const replyToArray = Array.isArray(formValue.replyTo)
+          ? formValue.replyTo
+          : formValue.replyTo
+          ? [formValue.replyTo]
+          : [];
+        payload.replytoids =
+          replyToArray.length > 0
+            ? replyToArray.map((r: any) => parseInt(r, 10))
+            : [];
+      } else if (formValue.replyTo && formValue.replyTo.length > 0) {
+        payload.replytoids = formValue.replyTo.map((r: any) => parseInt(r, 10));
+      }
 
-      case 'peopleWhoNotSignedUp':
-        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-        payload.sentto = SentTo.NOT_SIGNED_UP;
-        payload.groupids = [];
-        break;
+      if (formValue.fromName) {
+        payload.contactname = formValue.fromName;
+      }
 
-      case 'sendMessagePeopleIselect':
-        if (this.selectedRadioOption.fromCustomGroup === true) {
-          payload.sendtotype = SendToType.CUSTOM;
-          payload.sentto = SentTo.MEMBERS;
-          payload.to = this.selectedRadioOption.recipients.map((slot) => ({
-            memberid: slot.id,
-            firstname: slot.firstname,
-            lastname: slot.lastname,
-            email: slot.email,
-          }));
-        } else {
-          payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
-          payload.sentto = SentTo.ALL;
-          payload.groupids = [];
-          payload.slotids = this.selectedRadioOption.recipients.map(
-            (slot) => 'slot_' + slot.slotitemid
-          );
-          payload.sendToGroups = this.selectedRadioOption.recipients.map(
+      const sendtotypeLower = sendtotype.toLowerCase();
+
+      if (this.stateService.selectedSignups.length > 0) {
+        payload.signupids = this.stateService.selectedSignups.map(
+          (s) => s.signupid
+        );
+      }
+
+      if (this.stateService.selectedPortalPages.length > 0) {
+        payload.portals = this.stateService.selectedPortalPages.map((p) => ({
+          id: p.id,
+          title: p.title,
+          urlkey: p.urlkey,
+        }));
+      }
+
+      if (this.stateService.isSignUpIndexPageSelected) {
+        payload.signUpType = 'acctindex';
+      }
+
+      const groupIds = this.stateService.selectedGroups
+        .map((g) => parseInt(g.value, 10))
+        .filter((id) => !isNaN(id));
+      payload.groupids = groupIds.length > 0 ? groupIds : [];
+
+      if (sendtotypeLower === 'manual' && peopleSelectionData.manualEmails) {
+        payload.addEmails = peopleSelectionData.manualEmails;
+      }
+
+      if (
+        sendtotypeLower === 'specificdateslot' &&
+        this.stateService.selectedDateSlots.length > 0
+      ) {
+        payload.slotids = this.stateService.selectedDateSlots.map((slot) =>
+          slot.slotitemid.toString()
+        );
+
+        if (messagetypeid === 1) {
+          payload.sendToGroups = this.stateService.selectedDateSlots.map(
             (slot) => ({
               id: 'slot_' + slot.slotitemid,
-              isWaitlistedRow: slot.waitlist,
+              isWaitlistedRow: slot.waitlist || false,
             })
           );
         }
-        break;
-    }
-    // Apply non-group members rule after switch (can override sentto)
-    if (this.selectedRadioOption.includeNonGroupMembers) {
-      payload.sentto = SentTo.PEOPLE_IN_GROUPS;
-      payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
-    }
+      }
 
-    this.composeService.createMessage(payload).subscribe({
-      next: (response) => {
-        if (response.success === true && response.data) {
-          this.toastr.success('Message saved successfully', 'Success');
-          this.showOptionsAgain();
+      if (sendtotypeLower === 'specificrsvp') {
+        const responses: string[] = [];
+        if (peopleSelectionData.rsvpResponseyes) responses.push('yes');
+        if (peopleSelectionData.rsvpResponseno) responses.push('no');
+        if (peopleSelectionData.rsvpResponsemaybe) responses.push('maybe');
+        if (peopleSelectionData.rsvpResponsenoresponse) responses.push('nr');
+
+        if (responses.length > 0) {
+          payload.sentto = `rsvp:${responses.join(',')}`;
         }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.toastr.error(err.error.message[0]?.details, 'Error');
-        if (status !== MessageStatus.DRAFT) {
-          this.openPreviewDialog(this.currentForm);
+      }
+
+      if (sendtotypeLower === 'custom' && hasSelectedMemberGroups) {
+        payload.to = this.stateService.selectedMemberGroups.map((member) => ({
+          memberid: member.id,
+          firstname: member.firstname || '',
+          lastname: member.lastname || '',
+          email: member.email || '',
+        }));
+      }
+
+      this.saveDraftToApi(this.currentDraftMessageId, payload);
+    } else {
+      // this.isLoading = true;
+      // const groups = this.stateService.selectedGroups;
+      // const form = this.currentForm.value;
+      // const payload: ICreateMessageRequest = {
+      //   subject: form.subject,
+      //   body: form.message,
+      //   sentto: SentTo.SIGNED_UP,
+      //   sendtotype: SendToType.SIGNED_UP,
+      //   status: status,
+      //   messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
+      //   sendasemail: true,
+      //   sendastext: false,
+      //   themeid: form.themeid,
+      //   contactname: form.fromName,
+      //   replytoids: form.replyTo.map((id: string) => Number(id)),
+      //   signupids: this.stateService.selectedSignups.map(
+      //     (signup) => signup.signupid
+      //   ),
+      //   groupids: groups
+      //     .filter(
+      //       (group) =>
+      //         group.value !== 'manual_entry' && !isNaN(Number(group.value))
+      //     )
+      //     .map((group) => Number(group.value)),
+      //   portals: form.selectedPortalPages.map(
+      //     (pp: ISelectPortalOption) => pp.id
+      //   ),
+      //   attachmentids: this.stateService.selectedAttachment.map(
+      //     (file) => file.id
+      //   ),
+      // };
+      // if (date) {
+      //   payload.senddate = date;
+      // }
+      // if (form.isSignUpIndexPageSelected) {
+      //   payload.signUpType = 'acctindex';
+      // }
+
+      // // Handle radio selection logic
+      // switch (this.selectedRadioOption.selectedValue) {
+      //   case 'peopleingroups':
+      //   case 'sendMessagePeopleRadio':
+      //     payload.sentto = SentTo.ALL;
+      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+      //     break;
+
+      //   case 'ManuallyEnterEmail': {
+      //     const emailsString = this.selectedRadioOption.recipients[0] || '';
+      //     const aliasString = this.selectedRadioOption.recipients[1] || '';
+
+      //     // Convert comma-separated string to array of email objects
+      //     payload.to = emailsString
+      //       ? emailsString
+      //           .split(',')
+      //           .map((email: string) => email.trim())
+      //           .filter((email: string) => email)
+      //           .map((email: string) => ({
+      //             email: email,
+      //           }))
+      //       : [];
+
+      //     // Convert comma-separated alias string to array
+      //     payload.alias = aliasString
+      //       ? aliasString
+      //           .split(',')
+      //           .map((email: string) => email.trim())
+      //           .filter((email: string) => email)
+      //       : [];
+
+      //     payload.sendtotype = SendToType.CUSTOM;
+      //     payload.sentto = SentTo.MANUAL;
+      //     break;
+      //   }
+
+      //   case 'specificRsvpResponse':
+      //     payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
+      //     payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
+      //       ','
+      //     )}`;
+      //     payload.groupids = [];
+      //     break;
+
+      //   case 'peopleWhoSignedUp':
+      //     payload.sendtotype = SendToType.SIGNED_UP;
+      //     payload.sentto = SentTo.SIGNED_UP;
+      //     payload.groupids = [];
+      //     break;
+
+      //   case 'peopleOnWaitlist':
+      //     payload.sendtotype = SendToType.WAITLIST;
+      //     payload.sentto = SentTo.NOT_SIGNED_UP;
+      //     payload.groupids = [];
+      //     break;
+
+      //   case 'peopleSignedUpAndWaitlist':
+      //     payload.sendtotype = SendToType.WAITLIST;
+      //     payload.sentto = SentTo.SIGNED_UP;
+      //     payload.groupids = [];
+      //     break;
+
+      //   case 'peopleWhoNotSignedUp':
+      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+      //     payload.sentto = SentTo.NOT_SIGNED_UP;
+      //     payload.groupids = [];
+      //     break;
+
+      //   case 'sendMessagePeopleIselect':
+      //     if (this.selectedRadioOption.fromCustomGroup === true) {
+      //       payload.sendtotype = SendToType.CUSTOM;
+      //       payload.sentto = SentTo.MEMBERS;
+      //       payload.to = this.selectedRadioOption.recipients.map((slot) => ({
+      //         memberid: slot.id,
+      //         firstname: slot.firstname,
+      //         lastname: slot.lastname,
+      //         email: slot.email,
+      //       }));
+      //     } else {
+      //       payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+      //       payload.sentto = SentTo.ALL;
+      //       payload.groupids = [];
+      //       payload.slotids = this.selectedRadioOption.recipients.map(
+      //         (slot) => 'slot_' + slot.slotitemid
+      //       );
+      //       payload.sendToGroups = this.selectedRadioOption.recipients.map(
+      //         (slot) => ({
+      //           id: 'slot_' + slot.slotitemid,
+      //           isWaitlistedRow: slot.waitlist,
+      //         })
+      //       );
+      //     }
+      //     break;
+      // }
+      // // Apply non-group members rule after switch (can override sentto)
+      // if (this.selectedRadioOption.includeNonGroupMembers) {
+      //   payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+      // }
+
+      // this.composeService.createMessage(payload).subscribe({
+      //   next: (response) => {
+      //     if (response.success === true && response.data) {
+      //       this.toastr.success('Message saved successfully', 'Success');
+      //       this.showOptionsAgain();
+      //     }
+      //     this.isLoading = false;
+      //   },
+      //   error: (err) => {
+      //     this.isLoading = false;
+      //     this.toastr.error(err.error.message[0]?.details, 'Error');
+      //     this.openPreviewDialog(this.currentForm);
+      //   },
+      // });
+
+      this.isLoading = true;
+      const groups = this.stateService.selectedGroups;
+      const form = this.currentForm.value;
+      const payload: ICreateMessageRequest = {
+        subject: form.subject,
+        body: form.message,
+        signuptype: SignUPType.SIGNUP,
+        status: status,
+        messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
+        sendasemail: true,
+        sendastext: false,
+        themeid: form.themeid,
+        contactname: form.fromName,
+        replytoids: form.replyTo.map((id: string) => Number(id)),
+        signupids: this.stateService.selectedSignups.map(
+          (signup) => signup.signupid
+        ),
+        groupids: groups
+          .filter(
+            (group) =>
+              group.value !== 'manual_entry' && !isNaN(Number(group.value))
+          )
+          .map((group) => Number(group.value)),
+        portals: form.selectedPortalPages.map(
+          (pp: ISelectPortalOption) => pp.id
+        ),
+        attachmentids: this.stateService.selectedAttachment.map(
+          (file) => file.id
+        ),
+      };
+
+      if (date) {
+        payload.senddate = date;
+      }
+      if (form.isSignUpIndexPageSelected) {
+        payload.signuptype = SignUPType.ACCIDEX;
+        payload.sentto = SentTo.MANUAL;
+        payload.sendtotype = SendToType.CUSTOM;
+      }
+
+      if (form.selectedPortalPages.length > 0) {
+        payload.signuptype = SignUPType.PORTALS;
+      }
+
+      if (form.selectedTabGroups.length > 0) {
+        payload.signuptype = SignUPType.TABGROUP;
+        payload.tabgroupids = form.selectedTabGroups.map(
+          (pp: ISelectPortalOption) => pp.id
+        );
+      }
+
+      // Handle radio selection logic
+      switch (this.selectedRadioOption.selectedValue) {
+        case 'peopleingroups':
+        case 'sendMessagePeopleRadio':
+          payload.sentto = SentTo.ALL;
+          payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+          break;
+
+        case 'ManuallyEnterEmail': {
+          const emailsString = this.selectedRadioOption.recipients[0] || '';
+          const aliasString = this.selectedRadioOption.recipients[1] || '';
+          const aliasGroup = this.selectedRadioOption.recipients[2] || '';
+
+          // Convert comma-separated string to array of email objects
+          payload.to = emailsString
+            ? emailsString
+                .split(',')
+                .map((email: string) => email.trim())
+                .filter((email: string) => email)
+                .map((email: string) => ({
+                  email: email,
+                }))
+            : [];
+          // Convert comma-separated alias string to array
+          payload.alias = aliasString
+            ? aliasString
+                .split(',')
+                .map((email: string) => email.trim())
+                .filter((email: string) => email)
+            : [];
+          // Handle aliasGroup - can be array or comma-separated string
+          payload.groupids = aliasGroup
+            ? Array.isArray(aliasGroup)
+              ? aliasGroup
+                  .map((id: string) => Number(id))
+                  .filter((id: number) => !isNaN(id))
+              : aliasGroup
+                  .split(',')
+                  .map((id: string) => Number(id.trim()))
+                  .filter((id: number) => !isNaN(id))
+            : [];
+          payload.sendtotype = SendToType.CUSTOM;
+          payload.sentto = SentTo.MANUAL;
+          break;
         }
-      },
-    });
+
+        case 'ImportEmailFromProvider': {
+          payload.sentto = SentTo.IMPORT;
+          payload.sendtotype = SendToType.CUSTOM;
+          break;
+        }
+
+        case 'specificRsvpResponse':
+          payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
+          payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
+            ','
+          )}`;
+          payload.groupids = [];
+          break;
+
+        case 'peopleWhoSignedUp':
+          payload.sendtotype = SendToType.SIGNED_UP;
+          payload.sentto = SentTo.SIGNED_UP;
+          payload.groupids = [];
+          break;
+
+        case 'peopleOnWaitlist':
+          payload.sendtotype = SendToType.WAITLIST;
+          payload.sentto = SentTo.NOT_SIGNED_UP;
+          payload.groupids = [];
+          break;
+
+        case 'peopleSignedUpAndWaitlist':
+          payload.sendtotype = SendToType.WAITLIST;
+          payload.sentto = SentTo.SIGNED_UP;
+          payload.groupids = [];
+          break;
+
+        case 'peopleWhoNotSignedUp':
+          payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
+          payload.sentto = SentTo.NOT_SIGNED_UP;
+          payload.groupids = [];
+          break;
+
+        case 'sendMessagePeopleIselect':
+          if (this.selectedRadioOption.fromCustomGroup === true) {
+            payload.sendtotype = SendToType.CUSTOM;
+            payload.sentto = SentTo.MEMBERS;
+            payload.to = this.selectedRadioOption.recipients.map((slot) => ({
+              memberid: slot.id,
+              firstname: slot.firstname,
+              lastname: slot.lastname,
+              email: slot.email,
+            }));
+          } else {
+            payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
+            payload.sentto = SentTo.ALL;
+            payload.groupids = [];
+            payload.slotids = this.selectedRadioOption.recipients.map(
+              (slot) => 'slot_' + slot.slotitemid
+            );
+            payload.sendToGroups = this.selectedRadioOption.recipients.map(
+              (slot) => ({
+                id: 'slot_' + slot.slotitemid,
+                isWaitlistedRow: slot.waitlist,
+              })
+            );
+          }
+          break;
+      }
+      // Apply non-group members rule after switch (can override sentto)
+      if (this.selectedRadioOption.includeNonGroupMembers) {
+        payload.sentto = SentTo.PEOPLE_IN_GROUPS;
+        payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
+      }
+
+      this.composeService.createMessage(payload).subscribe({
+        next: (response) => {
+          if (response.success === true && response.data) {
+            this.toastr.success('Message saved successfully', 'Success');
+            this.showOptionsAgain();
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.toastr.error(err.error.message[0]?.details, 'Error');
+          if (status !== MessageStatus.DRAFT) {
+            this.openPreviewDialog(this.currentForm);
+          }
+        },
+      });
+    }
   }
 
   onThemeChange(themeId: number): void {
@@ -894,6 +1307,12 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
    * Update subject and message based on selected signups
    */
   private updateSubjectAndMessage(): void {
+    // Don't auto-update subject/message if editing an existing draft
+    // User should manually change these fields if needed
+    if (this.isEditingExistingDraft) {
+      return;
+    }
+
     const currentForm =
       this.selectedValue === 'emailoptionone'
         ? this.emailFormOne
@@ -1108,6 +1527,975 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     }
 
     return { isValid: errors.length === 0, errors };
+  }
+
+  getMessageById(id: number) {
+    this.isLoading = true;
+
+    type ReplyToItem = { memberid: number; email: string };
+
+    const optionOne = 4;
+    const optionTwo = 1;
+
+    this.composeService
+      .getMessageById(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: MessageResponse) => {
+          if (!response.success) {
+            this.isLoading = false;
+
+            handleDraftLoadError({
+              toastr: this.toastr,
+              router: this.router,
+              stateService: this.stateService,
+              onCleanup: () => {
+                this.isEditingExistingDraft = false;
+                this.currentDraftMessageId = null;
+              },
+            });
+            return;
+          }
+
+          initializeDraftEditMode(
+            id,
+            this.stateService,
+            response.data.sendtotype,
+            response.data.sendastext,
+            response.data.sendasemail,
+            (data) => {
+              this.isEditingExistingDraft = data.isEditingExistingDraft;
+              this.currentDraftMessageId = data.currentDraftMessageId;
+              this.currentSendToType = data.currentSendToType;
+              this.originalSendAsText = data.originalSendAsText;
+              this.originalSendAsEmail = data.originalSendAsEmail;
+            }
+          );
+
+          if (
+            response.data.sendtotype?.toLowerCase() === 'custom' &&
+            response.data.sentto
+          ) {
+            if (response.data.messagetypeid === 4) {
+              this.selectedCustomUserIds = response.data.sentto
+                .split(',')
+                .map((id) => id.trim())
+                .filter((id) => id.length > 0);
+
+              this.composeService
+                .getAllGroupsWithMembers()
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (allMembersResponse) => {
+                    if (allMembersResponse.success && allMembersResponse.data) {
+                      const memberIds = this.selectedCustomUserIds.map((id) =>
+                        Number(id)
+                      );
+
+                      const matchedMembers = allMembersResponse.data
+                        .filter((item) => memberIds.includes(item.member.id))
+                        .map((item) => ({
+                          id: item.member.id,
+                          firstname: item.member.firstname || '',
+                          lastname: item.member.lastname || '',
+                          email: item.member.email || '',
+                          label: item.member.email || '',
+                          value: item.member.id?.toString() || '',
+                          groupsId:
+                            item.groups?.[0]?.id?.toString() || undefined,
+                        }));
+
+                      this.stateService.setSelectedMemberGroups(matchedMembers);
+
+                      this.stateService.setRecipientCount(
+                        matchedMembers.length
+                      );
+                    }
+                  },
+                  error: (error) => {
+                    console.error(
+                      'Failed to fetch members from /all API:',
+                      error
+                    );
+                  },
+                });
+            } else {
+              const responseData = response.data as IMessageByIdDataExtended;
+              if (responseData.to && Array.isArray(responseData.to)) {
+                const memberGroups = responseData.to.map((member) => ({
+                  id: member.memberid,
+                  firstname: member.firstname || '',
+                  lastname: member.lastname || '',
+                  email: member.email || '',
+                  label: `${member.firstname || ''} ${member.lastname || ''} (${
+                    member.email || ''
+                  })`.trim(),
+                  value: member.memberid?.toString() || '',
+                }));
+
+                this.stateService.setSelectedMemberGroups(memberGroups);
+
+                this.selectedCustomUserIds = memberGroups.map((m) =>
+                  m.id.toString()
+                );
+              } else {
+                this.selectedCustomUserIds = response.data.sentto
+                  .split(',')
+                  .map((id) => id.trim())
+                  .filter((id) => id.length > 0);
+              }
+            }
+          }
+
+          if (response.data.messagetypeid == optionOne) {
+            this.selectedValue = 'emailoptionone';
+
+            this.showRadioButtons = false;
+
+            this.loadUserProfile();
+
+            const replyToMemberIds = (
+              (response.data.replyto as ReplyToItem[]) || []
+            ).map((item) => String(item.memberid));
+
+            const isRsvpSignup =
+              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
+              response.data.sendtotype?.toLowerCase() ===
+                'specificrsvpresponse';
+
+            const mappedSignups: ISignUpItem[] = (
+              response.data?.signups || []
+            ).map((s) => ({
+              signupid: s.signupid,
+              memberimagedisabled: false,
+              ownerid: response.data.createdby,
+              mode: isRsvpSignup ? 'rsvp' : 'default',
+              isapproved: false,
+              community: '',
+              communityid: 0,
+              memberimageowner: 0,
+              customimagedisabled: false,
+              iscomplete: false,
+              serverfilename: '',
+              customimagefilename: '',
+              partialimagepath: '',
+              signupimage: '',
+              title: s.signuptitle,
+              fulltitle: s.signuptitle,
+              themeid: response.data.themeid,
+              signupstatus: '',
+              themeclientfilename: '',
+              themeserverfilename: '',
+              themedisabled: false,
+              themeimageapproved: false,
+              themeowner: '',
+              themememberid: 0,
+              thememberid: 0,
+              themememberimageid: 0,
+              contactname: response.data.contactname,
+              hasads: false,
+              hasadsdisabled: false,
+              imageheight: 0,
+              imagewidth: 0,
+              zonename: response.data.zonename,
+              urlid: undefined,
+              memberimageid: undefined,
+              enddate: undefined,
+              startdate: undefined,
+              favoriteid: undefined,
+              haspassword: false,
+              passcode: '',
+            }));
+
+            if (response.data?.portals && response.data.portals.length > 0) {
+              const mappedPortals = response.data.portals.map((p) => ({
+                id: p.portalid,
+                title: p.portaltitle,
+                urlkey: p.portalurl,
+                label: p.portaltitle,
+                value: p.portalid.toString(),
+              }));
+              this.stateService.setSelectedPortalPages(mappedPortals);
+            } else if (
+              response.data?.signUpType === 'acctindex' ||
+              ((!response.data?.signups ||
+                response.data.signups.length === 0) &&
+                (!response.data?.portals ||
+                  response.data.portals.length === 0) &&
+                (!response.data?.tabgroups ||
+                  response.data.tabgroups.length === 0))
+            ) {
+              this.stateService.setSignUpIndexPageSelected(true, true);
+            } else if (
+              response.data?.signups &&
+              response.data.signups.length > 0
+            ) {
+              this.stateService.setSelectedSignups(mappedSignups, true);
+            }
+
+            this.emailFormOne.get('replyTo')?.enable();
+            this.emailFormOne.get('toPeople')?.enable();
+            this.emailFormOne.get('subject')?.enable();
+            this.emailFormOne.get('message')?.enable();
+
+            this.emailFormOne.patchValue({
+              subject: response.data.subject,
+              selectedSignups: mappedSignups,
+              message: stripHtml(response.data.body),
+              messageType: response.data.messagetype,
+            });
+
+            setTimeout(() => {
+              this.emailFormOne.get('replyTo')?.setValue(replyToMemberIds);
+              this.emailFormOne.get('replyTo')?.updateValueAndValidity();
+            }, 0);
+
+            this.restorePeopleSelection(
+              response.data.sentto,
+              response.data.sendtotype,
+              response.data.addEmails
+            );
+
+            if (
+              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.signups &&
+              response.data.signups.length > 0
+            ) {
+              this.restoreDateSlots(
+                response.data.sentto,
+                response.data.signups
+              );
+            }
+
+            const skipGroupRestoration =
+              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
+                response.data.sentto?.toLowerCase() === 'signedup') ||
+              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
+                response.data.sentto?.toLowerCase() === 'notsignedup') ||
+              response.data.sendtotype?.toLowerCase() === 'manual';
+
+            if (
+              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              this.stateService.selectedMemberGroups.length > 0
+            ) {
+              const memberIds = this.stateService.selectedMemberGroups.map(
+                (m) => m.id
+              );
+
+              this.composeService
+                .getAllGroupsWithMembers()
+                .pipe(
+                  switchMap((allGroupsResponse) => {
+                    if (!allGroupsResponse.success || !allGroupsResponse.data) {
+                      this.stateService.setRecipientCount(
+                        this.stateService.selectedMemberGroups.length
+                      );
+                      return of(null);
+                    }
+
+                    const selectedMemberData = allGroupsResponse.data.filter(
+                      (item) => memberIds.includes(item.member.id)
+                    );
+
+                    const groupIdsSet = new Set<number>();
+                    selectedMemberData.forEach((item) => {
+                      item.groups?.forEach((group) => {
+                        groupIdsSet.add(group.id);
+                      });
+                    });
+                    const groupIds = Array.from(groupIdsSet);
+
+                    if (groupIds.length === 0) {
+                      this.stateService.setRecipientCount(
+                        this.stateService.selectedMemberGroups.length
+                      );
+                      return of(null);
+                    }
+
+                    const signupIds = this.stateService.selectedSignups.map(
+                      (s) => s.signupid
+                    );
+                    return this.composeService
+                      .fetchRecipients({
+                        sentToType: 'peopleingroups',
+                        sentTo: 'all',
+                        messageTypeId: 4,
+                        signupIds: signupIds,
+                        groupIds: groupIds,
+                      })
+                      .pipe(
+                        tap((recipientsResponse) => {
+                          const data =
+                            recipientsResponse.data as IRecipientsResponseData;
+                          if (Array.isArray(data.recipients)) {
+                            this.stateService.setRecipientCount(
+                              data.recipients.length
+                            );
+                            this.stateService.setRecipients(
+                              data.recipients as IRecipient[]
+                            );
+                          } else if (
+                            recipientsResponse.success &&
+                            recipientsResponse.pagination
+                          ) {
+                            this.stateService.setRecipientCount(
+                              recipientsResponse.pagination.totalRecords || 0
+                            );
+                          }
+                        }),
+                        catchError((error) => {
+                          console.error(
+                            'Failed to fetch recipient count:',
+                            error
+                          );
+                          this.stateService.setRecipientCount(
+                            this.stateService.selectedMemberGroups.length
+                          );
+                          return of(null);
+                        })
+                      );
+                  }),
+                  takeUntil(this.destroy$),
+                  catchError((error) => {
+                    console.error('Failed to fetch group members:', error);
+                    this.stateService.setRecipientCount(
+                      this.stateService.selectedMemberGroups.length
+                    );
+                    return of(null);
+                  })
+                )
+                .subscribe();
+            } else if (skipGroupRestoration) {
+              const signupIds = this.stateService.selectedSignups.map(
+                (s) => s.signupid
+              );
+              this.composeService
+                .fetchRecipients({
+                  sentToType: response.data.sendtotype,
+                  sentTo: response.data.sentto,
+                  messageTypeId: 4,
+                  signupIds: signupIds,
+                })
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (response) => {
+                    const data = response.data as IRecipientsResponseData;
+                    if (Array.isArray(data.recipients)) {
+                      this.stateService.setRecipientCount(
+                        data.recipients.length
+                      );
+                      this.stateService.setRecipients(data.recipients as any);
+                    } else if (response.success && response.pagination) {
+                      this.stateService.setRecipientCount(
+                        response.pagination.totalRecords || 0
+                      );
+                    }
+                  },
+                  error: (error) => {
+                    console.error('Failed to fetch recipient count:', error);
+                    this.stateService.setRecipientCount(0);
+                  },
+                });
+            } else if (
+              response.data.groups &&
+              response.data.groups.length > 0
+            ) {
+              this.restoreGroups(
+                response.data.groups,
+                response.data.sendtotype,
+                response.data.sentto
+              );
+            }
+
+            this.isLoading = false;
+          } else if (response.data.messagetypeid == optionTwo) {
+            this.selectedValue = 'emailoptiontwo';
+
+            this.showRadioButtons = false;
+
+            this.loadUserProfile();
+
+            const replyToMemberIds = (
+              (response.data.replyto as ReplyToItem[]) || []
+            ).map((item) => String(item.memberid));
+
+            const isRsvpSignup =
+              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
+              response.data.sendtotype?.toLowerCase() ===
+                'specificrsvpresponse';
+
+            const mappedSignups: ISignUpItem[] = (
+              response.data?.signups || []
+            ).map((s) => ({
+              signupid: s.signupid,
+              memberimagedisabled: false,
+              ownerid: response.data.createdby,
+              mode: isRsvpSignup ? 'rsvp' : 'default',
+              isapproved: false,
+              community: '',
+              communityid: 0,
+              memberimageowner: 0,
+              customimagedisabled: false,
+              iscomplete: false,
+              serverfilename: '',
+              customimagefilename: '',
+              partialimagepath: '',
+              signupimage: '',
+              title: s.signuptitle,
+              fulltitle: s.signuptitle,
+              themeid: response.data.themeid,
+              signupstatus: '',
+              themeclientfilename: '',
+              themeserverfilename: '',
+              themedisabled: false,
+              themeimageapproved: false,
+              themeowner: '',
+              themememberid: 0,
+              thememberid: 0,
+              themememberimageid: 0,
+              contactname: response.data.contactname,
+              hasads: false,
+              hasadsdisabled: false,
+              imageheight: 0,
+              imagewidth: 0,
+              zonename: response.data.zonename,
+              urlid: undefined,
+              memberimageid: undefined,
+              enddate: undefined,
+              startdate: undefined,
+              favoriteid: undefined,
+              haspassword: false,
+              passcode: '',
+            }));
+
+            if (response.data?.portals && response.data.portals.length > 0) {
+              const mappedPortals = response.data.portals.map((p) => ({
+                id: p.portalid,
+                title: p.portaltitle,
+                urlkey: p.portalurl,
+                label: p.portaltitle,
+                value: p.portalid.toString(),
+              }));
+              this.stateService.setSelectedPortalPages(mappedPortals);
+            } else if (
+              response.data?.signUpType === 'acctindex' ||
+              ((!response.data?.signups ||
+                response.data.signups.length === 0) &&
+                (!response.data?.portals ||
+                  response.data.portals.length === 0) &&
+                (!response.data?.tabgroups ||
+                  response.data.tabgroups.length === 0))
+            ) {
+              this.stateService.setSignUpIndexPageSelected(true, true);
+            } else if (
+              response.data?.signups &&
+              response.data.signups.length > 0
+            ) {
+              this.stateService.setSelectedSignups(mappedSignups, true);
+            }
+
+            this.emailFormTwo.get('replyTo')?.enable();
+            this.emailFormTwo.get('toPeople')?.enable();
+            this.emailFormTwo.get('subject')?.enable();
+            this.emailFormTwo.get('message')?.enable();
+
+            this.emailFormTwo.patchValue({
+              subject: response.data.subject,
+              selectedSignups: mappedSignups,
+              message: stripHtml(response.data.body),
+              messageType: response.data.messagetype,
+            });
+
+            setTimeout(() => {
+              this.emailFormTwo.get('replyTo')?.setValue(replyToMemberIds);
+              this.emailFormTwo.get('replyTo')?.updateValueAndValidity();
+            }, 0);
+
+            this.restorePeopleSelection(
+              response.data.sentto,
+              response.data.sendtotype,
+              response.data.addEmails
+            );
+
+            if (
+              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.signups &&
+              response.data.signups.length > 0
+            ) {
+              this.restoreDateSlots(
+                response.data.sentto,
+                response.data.signups
+              );
+            }
+
+            const skipGroupRestoration =
+              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
+                response.data.sentto?.toLowerCase() === 'signedup') ||
+              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
+                response.data.sentto?.toLowerCase() === 'notsignedup') ||
+              response.data.sendtotype?.toLowerCase() === 'manual';
+
+            if (
+              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              (this.stateService.selectedMemberGroups.length > 0 ||
+                this.selectedCustomUserIds.length > 0)
+            ) {
+              let memberIds: number[] = [];
+              if (this.stateService.selectedMemberGroups.length > 0) {
+                memberIds = this.stateService.selectedMemberGroups.map(
+                  (m) => m.id
+                );
+              } else if (this.selectedCustomUserIds.length > 0) {
+                memberIds = this.selectedCustomUserIds.map((id) => Number(id));
+              }
+
+              this.composeService
+                .getAllGroupsWithMembers()
+                .pipe(
+                  switchMap((allGroupsResponse) => {
+                    if (!allGroupsResponse.success || !allGroupsResponse.data) {
+                      this.stateService.setRecipientCount(memberIds.length);
+                      return of(null);
+                    }
+
+                    const selectedMemberData = allGroupsResponse.data.filter(
+                      (item) => memberIds.includes(item.member.id)
+                    );
+
+                    const matchedMembers = allGroupsResponse.data
+                      .filter((item) => memberIds.includes(item.member.id))
+                      .map((item) => ({
+                        id: item.member.id,
+                        firstname: item.member.firstname || '',
+                        lastname: item.member.lastname || '',
+                        email: item.member.email || '',
+                        label: item.member.email || '',
+                        value: item.member.id?.toString() || '',
+                        groupsId: item.groups?.[0]?.id?.toString() || undefined,
+                      }));
+
+                    this.stateService.setSelectedMemberGroups(matchedMembers);
+
+                    const groupIdsSet = new Set<number>();
+                    selectedMemberData.forEach((item) => {
+                      item.groups?.forEach((group) => {
+                        groupIdsSet.add(group.id);
+                      });
+                    });
+                    const groupIds = Array.from(groupIdsSet);
+
+                    if (groupIds.length === 0) {
+                      this.stateService.setRecipientCount(memberIds.length);
+                      return of(null);
+                    }
+
+                    const signupIds = this.stateService.selectedSignups.map(
+                      (s) => s.signupid
+                    );
+                    return this.composeService
+                      .fetchRecipients({
+                        sentToType: 'peopleingroups',
+                        sentTo: 'all',
+                        messageTypeId: 1,
+                        signupIds: signupIds,
+                        groupIds: groupIds,
+                      })
+                      .pipe(
+                        tap((recipientsResponse) => {
+                          const data =
+                            recipientsResponse.data as IRecipientsResponseData;
+                          if (Array.isArray(data.recipients)) {
+                            this.stateService.setRecipientCount(
+                              data.recipients.length
+                            );
+                            this.stateService.setRecipients(
+                              data.recipients as IRecipient[]
+                            );
+                          } else if (
+                            recipientsResponse.success &&
+                            recipientsResponse.pagination
+                          ) {
+                            this.stateService.setRecipientCount(
+                              recipientsResponse.pagination.totalRecords || 0
+                            );
+                          }
+                        }),
+                        catchError((error) => {
+                          console.error(
+                            'Failed to fetch recipient count:',
+                            error
+                          );
+
+                          this.stateService.setRecipientCount(memberIds.length);
+                          return of(null);
+                        })
+                      );
+                  }),
+                  takeUntil(this.destroy$),
+                  catchError((error) => {
+                    console.error('Failed to fetch group members:', error);
+                    this.stateService.setRecipientCount(memberIds.length);
+                    return of(null);
+                  })
+                )
+                .subscribe();
+            } else if (skipGroupRestoration) {
+              const signupIds = this.stateService.selectedSignups.map(
+                (s) => s.signupid
+              );
+              this.composeService
+                .fetchRecipients({
+                  sentToType: response.data.sendtotype,
+                  sentTo: response.data.sentto,
+                  messageTypeId: 1,
+                  signupIds: signupIds,
+                })
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (response) => {
+                    const data = response.data as IRecipientsResponseData;
+                    if (Array.isArray(data.recipients)) {
+                      this.stateService.setRecipientCount(
+                        data.recipients.length
+                      );
+                      this.stateService.setRecipients(data.recipients as any);
+                    } else if (response.success && response.pagination) {
+                      this.stateService.setRecipientCount(
+                        response.pagination.totalRecords || 0
+                      );
+                    }
+                  },
+                  error: (error) => {
+                    console.error('Failed to fetch recipient count:', error);
+                    this.stateService.setRecipientCount(0);
+                  },
+                });
+            } else if (
+              response.data.groups &&
+              response.data.groups.length > 0
+            ) {
+              this.restoreGroups(
+                response.data.groups,
+                response.data.sendtotype,
+                response.data.sentto
+              );
+            }
+
+            this.isLoading = false;
+          } else {
+            this.isLoading = false;
+            this.toastr.error(
+              `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
+              'Unsupported Message Type'
+            );
+            this.router.navigate(['/messages/compose']);
+          }
+        },
+
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Failed to load message', error);
+
+          handleDraftLoadError({
+            toastr: this.toastr,
+            router: this.router,
+            stateService: this.stateService,
+            onCleanup: () => {
+              this.isEditingExistingDraft = false;
+              this.currentDraftMessageId = null;
+            },
+          });
+        },
+      });
+  }
+
+  /**
+   * Restore groups selection and fetch recipient count
+   * Now uses the generalized fetchRecipients function from compose.service.ts
+   */
+  private restoreGroups(
+    groups: { groupid: number; groupname: string }[],
+    sendtotype: string,
+    sentto: string
+  ): void {
+    const groupOptions = groups.map((group) => ({
+      label: group.groupname,
+      value: group.groupid.toString(),
+    }));
+
+    const existingGroupOptions = this.stateService.groupOptions;
+    const existingGroupIds = existingGroupOptions.map((g) => g.value);
+    const newGroups = groupOptions.filter(
+      (g) => !existingGroupIds.includes(g.value)
+    );
+    if (newGroups.length > 0) {
+      this.stateService.setGroupOptions([
+        ...existingGroupOptions,
+        ...newGroups,
+      ]);
+    }
+
+    this.stateService.setSelectedGroups(groupOptions);
+
+    const signupIds = this.stateService.selectedSignups.map((s) => s.signupid);
+    const groupIds = groups.map((g) => g.groupid);
+
+    const messageTypeId = this.selectedValue === 'emailoptionone' ? 4 : 1;
+
+    const existingPeopleSelectionData =
+      this.stateService.peopleSelectionData || {};
+    const updatedPeopleSelectionData = {
+      ...existingPeopleSelectionData,
+      selectedValue:
+        messageTypeId === 4 ? 'peopleingroups' : 'sendMessagePeopleRadio',
+      selectedGroups: groupIds.map((id) => id.toString()),
+    };
+    this.stateService.setPeopleSelectionData(updatedPeopleSelectionData);
+
+    this.composeService
+      .fetchRecipients({
+        sentToType: sendtotype,
+        sentTo: sentto,
+        messageTypeId: messageTypeId,
+        signupIds: signupIds,
+        groupIds: groupIds,
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const data = response.data as IRecipientsData & {
+            recipients?: unknown[];
+          };
+          if (Array.isArray(data.recipients)) {
+            const recipientCount = data.recipients.length;
+            const recipients = data.recipients;
+
+            this.stateService.setRecipientCount(recipientCount);
+            this.stateService.setRecipients(recipients);
+          } else if (response.success && response.pagination) {
+            const recipientCount = response.pagination.totalRecords || 0;
+            this.stateService.setRecipientCount(recipientCount);
+          }
+        },
+        error: (error) => {
+          console.error('Failed to fetch recipient count:', error);
+          this.stateService.setRecipientCount(0);
+        },
+      });
+  }
+
+  /**
+   * Restore people selection state from API sentto and sendtotype values
+   * This is used when editing a draft message
+   */
+  private restorePeopleSelection(
+    sentto: string,
+    sendtotype: string,
+    addEmails?: string
+  ): void {
+    const corrected = applyBackendWorkarounds(sentto, sendtotype);
+    sentto = corrected.sentto;
+    sendtotype = corrected.sendtotype;
+
+    if (!sentto || !sendtotype) {
+      console.warn(
+        'sentto or sendtotype is missing, cannot restore people selection'
+      );
+      return;
+    }
+
+    const selectedValue = mapApiToSelectedValue(sentto, sendtotype);
+
+    if (!selectedValue) {
+      console.warn(
+        `Unable to map sentto="${sentto}" and sendtotype="${sendtotype}" to a people selection option`
+      );
+      return;
+    }
+
+    const additionalData = extractPeopleSelectionData(sentto, sendtotype);
+
+    const peopleSelectionData = buildPeopleSelectionData(
+      selectedValue,
+      additionalData,
+      addEmails
+    );
+
+    if (sendtotype.toLowerCase() === 'manual') {
+      if (addEmails) {
+        const emailList = parseManualEmails(addEmails);
+        this.stateService.setRecipientCount(emailList.length);
+      } else {
+        this.stateService.setRecipientCount(0);
+      }
+    }
+
+    this.stateService.setPeopleSelectionData(peopleSelectionData);
+
+    this.selectedRadioOption = {
+      selectedValue: selectedValue,
+      includeNonGroupMembers: additionalData.includeNonGroupMembers || false,
+      recipients: [],
+    };
+
+    this.currentSendToType = sendtotype;
+
+    const label = getLabelForSelectedValue(selectedValue);
+    this.stateService.setSelectedGroups([
+      {
+        label: label,
+        value: selectedValue,
+      },
+    ]);
+  }
+
+  // onFileSelected(file: IFileItem) {
+  //   this.stateService.setSelectedAttachment([
+  //     ...this.stateService.selectedAttachment,
+  //     file,
+  //   ]);
+  // }
+
+  /**
+   * Restore date slots selection from API
+   * Used when editing a draft with sendtotype: 'specificdateslot'
+   */
+  private restoreDateSlots(
+    sentto: string,
+    signups: { signupid: number; signuptitle: string }[]
+  ): void {
+    if (this.isRestoringDateSlots) {
+      console.warn(
+        'Date slots are already being restored, skipping duplicate call'
+      );
+      return;
+    }
+
+    if (!sentto || !signups || signups.length === 0) {
+      console.warn('Invalid sentto or signups for restoring date slots');
+      return;
+    }
+
+    this.isRestoringDateSlots = true;
+
+    const slotIds = sentto
+      .split(',')
+      .map((s) => s.trim().replace('slot_', ''))
+      .filter((s) => s.length > 0 && !isNaN(Number(s)));
+
+    if (slotIds.length === 0) {
+      console.warn('No valid slot IDs found in sentto:', sentto);
+      this.isRestoringDateSlots = false;
+      return;
+    }
+
+    const allDateSlots: any[] = [];
+    let completedRequests = 0;
+
+    signups.forEach((signup) => {
+      this.composeService
+        .getDateSlots(signup.signupid, {
+          includeSignedUpMembers: false,
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success && response.data) {
+              const matchingSlots = response.data.filter((slot) => {
+                const slotIdStr = slot.slotitemid.toString();
+                return slotIds.includes(slotIdStr);
+              });
+
+              allDateSlots.push(...matchingSlots);
+            }
+
+            completedRequests++;
+            if (completedRequests === signups.length) {
+              if (allDateSlots.length > 0) {
+                this.stateService.setSelectedDateSlots(allDateSlots);
+
+                // Update the "To" field to show the actual date slot values
+                const dateSlotLabels = allDateSlots.map((slot) => {
+                  const timeStr = slot.starttime
+                    ? new Date(slot.starttime).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })
+                    : 'No time';
+                  const itemStr = slot.item || 'No item';
+                  return {
+                    label: `${timeStr} - ${itemStr}`,
+                    value: slot.slotitemid.toString(),
+                  };
+                });
+
+                this.stateService.setSelectedGroups(dateSlotLabels);
+
+                // Fetch recipient count for the selected date slots
+                const slotItemIds = allDateSlots.map((slot) => slot.slotitemid);
+                const signupIds = signups.map((s) => s.signupid);
+                const messageTypeId =
+                  this.selectedValue === 'emailoptionone' ? 4 : 1;
+
+                this.composeService
+                  .fetchRecipients({
+                    sentToType: 'specificdateslot',
+                    sentTo: 'specificdateslot',
+                    messageTypeId: messageTypeId,
+                    signupIds: signupIds,
+                    slotItemIds: slotItemIds,
+                  })
+                  .pipe(takeUntil(this.destroy$))
+                  .subscribe({
+                    next: (recipientsResponse) => {
+                      const data =
+                        recipientsResponse.data as IRecipientsResponseData;
+                      if (Array.isArray(data.recipients)) {
+                        this.stateService.setRecipientCount(
+                          data.recipients.length
+                        );
+                        this.stateService.setRecipients(
+                          data.recipients as IRecipient[]
+                        );
+                      } else if (
+                        recipientsResponse.success &&
+                        recipientsResponse.pagination
+                      ) {
+                        this.stateService.setRecipientCount(
+                          recipientsResponse.pagination.totalRecords || 0
+                        );
+                      }
+                    },
+                    error: (error) => {
+                      console.error(
+                        'Failed to fetch recipient count for date slots:',
+                        error
+                      );
+                      this.stateService.setRecipientCount(0);
+                    },
+                  });
+              } else {
+                console.warn('No matching date slots found');
+              }
+
+              this.isRestoringDateSlots = false;
+            }
+          },
+          error: (error) => {
+            console.error(
+              `Failed to fetch date slots for signup ${signup.signupid}:`,
+              error
+            );
+            completedRequests++;
+
+            if (completedRequests === signups.length) {
+              this.isRestoringDateSlots = false;
+            }
+          },
+        });
+    });
   }
 
   onFileSelected(file: IFileItem) {

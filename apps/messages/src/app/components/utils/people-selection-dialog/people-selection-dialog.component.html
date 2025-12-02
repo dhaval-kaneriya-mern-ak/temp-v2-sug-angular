@@ -183,6 +183,82 @@
           </div>
           }
 
+          <!-- Form One: People I will select (only when sendtotype = 'custom') -->
+          @if (formType === 'inviteToSignUp' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'sendMessagePeopleIselect' && sendtotype?.toLowerCase() === 'custom')
+          {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <!-- Show selected member groups as chips if any -->
+            @if (selectedMemberGroups.length > 0) {
+            <div class="selected-slots-chips gap-3 d-flex">
+              @for (slot of selectedMemberGroups; track slot.id; let i = $index)
+              { @if (i < 2) {
+              <p-chip
+                [label]="
+                  slot.email ||
+                  slot.displayname ||
+                  (slot.firstname && slot.lastname
+                    ? slot.firstname + ' ' + slot.lastname
+                    : 'Unknown')
+                "
+                [removable]="true"
+                (onRemove)="removeSelectedMemberGroup(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              } } @if (selectedMemberGroups.length > 2) {
+              <p-chip
+                [label]="'+' + (selectedMemberGroups.length - 2) + ' more'"
+                [removable]="false"
+                styleClass="custom-chip more-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="
+                  'Edit ' +
+                  recipientCount +
+                  ' recipient' +
+                  (recipientCount !== 1 ? 's' : '')
+                "
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editMemberGroups()"
+              >
+              </sug-ui-button>
+            </div>
+            }
+            <!-- Buttons to select members -->
+            @if (selectedMemberGroups.length === 0) {
+            <div class="btn-wrapper">
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From my groups"
+                (buttonClick)="openFromMyGroupsDialog()"
+              >
+              </sug-ui-button>
+              <!-- Show "From this sign up" button when Sign Up Index Page is NOT selected and exactly 1 signup is selected -->
+              @if (!isSignUpIndexPageSelected && selectedSignups.length === 1) {
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From this sign up"
+                (buttonClick)="openFromThisSignUpDialog(true)"
+              >
+              </sug-ui-button>
+              }
+            </div>
+            }
+          </div>
+          }
+
           <!-- Form Two: RSVP Responses -->
           @if (formType === 'emailParticipants' &&
           peopleDialogForm.get('selectedValue')?.value ===
@@ -252,7 +328,7 @@
           peopleDialogForm.get('selectedValue')?.value ===
           'sendMessagePeopleIselect') {
           <div class="signup-radio-content send-msg-dialog-content">
-            <!-- Show selected slots as chips if any -->
+            <!-- Show selected slots as chips if any (hide for messageTypeId = 4) -->
             @if (selectedDateSlots.length > 0) {
             <div class="selected-slots-chips gap-3 d-flex">
               @for (slot of selectedDateSlots; track slot.slotitemid; let i =
@@ -290,9 +366,17 @@
               { @if (i < 2) {
               <p-chip
                 [label]="
-                  slot.firstname
-                    ? slot.firstname + ' ' + slot.lastname
-                    : slot.email
+                  messageTypeId === 4
+                    ? slot.email ||
+                      slot.displayname ||
+                      (slot.firstname && slot.lastname
+                        ? slot.firstname + ' ' + slot.lastname
+                        : 'Unknown')
+                    : slot.displayname ||
+                      slot.email ||
+                      (slot.firstname && slot.lastname
+                        ? slot.firstname + ' ' + slot.lastname
+                        : 'Unknown')
                 "
                 [removable]="true"
                 (onRemove)="removeSelectedMemberGroup(i)"
@@ -325,7 +409,7 @@
             </div>
             }
             <!-- Buttons to select slots -->
-            @if (selectedDateSlots.length === 0 && selectedMemberGroups.length
+            @if ((selectedDateSlots.length === 0) && selectedMemberGroups.length
             === 0) {
             <div class="btn-wrapper">
               <sug-ui-button
@@ -336,7 +420,7 @@
                 (buttonClick)="openFromMyGroupsDialog()"
               >
               </sug-ui-button>
-              <!-- Hide "From This Sign Up" button when Sign Up Index Page is selected or multiple signups are selected -->
+              <!-- Hide "From This Sign Up" button when Sign Up Index Page is selected or multiple signups are selected or messageTypeId is 4 -->
               @if (!isSignUpIndexPageSelected && selectedSignups.length === 1) {
               <sug-ui-button
                 type="button"

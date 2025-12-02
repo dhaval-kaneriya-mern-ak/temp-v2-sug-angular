@@ -41,7 +41,7 @@
       (openSelectFileDialog)="openSelectFileDialog()"
       (openHelpDialog)="openHelpDialog()"
       (previewAndSend)="onPreviewAndSend(currentFormType)"
-      (saveDraft)="onSaveDraft(messageStatus.DRAFT)"
+      (saveDraft)="onSaveDraft(messageStatus.DRAFT, undefined, currentFormType)"
       (showRecipientDetails)="showRecipientDetails()"
       (editSelectedSlots)="openDateSlotsDialog()"
       (editSelectedMemberGroups)="openMyGroupDialog()"
@@ -150,6 +150,7 @@
 <!-- People Selection Dialog -->
 <sug-people-selection-dialog
   [(visible)]="isPeopleDialogVisible"
+  [messageTypeId]="selectedValue === 'emailoptionone' ? 4 : 1"
   [formType]="currentFormType"
   [selectedSignups]="stateService.selectedSignups"
   [isSignUpIndexPageSelected]="stateService.isSignUpIndexPageSelected"
@@ -159,6 +160,8 @@
   [recipientCount]="stateService.recipientCount"
   [selectedMemberGroups]="stateService.selectedMemberGroups"
   [peopleSelectionData]="stateService.peopleSelectionData"
+  [sendtotype]="currentSendToType"
+  [selectedCustomUserIds]="selectedCustomUserIds"
   (selectedGroupsChange)="stateService.setSelectedGroups($event)"
   (recipientsChange)="stateService.setRecipients($event)"
   (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"

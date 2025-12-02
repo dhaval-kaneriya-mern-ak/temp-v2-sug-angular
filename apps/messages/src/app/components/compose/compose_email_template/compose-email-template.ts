@@ -43,8 +43,10 @@ import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
 import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/file-selection-dialog.component';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
 import { ToastrService } from 'ngx-toastr';
+import { stripHtml } from '../../utils/services/draft-message.util';
 
 @Component({
   selector: 'sug-compose-email-template',
@@ -56,6 +58,7 @@ import { ToastrService } from 'ngx-toastr';
     SugUiTooltipComponent,
     ButtonModule,
     BadgeModule,
+    SugUiLoadingSpinnerComponent,
     SugUiMultiSelectDropdownComponent,
     ReactiveFormsModule,
     FileSelectionDialogComponent,
@@ -74,6 +77,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private toastr = inject(ToastrService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   reminderEmailForm!: FormGroup;
   confirmationEmailForm!: FormGroup;
   isLoading = false;
@@ -104,6 +109,16 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   messageStatus = MessageStatus;
   ngOnInit(): void {
     this.initializeForms();
+
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        const messageId = Number(params['id']);
+
+        if (!isNaN(messageId) && messageId > 0) {
+          this.getMessageById(messageId);
+        }
+      });
   }
 
   handleSelection(event: RadioCheckboxChangeEvent) {
@@ -145,7 +160,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     // Create form for reminder email template
     this.reminderEmailForm = this.fb.group({
       fromName: ['', Validators.required],
-      replyTo: [''],
+      replyTo: [[]], // Changed to array for multi-select dropdown
       subject: ['', Validators.required],
       message: ['', Validators.required],
       token: ['', Validators.required],
@@ -156,7 +171,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     // Create form for confirmation email template
     this.confirmationEmailForm = this.fb.group({
       fromName: ['', Validators.required],
-      replyTo: [''],
+      replyTo: [[]], // Changed to array for multi-select dropdown
       subject: ['', Validators.required],
       message: ['', Validators.required],
       token: ['', Validators.required],
@@ -363,6 +378,100 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         },
       });
   }
+
+  getMessageById(id: number) {
+    this.isLoading = true;
+
+    type ReplyToItem = { memberid: number; email: string };
+
+    const optionOne = 8;
+    const optionTwo = 2;
+
+    this.composeService
+      .getMessageById(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (!response.success) {
+            this.isLoading = false;
+            this.toastr.error(
+              'Failed to load message. Invalid message ID.',
+              'Error'
+            );
+            this.router.navigate(['/messages/compose']);
+            return;
+          }
+
+          if (response.data.messagetypeid == optionOne) {
+            this.selectedValue = 'emailoptionone';
+
+            this.showRadioButtons = false;
+
+            this.loadUserProfile();
+
+            const replyToMemberIds = (
+              (response.data.replyto as ReplyToItem[]) || []
+            ).map((item) => String(item.memberid));
+
+            this.reminderEmailForm.patchValue({
+              subject: response.data.subject,
+              message: stripHtml(response.data.body),
+            });
+
+            setTimeout(() => {
+              this.reminderEmailForm.get('replyTo')?.setValue(replyToMemberIds);
+              this.reminderEmailForm.get('replyTo')?.updateValueAndValidity();
+            }, 0);
+
+            this.isLoading = false;
+          } else if (response.data.messagetypeid == optionTwo) {
+            this.selectedValue = 'emailoptiontwo';
+
+            this.showRadioButtons = false;
+
+            this.loadUserProfile();
+
+            const replyToMemberIds = (
+              (response.data.replyto as ReplyToItem[]) || []
+            ).map((item) => String(item.memberid));
+
+            this.confirmationEmailForm.patchValue({
+              subject: response.data.subject,
+              message: stripHtml(response.data.body),
+            });
+
+            setTimeout(() => {
+              this.confirmationEmailForm
+                .get('replyTo')
+                ?.setValue(replyToMemberIds);
+              this.confirmationEmailForm
+                .get('replyTo')
+                ?.updateValueAndValidity();
+            }, 0);
+
+            this.isLoading = false;
+          } else {
+            this.isLoading = false;
+            this.toastr.error(
+              `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
+              'Unsupported Message Type'
+            );
+            this.router.navigate(['/messages/compose']);
+          }
+        },
+
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Failed to load message', error);
+          this.toastr.error(
+            'Failed to load message. Please try again.',
+            'Error'
+          );
+          this.router.navigate(['/messages/compose']);
+        },
+      });
+  }
+
   /**
    * Cleanup subscriptions on component destroy
    */

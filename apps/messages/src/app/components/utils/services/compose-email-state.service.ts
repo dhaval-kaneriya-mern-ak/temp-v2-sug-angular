@@ -16,6 +16,10 @@ import {
  */
 @Injectable()
 export class ComposeEmailStateService {
+  // Track if we're editing a draft to prevent auto-resetting "To" field
+  private isDraftEditModeSubject = new BehaviorSubject<boolean>(false);
+  isDraftEditMode$ = this.isDraftEditModeSubject.asObservable();
+
   // Selected signups state
   private selectedSignupsSubject = new BehaviorSubject<ISignUpItem[]>([]);
   selectedSignups$ = this.selectedSignupsSubject.asObservable();
@@ -95,6 +99,7 @@ export class ComposeEmailStateService {
       qtytaken: number;
       qtyremaining: number;
       signedupmembers: string;
+      waitlist?: boolean;
     }>
   >([]);
   selectedDateSlots$ = this.selectedDateSlotsSubject.asObservable();
@@ -187,15 +192,26 @@ export class ComposeEmailStateService {
     return this.subAdminsDataSubject.value;
   }
 
+  get isDraftEditMode(): boolean {
+    return this.isDraftEditModeSubject.value;
+  }
+
   get getMemberIndexPageUrl(): string {
     return this.memberIndexPageUrl;
   }
 
   // Setters
-  setSelectedSignups(signups: ISignUpItem[]): void {
+  setDraftEditMode(isDraftMode: boolean): void {
+    this.isDraftEditModeSubject.next(isDraftMode);
+  }
+
+  setSelectedSignups(signups: ISignUpItem[], skipPeopleReset = false): void {
     this.selectedSignupsSubject.next(signups);
     // Reset people selection when signups change
-    this.resetPeopleSelection();
+    // Skip if in draft edit mode OR explicitly requested to skip
+    if (!this.isDraftEditMode && !skipPeopleReset) {
+      this.resetPeopleSelection();
+    }
   }
 
   setSelectedAttachment(attachments: IFileItem[]): void {
@@ -210,13 +226,19 @@ export class ComposeEmailStateService {
     this.memberIndexPageUrl = url;
   }
 
-  setSelectedTabGroups(tabGroups: ISelectOption[]): void {
+  setSelectedTabGroups(
+    tabGroups: ISelectOption[],
+    skipPeopleReset = false
+  ): void {
     this.selectedTabGroupsSubject.next(tabGroups);
     // Reset people selection when tab groups change
-    this.resetPeopleSelection();
+    // Skip if in draft edit mode OR explicitly requested to skip
+    if (!this.isDraftEditMode && !skipPeopleReset) {
+      this.resetPeopleSelection();
+    }
   }
 
-  setSignUpIndexPageSelected(selected: boolean): void {
+  setSignUpIndexPageSelected(selected: boolean, skipPeopleReset = false): void {
     this.isSignUpIndexPageSelectedSubject.next(selected);
 
     // If deselecting index page and no other selections remain, reset signup options
@@ -229,7 +251,10 @@ export class ComposeEmailStateService {
     }
 
     // Reset people selection when index page selection changes
-    this.resetPeopleSelection();
+    // Skip if in draft edit mode OR explicitly requested to skip
+    if (!this.isDraftEditMode && !skipPeopleReset) {
+      this.resetPeopleSelection();
+    }
   }
 
   setSelectedGroups(groups: ISelectOption[]): void {
@@ -293,8 +318,10 @@ export class ComposeEmailStateService {
   addSignup(signup: ISignUpItem): void {
     const current = this.selectedSignupsSubject.value;
     this.selectedSignupsSubject.next([...current, signup]);
-    // Reset people selection when signup is added
-    this.resetPeopleSelection();
+    // Reset people selection when signup is added (unless in draft edit mode)
+    if (!this.isDraftEditMode) {
+      this.resetPeopleSelection();
+    }
   }
 
   removeSignup(index: number): void {
@@ -307,8 +334,10 @@ export class ComposeEmailStateService {
       this.resetSignUpOptionsState();
     }
 
-    // Reset people selection when signup is removed
-    this.resetPeopleSelection();
+    // Reset people selection when signup is removed (unless in draft edit mode)
+    if (!this.isDraftEditMode) {
+      this.resetPeopleSelection();
+    }
   }
 
   removeTabGroup(index: number): void {
@@ -324,8 +353,10 @@ export class ComposeEmailStateService {
       this.resetSignUpOptionsState();
     }
 
-    // Reset people selection when tab group is removed
-    this.resetPeopleSelection();
+    // Reset people selection when tab group is removed (unless in draft edit mode)
+    if (!this.isDraftEditMode) {
+      this.resetPeopleSelection();
+    }
   }
 
   removePortalPage(index: number): void {
@@ -419,6 +450,8 @@ export class ComposeEmailStateService {
       rsvpResponsemaybe: false,
       rsvpResponsenoresponse: false,
     });
+    // Reset draft edit mode when clearing all selections
+    this.isDraftEditModeSubject.next(false);
     // Ensure any disabled sign up options are reset when clearing selections
     this.resetSignUpOptionsState();
   }
