@@ -255,6 +255,7 @@
 </sug-file-selection-dialog>
 <sug-preview-email
   [(visible)]="isPreviewVisible"
+  [showThemeSelection]="!userStateService.isBasicUser()"
   [saveCustomButton]="true"
   (saveCustom)="onSaveDraft(messageStatus.DRAFT)"
   (visibleChange)="onPreviewClose()"

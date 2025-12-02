@@ -211,10 +211,10 @@
   (fileSelected)="onFileSelected($event)"
 >
 </sug-file-selection-dialog>
-
 <!-- Preview Email Dialog -->
 <sug-preview-email
   [(visible)]="isPreviewDialogVisible"
+  [showThemeSelection]="!userStateService.isBasicUser()"
   (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   (scheduleEmail)="scheduleEmail($event)"

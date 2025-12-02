@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { ComposeTextMessageComponent } from './compose-text-message';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TOAST_CONFIG, DefaultGlobalConfig, ToastrService } from 'ngx-toastr';
+import { of } from 'rxjs';
 
 class MockToastrService {
   success() {
@@ -28,6 +30,7 @@ describe('ComposeTextMessageComponent', () => {
       providers: [
         { provide: TOAST_CONFIG, useValue: DefaultGlobalConfig },
         { provide: ToastrService, useClass: MockToastrService },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
       ],
     }).compileComponents();
 

@@ -20,15 +20,18 @@
   </div>
   <div class="dialog-content preview-email-content">
     <!-- Email HTML Preview -->
-    <div class="email-preview-wrapper">
-      <div class="email-preview-container" [innerHTML]="emailHtmlPreview"></div>
+    <div class="email-preview locked" id="previewArea">
+      <div class="link-blocking-cover"></div>
+      <div class="email-content">
+        <div [innerHTML]="sanitizedHtmlPreview"></div>
+      </div>
     </div>
   </div>
 
   <!-- Footer with Theme Selection and Send Buttons -->
   <div slot="footer" class="preview-dialog-footer">
     <!-- Choose Theme - Horizontal Row on Top -->
-    @if (availableThemes.length > 0) {
+    @if (availableThemes.length > 0 && showThemeSelection === true) {
     <div class="theme-section-footer">
       <span class="theme-label">Choose Theme:</span>
       <div class="theme-icons">

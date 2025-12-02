@@ -44,6 +44,13 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
           },
         })
       ),
+      fetchRecipients: vi.fn().mockReturnValue(
+        of({
+          success: true,
+          data: { recipients: [] },
+          pagination: { totalRecords: 0 },
+        })
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -391,7 +398,7 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
       component.closeDialog(false);
 
       expect(toastrSpy).toHaveBeenCalledWith(
-        'Please select people from groups or sign up',
+        'Please select people from groups',
         'Error'
       );
       toastrSpy.mockRestore();
@@ -399,10 +406,13 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
 
     it('should allow closing when date slots selected', () => {
       const emitSpy = vi.spyOn(component.selectedGroupsChange, 'emit');
+      component.messageTypeId = 1; // Set messageTypeId to non-4 to allow date slots validation path
       component.peopleDialogForm.patchValue({
         selectedValue: 'sendMessagePeopleIselect',
       });
-      component.selectedDateSlots = [{ slotitemid: 1 }];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      component.selectedDateSlots = [{ slotitemid: 1 }] as any;
+      component.selectedMemberGroups = [];
 
       component.closeDialog(false);
 

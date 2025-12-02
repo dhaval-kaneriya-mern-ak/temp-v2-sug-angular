@@ -17,6 +17,7 @@ import {
   SugUiRadioCheckboxButtonComponent,
   RadioCheckboxChangeEvent,
   SugUiLoadingSpinnerComponent,
+  ISelectOption,
 } from '@lumaverse/sug-ui';
 import { ComposeService } from '../compose.service';
 import { ComposeEmailStateService } from '../../utils/services/compose-email-state.service';
@@ -48,6 +49,7 @@ import {
   IMessageByIdDataExtended,
   IRecipient,
   SignUPType,
+  EXCLUDED_RECIPIENT_VALUES,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -627,22 +629,21 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     const payload: IMessagePreviewRequest = {
       fromname: form.value.fromName,
+      signuptype: SignUPType.SIGNUP,
       replyto: this.stateService.subAdminsData
         .filter((su) => form.value.replyTo.includes(String(su.value)))
         .map((su) => su.label),
       subject: form.value.subject,
       message: form.value.message,
-      emailType: this.selectedValue === 'emailoptionone' ? '4' : '1',
+      emailtype: this.selectedValue === 'emailoptionone' ? '4' : '1',
       themeid: form.value.themeid,
     };
 
     // Only add portals if there are any selected
     if (form.value.selectedSignups && form.value.selectedSignups.length >= 1) {
-      payload.signups = form.value.selectedSignups.map((su: any) => ({
-        id: su.signupid,
-        title: su.title,
-        themeid: su.themeid,
-      }));
+      payload.signupids = form.value.selectedSignups.map(
+        (su: ISignUpItem) => su.signupid
+      );
     }
 
     //add attachments
@@ -652,43 +653,38 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Only add portals if there are any selected
     if (
       form.value.selectedPortalPages &&
       form.value.selectedPortalPages.length >= 1
     ) {
-      payload.portals = form.value.selectedPortalPages.map((pp: any) => ({
-        id: pp.id,
-        title: pp.title,
-        urlkey: pp.urlkey,
-      }));
+      payload.signuptype = SignUPType.PORTALS;
+      payload.portalids = form.value.selectedPortalPages.map(
+        (pp: any) => pp.id
+      );
+    }
+
+    if (form.value.selectedTabGroups.length > 0) {
+      payload.signuptype = SignUPType.TABGROUP;
+      payload.tabgroupids = form.value.selectedTabGroups.map(
+        (pp: ISelectPortalOption) => pp.id
+      );
     }
     if (form.value.isSignUpIndexPageSelected) {
-      payload.signUpType = SignUPType.ACCIDEX;
-      // const signupsFromOptions = (this.stateService.signUpOptions || [])
-      //   .flatMap((g) => g.items ?? [])
-      //   .map((item) => {
-      //     const signupData = (item as any).signupData as
-      //       | ISignUpItem
-      //       | undefined;
-      //     return {
-      //       id: signupData?.signupid ?? Number(item.value),
-      //       title: signupData?.title ?? item.label,
-      //       themeid: signupData?.themeid ?? 1,
-      //     };
-      //   });
-      // payload.signups = signupsFromOptions;
-      // this.availableThemes = [
-      //   1,
-      //   ...(signupsFromOptions || []).map((su) => su.themeid),
-      // ];
+      payload.signuptype = SignUPType.ACCIDEX;
     }
+
     if (form.value.toPeople.length > 0) {
-      payload.sendTo = form.value.toPeople.map((person: any) => ({
-        id: Number(person.value || 1),
-        displayName: person.label,
-        isChecked: true,
-      }));
+      payload.sendto = form.value.toPeople
+        .filter(
+          (person: ISelectOption) =>
+            !EXCLUDED_RECIPIENT_VALUES.has(person.value as string)
+        )
+        .map((person: ISelectOption) => ({
+          id: Number(person.value || 1),
+          displayname: person.label,
+          ischecked: true,
+          membercount: this.stateService.recipientCount,
+        }));
     }
     // Load signups
     this.composeService.messagePreview(payload).subscribe({

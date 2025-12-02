@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { ComposeEmailTemplateComponent } from './compose-email-template';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TOAST_CONFIG, ToastrService } from 'ngx-toastr';
+import { of } from 'rxjs';
 
 describe('ComposeEmailTemplateComponent', () => {
   let component: ComposeEmailTemplateComponent;
@@ -26,6 +28,7 @@ describe('ComposeEmailTemplateComponent', () => {
             config: {},
           },
         },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
       ],
     }).compileComponents();
 

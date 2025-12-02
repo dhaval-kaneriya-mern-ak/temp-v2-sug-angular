@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
+import { ActivatedRoute } from '@angular/router';
 import { ComposeEmailComponent } from './compose-email';
 import { ComposeService } from '../compose.service';
 import { UserStateService } from '@services/user-state.service';
@@ -90,6 +91,8 @@ describe('ComposeEmailComponent (Refactored)', () => {
       memberProfile$: memberProfileSubject.asObservable(),
       userProfile$: of(null),
       isValidEmail: (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      isBasicUser: (userProfile: any) => false,
     };
 
     await TestBed.configureTestingModule({
@@ -100,6 +103,7 @@ describe('ComposeEmailComponent (Refactored)', () => {
         FormBuilder,
         { provide: ComposeService, useValue: mockComposeService },
         { provide: UserStateService, useValue: mockUserStateService },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
       ],
     }).compileComponents();
 

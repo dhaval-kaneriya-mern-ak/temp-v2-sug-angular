@@ -483,6 +483,7 @@
 
 <!-- Preview Email Dialog -->
 <sug-preview-email
+  [showThemeSelection]="!userStateService.isBasicUser()"
   [(visible)]="isPreviewVisible"
   [showTextPreview]="selectedValue === 'emailoptiontwo'"
   [textMessage]="currentEmailForm.get('message')?.value"

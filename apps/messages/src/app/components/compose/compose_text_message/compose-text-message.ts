@@ -15,6 +15,8 @@ import {
   IGroupMemberDto,
   IGroupInfoDto,
   IGroupMember,
+  SignUPType,
+  EXCLUDED_RECIPIENT_VALUES,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { CommonModule } from '@angular/common';
 import {
@@ -1066,40 +1068,42 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       ) as string[],
       subject: form.value.subject || form.value.emailSubject,
       message: form.value.message,
-      emailType: this.selectedValue === 'emailoptionone' ? '14' : '15',
+      signuptype: SignUPType.SIGNUP,
+      emailtype: this.selectedValue === 'emailoptionone' ? '14' : '15',
       themeid: form.value.themeid,
-      signups: this.getSelectedSignup().map((su) => ({
-        id: su.signupid,
-        title: su.title,
-        themeid: su.themeid ?? 1,
-      })),
+      signupids: this.getSelectedSignup().map((su) => su.signupid),
     };
     this.availableThemes = [
       1,
       ...this.signupOptionsData.map((su) => su.themeid),
     ];
     if (this.getSelectedSignup().length === 0) {
-      payload.signUpType = 'acctindex';
+      payload.signuptype = SignUPType.ACCIDEX;
     }
     if (form.value.to && form.value.to.length > 0) {
-      payload.sendTo = form.value.to.map(
-        (person: string | { label: string; value: string | number }) => {
+      payload.sendto = form.value.to
+        .filter(
+          (person: ISelectOption) =>
+            !EXCLUDED_RECIPIENT_VALUES.has(person.value as string)
+        )
+        .map((person: string | { label: string; value: string | number }) => {
           // Handle case where person is just a string (like '37826')
           if (typeof person === 'string') {
             return {
               id: Number(person),
-              displayName: person,
-              isChecked: true,
+              displayname: person,
+              ischecked: true,
+              membercount: this.stateService.recipients.length,
             };
           }
           // Handle case where person is an object with label and value
           return {
             id: Number(person.value),
-            displayName: person.label,
-            isChecked: true,
+            displayname: person.label,
+            ischecked: true,
+            membercount: this.stateService.recipients.length,
           };
-        }
-      );
+        });
     }
     // Load signups
     this.composeService

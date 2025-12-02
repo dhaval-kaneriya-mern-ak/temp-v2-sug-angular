@@ -680,16 +680,22 @@ export interface MessageByIdData {
 
 export interface IMessagePreviewRequest {
   fromname: string;
-  replyto?: string[];
   subject: string;
   message: string;
-  emailType: string;
+  emailtype: string;
   themeid: number;
-  signups?: Array<{ id: number; title: string; themeid: number }>;
-  signUpType?: string;
-  tabgroups?: [];
-  portals?: Array<{ id: number; title: string; urlkey: string }>;
-  sendTo?: Array<{ id: number; displayName: string; isChecked: boolean }>;
+  replyto?: string[];
+  signupids?: number[];
+  signuptype?: string;
+  tabgroupids?: number[];
+  portalids?: number[];
+  sendto?: Array<{
+    id: number;
+    displayname: string;
+    ischecked: boolean;
+    membercount?: number;
+  }>;
+  sendtotype?: string;
   attachmentids?: number[];
 }
 
@@ -972,3 +978,16 @@ export interface IShortUrlResponse {
     url: string;
   };
 }
+
+/**
+ * Set of recipient values that should be excluded from message preview and send payloads.
+ * These values represent UI-only selection options that don't map to actual recipient data.
+ */
+export const EXCLUDED_RECIPIENT_VALUES = new Set<string>([
+  'manual_entry',
+  'sendMessagePeopleIselect',
+  'peopleOnWaitlist',
+  'peopleSignedUpAndWaitlist',
+  'peopleWhoSignedUp',
+  'peopleWhoNotSignedUp',
+]);

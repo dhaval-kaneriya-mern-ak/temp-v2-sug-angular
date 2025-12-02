@@ -37,6 +37,7 @@ import {
   MessageStatus,
   SentTo,
   SendToType,
+  SignUPType,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { MemberProfile } from '@services/interfaces/member-profile.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
@@ -236,9 +237,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         .map((su) => su.email),
       subject: form.value.subject,
       message: form.value.message,
-      emailType: this.selectedValue === 'emailoptionone' ? '8' : '2',
+      emailtype: this.selectedValue === 'emailoptionone' ? '8' : '2',
       themeid: form.value.themeid ?? 1,
-      signups: selectedSignups,
+      signuptype: SignUPType.SIGNUP,
+      signupids: selectedSignups.map((su) => su.id),
     };
     this.availableThemes = [
       1,

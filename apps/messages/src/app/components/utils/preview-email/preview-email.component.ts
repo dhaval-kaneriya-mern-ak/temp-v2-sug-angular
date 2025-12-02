@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '@environments/environment';
 import {
   SugUiDialogComponent,
@@ -16,11 +17,12 @@ import { format } from 'date-fns';
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
 })
 export class PreviewEmailComponent {
+  sanitizer = inject(DomSanitizer);
   @Input() visible = false;
   @Input() showTextPreview = false;
   @Input() saveCustomButton = false;
+  @Input() showThemeSelection = true;
   @Input() textMessage = '';
-  @Input() emailHtmlPreview = '';
   @Input() availableThemes: Array<number> = [];
   siteUrl = environment.SITE_URL;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -28,6 +30,15 @@ export class PreviewEmailComponent {
   @Output() themeChange = new EventEmitter<number>();
   @Output() saveCustom = new EventEmitter<number>();
   @Output() scheduleEmail = new EventEmitter<string>();
+  @Input() set emailHtmlPreview(value: string) {
+    this._emailHtmlPreview = value;
+    this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(value);
+  }
+  get emailHtmlPreview(): string {
+    return this._emailHtmlPreview;
+  }
+  private _emailHtmlPreview = '';
+  sanitizedHtmlPreview: SafeHtml = '';
 
   dialogConfig: DialogConfig = {
     modal: true,
