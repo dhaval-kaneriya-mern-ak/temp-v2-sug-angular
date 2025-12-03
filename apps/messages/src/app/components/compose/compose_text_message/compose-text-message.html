@@ -4,7 +4,14 @@
 ></sug-ui-loading-spinner>
 
 <div class="compose-container">
-  @if (showRadioButtons) {
+  <!-- Validation Errors Display -->
+  @if (formValidationErrors && formValidationErrors.length > 0) {
+  <ul class="form-validation-errors">
+    @for (error of formValidationErrors; track error) {
+    <li class="error-item">{{ error }}</li>
+    }
+  </ul>
+  } @if (showRadioButtons) {
   <div class="radio-selection">
     <sug-ui-radio-checkbox-button
       type="radio"

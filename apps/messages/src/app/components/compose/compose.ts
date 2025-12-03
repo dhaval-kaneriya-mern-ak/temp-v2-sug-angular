@@ -44,6 +44,7 @@ export class Compose implements OnInit, OnDestroy {
   public isTrialUser = false;
   public isVisible = false;
   public dialogType: 'template' | 'text' | null = null;
+  public isSuccessRoute = false;
 
   // Navigation tabs
   navigationComposeTabs: ComposeTab[] = [
@@ -70,6 +71,12 @@ export class Compose implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.initializeActiveTab();
+    this.checkIfSuccessRoute();
+
+    // Subscribe to router events to detect route changes
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.checkIfSuccessRoute();
+    });
 
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
@@ -80,6 +87,10 @@ export class Compose implements OnInit, OnDestroy {
         this.isTrialUser = profile.istrial ?? false;
         this.checkDirectAccess();
       });
+  }
+
+  private checkIfSuccessRoute() {
+    this.isSuccessRoute = this.router.url.includes('/success');
   }
 
   ngOnDestroy() {

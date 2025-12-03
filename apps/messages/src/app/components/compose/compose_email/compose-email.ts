@@ -113,6 +113,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   signupDialog!: SignupSelectionDialogComponent;
   messageStatus = MessageStatus;
   // Forms
+  formValidationErrors: string[] = [];
   emailFormOne!: FormGroup;
   emailFormTwo!: FormGroup;
   selectedRadioOption: {
@@ -730,9 +731,13 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
         this.isPreviewDialogVisible = false;
+        error?.error?.message?.forEach((msg: { details: string }) => {
+          this.formValidationErrors.push(msg.details);
+        });
+        this.cdr.markForCheck();
       },
     });
   }
@@ -744,14 +749,18 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     const form =
       formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
 
-    // Perform custom validation based on people selection and Show error messages to user
+    // Perform custom validation based on people selection and show error messages
     const customValidationResult = this.validateFormBasedOnSelection();
     if (!customValidationResult.isValid) {
-      customValidationResult.errors.forEach((error) => {
-        this.toastr.error(error, 'Validation Error');
-      });
+      // Store errors in form error array to display above form
+      this.formValidationErrors = customValidationResult.errors;
+      this.cdr.markForCheck();
       return;
     }
+
+    // Clear errors if validation passes
+    this.formValidationErrors = [];
+
     this.availableThemes = [
       1,
       ...((form.value.selectedSignups || []) as ISignUpItem[]).map(
@@ -816,10 +825,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       const peopleSelectionData = this.stateService.peopleSelectionData;
 
       if (!peopleSelectionData.selectedValue) {
-        this.toastr.error(
+        // this.toastr.error(
+        //   'Please select recipients in the "To" field',
+        //   'Validation Error'
+        // );
+        this.formValidationErrors = [
           'Please select recipients in the "To" field',
-          'Validation Error'
-        );
+        ];
+        this.cdr.markForCheck();
         return;
       }
 
@@ -1286,14 +1299,20 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       this.composeService.createMessage(payload).subscribe({
         next: (response) => {
           if (response.success === true && response.data) {
-            this.toastr.success('Message saved successfully', 'Success');
-            this.showOptionsAgain();
+            // this.toastr.success('Message saved successfully', 'Success');
+            this.router.navigate(['/messages/compose/success'], {
+              queryParams: { type: status },
+            });
           }
           this.isLoading = false;
         },
         error: (err) => {
           this.isLoading = false;
-          this.toastr.error(err.error.message[0]?.details, 'Error');
+          // this.toastr.error(err.error.message[0]?.details, 'Error');
+          err?.error?.message?.forEach((msg: any) => {
+            this.formValidationErrors.push(msg.details);
+          });
+          this.cdr.markForCheck();
           if (status !== MessageStatus.DRAFT) {
             this.openPreviewDialog(this.currentForm);
           }
@@ -2220,18 +2239,19 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             this.isLoading = false;
           } else {
             this.isLoading = false;
-            this.toastr.error(
-              `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
-              'Unsupported Message Type'
-            );
+            // this.toastr.error(
+            //   `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
+            //   'Unsupported Message Type'
+            // );
+            this.formValidationErrors = [
+              `This message type ${response.data.messagetypeid} cannot be edited in this form.`,
+            ];
             this.router.navigate(['/messages/compose']);
           }
         },
 
         error: (error) => {
           this.isLoading = false;
-          console.error('Failed to load message', error);
-
           handleDraftLoadError({
             toastr: this.toastr,
             router: this.router,

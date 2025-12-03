@@ -79,7 +79,7 @@ export function saveDraftMessage(options: SaveDraftOptions): void {
         }
 
         if (response.success) {
-          toastr.success('Draft message saved successfully!', 'Success');
+          // toastr.success('Draft message saved successfully!', 'Success');
 
           if (onSuccess) {
             onSuccess(response.data.data);
@@ -89,7 +89,7 @@ export function saveDraftMessage(options: SaveDraftOptions): void {
             response as any,
             'Failed to save draft'
           );
-          toastr.error(errorMessage, 'Error');
+          // toastr.error(errorMessage, 'Error');
 
           if (onError) {
             onError();
@@ -100,13 +100,13 @@ export function saveDraftMessage(options: SaveDraftOptions): void {
         if (onLoadingChange) {
           onLoadingChange(false);
         }
-        console.error('Error saving draft:', error);
+        // console.error('Error saving draft:', error);
 
         const errorMessage = parseApiErrorMessage(
           error,
           'Failed to save draft. Please try again.'
         );
-        toastr.error(errorMessage, 'Error');
+        // toastr.error(errorMessage, 'Error');
 
         if (onError) {
           onError();
@@ -128,7 +128,7 @@ export function handleDraftLoadError(options: DraftLoadErrorOptions): void {
     onCleanup();
   }
 
-  toastr.error('Failed to load message. Invalid message ID.', 'Error');
+  // toastr.error('Failed to load message. Invalid message ID.', 'Error');
   router.navigate(['/messages/compose']);
 }
 

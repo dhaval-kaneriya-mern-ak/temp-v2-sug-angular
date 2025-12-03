@@ -22,11 +22,11 @@ import {
   ISelectPortalOption,
   ISignUpItem,
 } from '@services/interfaces/messages-interface/compose.interface';
-import { ToastrService } from 'ngx-toastr';
 import { UserStateService } from '@services/user-state.service';
 import { Subject, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
 import { ComposeEmailStateService } from '../services/compose-email-state.service';
+import { SugInformationDialogComponent } from '../information-dialog/information-dialog.component';
 
 @Component({
   selector: 'sug-signup-selection-dialog',
@@ -39,6 +39,7 @@ import { ComposeEmailStateService } from '../services/compose-email-state.servic
     SugUiButtonComponent,
     SugUiTooltipComponent,
     SugUiMultiSelectDropdownComponent,
+    SugInformationDialogComponent,
   ],
   templateUrl: './signup-selection-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
@@ -64,12 +65,13 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private userProfile: MemberProfile | null = null;
 
-  toastr = inject(ToastrService);
   private fb = inject(FormBuilder);
   private userStateService = inject(UserStateService);
   composeStateService = inject(ComposeEmailStateService);
 
   signUpDialogForm!: FormGroup;
+  infoDialog = false;
+  infoMessage = '';
 
   dialogConfig: DialogConfig = {
     modal: true,
@@ -194,7 +196,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
       const selectedValue = formValue.selectedSignupValue;
 
       if (!selectedValue) {
-        this.toastr.error('Please select an option', 'Error');
+        this.openInfoDialog('You have not selected a sign up link.');
         return;
       }
 
@@ -211,7 +213,9 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
           });
         }
         if (selectedSignupIds.length === 0) {
-          this.toastr.error('Please select at least one sign up', 'Error');
+          this.openInfoDialog(
+            'You must select one or more sign ups from the list.'
+          );
           return;
         }
 
@@ -235,7 +239,9 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
       } else if (selectedValue === 'LinkSpecifixTabGroup') {
         const selectedTabGroupIds = formValue.selectedTabGroups || [];
         if (selectedTabGroupIds.length === 0) {
-          this.toastr.error('Please select at least one tab group', 'Error');
+          this.openInfoDialog(
+            'You must select one or more tab groups from the list.'
+          );
           return;
         }
         const tabGroups = this.tabGroupsData.filter((group) =>
@@ -255,7 +261,9 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
 
         // Validate that at least one portal page is selected
         if (selectedPortalPageIds.length === 0) {
-          this.toastr.error('Please select at least one portal page', 'Error');
+          this.openInfoDialog(
+            'You must select one or more portal pages from the list.'
+          );
           return;
         }
 
@@ -400,5 +408,15 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
     if (url) {
       window.open(url, '_blank');
     }
+  }
+
+  openInfoDialog(msg: string): void {
+    this.infoMessage = msg;
+    this.infoDialog = true;
+  }
+
+  closeInfoDialog(): void {
+    this.infoMessage = '';
+    this.infoDialog = false;
   }
 }
