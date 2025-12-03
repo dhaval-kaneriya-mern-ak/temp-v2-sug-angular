@@ -1253,8 +1253,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       }
       // Apply non-group members rule after switch (can override sentto)
       if (this.selectedRadioOption.includeNonGroupMembers) {
-        payload.sentto = SentTo.PEOPLE_IN_GROUPS;
-        payload.sendtotype = SendToType.ALL_INCLUDE_NON_GROUP_MEMBERS;
+        payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
+        payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
       }
 
       this.composeService.createMessage(payload).subscribe({
