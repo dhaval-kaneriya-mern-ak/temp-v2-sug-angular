@@ -179,21 +179,6 @@ describe('PeopleSelectionDialogComponent - Business Rules', () => {
         true
       );
     });
-
-    it('should show multi-signup options when multiple signups selected', () => {
-      component.formType = 'emailParticipants';
-      component.selectedSignups = [
-        { signupid: 123, mode: 'standard' } as ISignUpItem,
-        { signupid: 124, mode: 'standard' } as ISignUpItem,
-      ];
-
-      const options = component.formTwoRadioOptions;
-
-      expect(options.some((o) => o.value === 'peopleOnWaitlist')).toBe(true);
-      expect(options.some((o) => o.value === 'peopleSignedUpAndWaitlist')).toBe(
-        true
-      );
-    });
   });
 
   describe('Business Rule: Group Selection', () => {

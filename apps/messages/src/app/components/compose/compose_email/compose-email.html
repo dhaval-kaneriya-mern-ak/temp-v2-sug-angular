@@ -215,7 +215,7 @@
 <!-- Preview Email Dialog -->
 <sug-preview-email
   [(visible)]="isPreviewDialogVisible"
-  [showThemeSelection]="!userStateService.isBasicUser()"
+  [showThemeSelection]="!userStateService.isBasicUser(userProfile)"
   (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   (scheduleEmail)="scheduleEmail($event)"
