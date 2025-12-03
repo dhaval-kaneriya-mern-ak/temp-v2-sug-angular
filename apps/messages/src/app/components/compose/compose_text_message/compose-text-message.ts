@@ -1044,9 +1044,16 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               next: (response) => {
                 if (response.success === true) {
                   // this.toastr.success('Message saved successfully', 'Success');
-                  this.router.navigate(['/messages/compose/success'], {
-                    queryParams: { type: status },
-                  });
+                  const successType =
+                    status === MessageStatus.DRAFT
+                      ? 'draft'
+                      : status === MessageStatus.SCHEDULED
+                      ? 'scheduled'
+                      : 'send';
+                  const array = this.signupOptionsData.filter((su) =>
+                    form.selectedSignups?.includes(String(su.signupid))
+                  );
+                  this.composeService.triggerSuccessPage(successType, array);
                 }
                 this.isLoading = false;
               },

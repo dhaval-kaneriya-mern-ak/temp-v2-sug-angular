@@ -13,7 +13,6 @@ import { ComposeEmailTemplateComponent } from '../components/compose/compose_ema
 import { ComposeTextMessageComponent } from '../components/compose/compose_text_message/compose-text-message';
 import { SentDetails } from '../components/sent/details/sent-details';
 import { scheduleGuard } from '../guards/schedule.guard';
-import { SuccessPageComponent } from '../components/compose/success-page/success-page.component';
 
 export const remoteRoutes: Route[] = [
   {
@@ -31,7 +30,6 @@ export const remoteRoutes: Route[] = [
           { path: 'email', component: ComposeEmailComponent },
           { path: 'template', component: ComposeEmailTemplateComponent },
           { path: 'text', component: ComposeTextMessageComponent },
-          { path: 'success', component: SuccessPageComponent },
         ],
       },
       { path: 'draft', component: Draft },

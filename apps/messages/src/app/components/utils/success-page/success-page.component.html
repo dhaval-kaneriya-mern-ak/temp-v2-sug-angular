@@ -8,6 +8,8 @@
     <h1 class="success-title">Draft Saved!</h1>
     } @else if(type === 'scheduled') {
     <h1 class="success-title">Message Scheduled!</h1>
+    } @else if(type === 'custom') {
+    <h1 class="success-title">Success!</h1>
     }
 
     <!-- Success Messages -->
@@ -71,6 +73,26 @@
           >Sent</span
         >" tab for details about the delivery.
       </p>
+      } @else if (type === 'custom') {
+      <p class="secondary-message">
+        You did it! Your custom reminder template is saved and ready for use. If
+        you need to edit it in the future, simply click on the "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewDrafts()"
+          (keydown.enter)="viewDrafts()"
+          role="button"
+          aria-label="Go to Drafts & Templates"
+          >Drafts & Templates</span
+        >" tab in the Messages area.
+      </p>
+      <br />
+      <p class="secondary-message">
+        To assign this template to a new sign up that you create in the future,
+        go to the “Settings” tab in the builder, and scroll down to the
+        "Notifications" area within the sign up Preferences. Expand "Custom
+        Confirmation Emails & Reminders" to select your saved template.
+      </p>
       }
     </div>
 
@@ -84,6 +106,7 @@
         styleClass="success-btn"
       >
       </sug-ui-button>
+      @if (shouldShowViewSignUpButton) {
       <sug-ui-button
         label="View Sign Up"
         [severity]="'secondary'"
@@ -92,6 +115,7 @@
         styleClass="success-btn"
       >
       </sug-ui-button>
+      }
     </div>
   </div>
 </div>

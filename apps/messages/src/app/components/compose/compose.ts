@@ -15,6 +15,8 @@ import { ComposeService } from './compose.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserStateService } from '@services/user-state.service';
+import { SuccessPageComponent } from '../utils/success-page/success-page.component';
+import { ISignUpItem } from '@services/interfaces';
 interface ComposeTab extends Tabs {
   restricted?: boolean;
   badge?: string;
@@ -29,6 +31,7 @@ interface ComposeTab extends Tabs {
     RouterOutlet,
     SugUiMenuTabsComponent,
     SugUiButtonComponent,
+    SuccessPageComponent,
     // SugUiRadioCheckboxButtonComponent,
   ],
   templateUrl: './compose.html',
@@ -45,6 +48,9 @@ export class Compose implements OnInit, OnDestroy {
   public isVisible = false;
   public dialogType: 'template' | 'text' | null = null;
   public isSuccessRoute = false;
+  isShowSuccessPage = false;
+  successPageType: 'send' | 'draft' | 'scheduled' | 'custom' = 'send';
+  successPageSelectedSignups: ISignUpItem[] = [];
 
   // Navigation tabs
   navigationComposeTabs: ComposeTab[] = [
@@ -86,6 +92,16 @@ export class Compose implements OnInit, OnDestroy {
         this.isProUser = profile.ispro ?? false;
         this.isTrialUser = profile.istrial ?? false;
         this.checkDirectAccess();
+      });
+
+    // Subscribe to success page events from compose service
+    this.composeService.showSuccessPage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        console.log(data);
+        if (data && data.type) {
+          this.showSuccessPageWithType(data.type, data.selectedSignups);
+        }
       });
   }
 
@@ -181,5 +197,19 @@ export class Compose implements OnInit, OnDestroy {
     this.router
       .navigateByUrl('/', { skipLocationChange: true })
       .then(() => this.router.navigateByUrl('/' + this.currentActiveTab));
+  }
+
+  showSuccessPageWithType(
+    type: 'send' | 'draft' | 'scheduled' | 'custom',
+    selectedSignups?: ISignUpItem[]
+  ) {
+    this.successPageType = type;
+    this.successPageSelectedSignups = selectedSignups || [];
+    this.isShowSuccessPage = true;
+    window.scrollTo(0, 0);
+  }
+
+  hideSuccessPage() {
+    this.isShowSuccessPage = false;
   }
 }

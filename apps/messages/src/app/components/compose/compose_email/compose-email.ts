@@ -1299,10 +1299,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       this.composeService.createMessage(payload).subscribe({
         next: (response) => {
           if (response.success === true && response.data) {
-            // this.toastr.success('Message saved successfully', 'Success');
-            this.router.navigate(['/messages/compose/success'], {
-              queryParams: { type: status },
-            });
+            // Trigger success page display without routing
+            const successType =
+              status === MessageStatus.DRAFT
+                ? 'draft'
+                : status === MessageStatus.SCHEDULED
+                ? 'scheduled'
+                : 'send';
+            this.composeService.triggerSuccessPage(
+              successType,
+              this.stateService.selectedSignups
+            );
           }
           this.isLoading = false;
         },
