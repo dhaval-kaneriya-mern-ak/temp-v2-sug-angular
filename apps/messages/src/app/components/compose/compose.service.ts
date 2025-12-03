@@ -33,10 +33,22 @@ export class ComposeService {
     return this.sugApiClient.get(`messages/compose/member-info`);
   }
 
-  getSignUpList(): Observable<ISignUpListResponse> {
-    return this.sugApiClient.get(
-      `/signups/created?page=1&limit=100&sortBy=startdate&sortOrder=desc&filter=active`
-    );
+  getSignUpList(options?: {
+    includeAdvanceDetails?: boolean;
+  }): Observable<ISignUpListResponse> {
+    const params = new URLSearchParams({
+      page: '1',
+      limit: '100',
+      sortBy: 'startdate',
+      sortOrder: 'desc',
+      filter: 'active',
+    });
+
+    if (options?.includeAdvanceDetails) {
+      params.append('includeAdvanceDetails', 'true');
+    }
+
+    return this.sugApiClient.get(`/signups/created?${params.toString()}`);
   }
 
   getGroupforMembers(): Observable<IGroupListResponse> {

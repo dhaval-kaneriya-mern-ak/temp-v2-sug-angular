@@ -92,6 +92,8 @@ export interface ISignUpItem {
   favoriteid?: number;
   haspassword?: string | boolean;
   passcode?: string;
+  remindertemplate?: string | number;
+  confirmationtemplate?: string | number;
 }
 
 export interface ISelectPortalOption {

@@ -90,6 +90,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   isHelpDialogVisible = false;
   subAdminsApiData: ISubAdmin[] = [];
   signupOptionApiData: ISignUpItem[] = [];
+  allSignupsData: ISignUpItem[] = []; // Cached unfiltered signup data
   subAdminsData: ISelectOption[] = [];
   assignToData: ISelectOption[] = [];
   // Options for the dialog select box when first radio option is selected
@@ -108,6 +109,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   emailHtmlPreview = '';
   availableThemes: Array<number> = [1];
   messageStatus = MessageStatus;
+  currentEditingMessageId: number | null = null;
+
   ngOnInit(): void {
     this.initializeForms();
 
@@ -117,6 +120,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         const messageId = Number(params['id']);
 
         if (!isNaN(messageId) && messageId > 0) {
+          this.currentEditingMessageId = messageId;
           this.getMessageById(messageId);
         }
       });
@@ -125,11 +129,14 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   handleSelection(event: RadioCheckboxChangeEvent) {
     this.selectedValue = event.value; // Update the selected size
     this.showRadioButtons = false; // Hide the radio buttons
+    // Re-filter signup list based on the selected template type (client-side)
+    this.applySignupFilter();
   }
 
   showOptionsAgain() {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+    this.currentEditingMessageId = null; // Clear editing message ID
     this.reminderEmailForm.reset({
       themeid: 1,
     });
@@ -137,6 +144,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       themeid: 1,
     });
     this.loadUserProfile();
+    // Re-apply filter to show all signups (client-side)
+    this.applySignupFilter();
   }
 
   // Methods for "Select File" dialog
@@ -314,23 +323,175 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
 
   getSignUpList() {
     this.isLoading = true;
-    this.composeService.getSignUpList().subscribe({
-      next: (apiResponse) => {
-        if (apiResponse && apiResponse.success) {
-          this.signupOptionApiData = apiResponse.data;
-          this.signUpOptions = apiResponse.data.map((signup) => ({
-            label: signup.title,
-            value: signup.signupid?.toString() || '',
-          }));
-        }
-        this.loadUserProfile();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error fetching signup list:', error);
-      },
+    // Always include advance details to get remindertemplate field
+    this.composeService
+      .getSignUpList({ includeAdvanceDetails: true })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (apiResponse) => {
+          if (apiResponse && apiResponse.success) {
+            // Cache the complete unfiltered list for client-side filtering
+            this.allSignupsData = apiResponse.data;
+
+            // Apply filtering based on current state
+            this.applySignupFilter();
+          }
+          this.loadUserProfile();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.toastr.error(
+            'Failed to load signup list. Please try again.',
+            'Error'
+          );
+        },
+      });
+  }
+
+  /**
+   * Applies client-side filtering to the cached signup list
+   * This avoids unnecessary API calls when user changes template type
+   */
+  private applySignupFilter(): void {
+    // If no data cached yet, nothing to filter
+    if (!this.allSignupsData || this.allSignupsData.length === 0) {
+      return;
+    }
+
+    // Filter signups based on current state
+    const filteredSignups = this.filterSignupsWithoutTemplate(
+      this.allSignupsData
+    );
+
+    this.signupOptionApiData = filteredSignups;
+    this.signUpOptions = filteredSignups.map((signup) => ({
+      label: signup.title,
+      value: signup.signupid?.toString() || '',
+    }));
+
+    // If editing a message, find and pre-select the signup with matching template
+    if (this.currentEditingMessageId) {
+      this.preSelectSignupForEditMode(filteredSignups);
+    }
+  }
+
+  /**
+   * Pre-selects all signups that have matching template field for the current editing message ID
+   * For reminder template (emailoptionone): Checks remindertemplate field
+   * For confirmation template (emailoptiontwo): Checks confirmationtemplate field
+   * Called when editing an existing message
+   *
+   * @param signups - Array of filtered signup items
+   */
+  private preSelectSignupForEditMode(signups: ISignUpItem[]): void {
+    const matchingSignups = signups.filter((signup) => {
+      const assignedTemplateId = this.getTemplateFieldForCurrentType(signup);
+      return (
+        this.isTemplateIdValid(assignedTemplateId) &&
+        Number(assignedTemplateId) === this.currentEditingMessageId
+      );
     });
+
+    if (matchingSignups.length > 0) {
+      const signupIds = matchingSignups.map((signup) =>
+        signup.signupid.toString()
+      );
+      const form = this.currentEmailForm;
+
+      // Use ChangeDetectorRef to ensure form value is set after the form is fully initialized
+      form.get('assignTo')?.setValue(signupIds);
+      form.get('assignTo')?.updateValueAndValidity();
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Filters signups based on the selected template type
+   * For reminder template (emailoptionone): Check remindertemplate field
+   * For confirmation template (emailoptiontwo): Check confirmationtemplate field
+   * When editing, also includes signups assigned to the current message
+   *
+   * Business Rules:
+   * - In create mode: Only show signups without templates assigned
+   * - In edit mode: Show unassigned signups + signups assigned to current template
+   * - This prevents reassigning a signup that's already used by another template
+   * - If no template type is selected yet, return all signups (initial state)
+   *
+   * @param signups - Array of signup items from API
+   * @returns Filtered array excluding signups assigned to other templates
+   */
+  private filterSignupsWithoutTemplate(signups: ISignUpItem[]): ISignUpItem[] {
+    // If no template type selected yet, return all signups (initial load state)
+    if (!this.selectedValue) {
+      return signups;
+    }
+
+    return signups.filter((signup) => {
+      const assignedTemplateId = this.getTemplateFieldForCurrentType(signup);
+      const hasTemplate = this.hasAssignedTemplate(assignedTemplateId);
+
+      // If no template assigned, include this signup
+      if (!hasTemplate) {
+        return true;
+      }
+
+      // If editing a message and this signup's template matches the current message ID, include it
+      if (
+        this.currentEditingMessageId &&
+        this.isTemplateIdValid(assignedTemplateId)
+      ) {
+        const templateIdNumber = Number(assignedTemplateId);
+        return templateIdNumber === this.currentEditingMessageId;
+      }
+
+      // Otherwise, exclude this signup (it's assigned to a different template)
+      return false;
+    });
+  }
+
+  /**
+   * Gets the appropriate template field value based on the currently selected template type
+   * @param signup - The signup item to extract the template field from
+   * @returns The template ID (remindertemplate or confirmationtemplate) or undefined
+   */
+  private getTemplateFieldForCurrentType(
+    signup: ISignUpItem
+  ): string | number | undefined {
+    return this.selectedValue === 'emailoptionone'
+      ? signup.remindertemplate
+      : signup.confirmationtemplate;
+  }
+
+  /**
+   * Checks if a signup has a template assigned (non-empty, non-zero value)
+   * @param assignedTemplateId - The template ID to check
+   * @returns True if a valid template is assigned, false otherwise
+   */
+  private hasAssignedTemplate(
+    assignedTemplateId: string | number | undefined
+  ): boolean {
+    return (
+      assignedTemplateId !== undefined &&
+      assignedTemplateId !== null &&
+      String(assignedTemplateId).trim() !== '' &&
+      Number(assignedTemplateId) !== 0
+    );
+  }
+
+  /**
+   * Validates that a template ID is a valid number (not NaN)
+   * @param assignedTemplateId - The template ID to validate
+   * @returns True if the template ID can be converted to a valid number
+   */
+  private isTemplateIdValid(
+    assignedTemplateId: string | number | undefined
+  ): boolean {
+    if (assignedTemplateId === undefined || assignedTemplateId === null) {
+      return false;
+    }
+    const templateIdNumber = Number(assignedTemplateId);
+    return !isNaN(templateIdNumber);
   }
 
   getSubAdmins() {
@@ -348,7 +509,11 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             }));
           }
           this.isLoading = false;
-          this.getSignUpList();
+          // Only load signup list if NOT in edit mode
+          // In edit mode, getSignUpList() will be called after getMessageById() completes
+          if (!this.currentEditingMessageId) {
+            this.getSignUpList();
+          }
         },
         error: () => {
           this.isLoading = false;
@@ -425,6 +590,9 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
               this.reminderEmailForm.get('replyTo')?.updateValueAndValidity();
             }, 0);
 
+            // Load and filter signup list after selectedValue is set
+            this.getSignUpList();
+
             this.isLoading = false;
           } else if (response.data.messagetypeid == optionTwo) {
             this.selectedValue = 'emailoptiontwo';
@@ -450,6 +618,9 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
                 .get('replyTo')
                 ?.updateValueAndValidity();
             }, 0);
+
+            // Load and filter signup list after selectedValue is set
+            this.getSignUpList();
 
             this.isLoading = false;
           } else {
