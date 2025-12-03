@@ -65,6 +65,8 @@ import {
   saveDraftMessage,
   handleDraftLoadError,
   initializeDraftEditMode,
+  checkForWaitlistSlots,
+  isWaitlistRelatedMessage,
 } from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
@@ -159,6 +161,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   availableThemes: Array<number> = [1];
   private readonly destroy$ = new Subject<void>();
   private isRestoringDateSlots = false;
+  hasWaitlistSlots = false;
 
   ngOnInit(): void {
     this.initializeForms();
@@ -250,6 +253,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((selectedSignups) => {
         handleFormStateChange({ selectedSignups });
+        this.updateWaitlistSlotsStatus(selectedSignups);
       });
 
     // Portal pages subscription
@@ -376,6 +380,28 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           }
         },
       });
+  }
+
+  /**
+   * Updates the waitlist slots status based on selected signups
+   * Checks for waitlist slots when exactly one signup is selected for email option two
+   */
+  private updateWaitlistSlotsStatus(selectedSignups: ISignUpItem[]): void {
+    const shouldCheckWaitlist =
+      selectedSignups.length === 1 && this.selectedValue === 'emailoptiontwo';
+
+    if (shouldCheckWaitlist) {
+      checkForWaitlistSlots({
+        signupId: selectedSignups[0].signupid,
+        composeService: this.composeService,
+        destroy$: this.destroy$,
+        onResult: (hasWaitlistSlots) => {
+          this.hasWaitlistSlots = hasWaitlistSlots;
+        },
+      });
+    } else {
+      this.hasWaitlistSlots = false;
+    }
   }
 
   /**
@@ -1209,13 +1235,13 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
         case 'peopleOnWaitlist':
           payload.sendtotype = SendToType.WAITLIST;
-          payload.sentto = SentTo.NOT_SIGNED_UP;
+          payload.sentto = SentTo.WAITLIST;
           payload.groupids = [];
           break;
 
         case 'peopleSignedUpAndWaitlist':
-          payload.sendtotype = SendToType.WAITLIST;
-          payload.sentto = SentTo.SIGNED_UP;
+          payload.sendtotype = SendToType.SIGNUP_WAITLIST;
+          payload.sentto = SentTo.SIGNED_UP_AND_WAITLIST;
           payload.groupids = [];
           break;
 
@@ -2007,6 +2033,16 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               this.emailFormTwo.get('replyTo')?.updateValueAndValidity();
             }, 0);
 
+            // Check if draft has waitlist-related sendtotype to set hasWaitlistSlots flag
+            if (
+              isWaitlistRelatedMessage(
+                response.data.sendtotype || '',
+                response.data.sentto || ''
+              )
+            ) {
+              this.hasWaitlistSlots = true;
+            }
+
             this.restorePeopleSelection(
               response.data.sentto,
               response.data.sendtotype,
@@ -2029,7 +2065,11 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                 response.data.sentto?.toLowerCase() === 'signedup') ||
               (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
                 response.data.sentto?.toLowerCase() === 'notsignedup') ||
-              response.data.sendtotype?.toLowerCase() === 'manual';
+              response.data.sendtotype?.toLowerCase() === 'manual' ||
+              isWaitlistRelatedMessage(
+                response.data.sendtotype || '',
+                response.data.sentto || ''
+              );
 
             if (
               response.data.sendtotype?.toLowerCase() === 'custom' &&

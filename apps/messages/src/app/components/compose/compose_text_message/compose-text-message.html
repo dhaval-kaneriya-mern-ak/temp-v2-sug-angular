@@ -424,7 +424,7 @@
 <!-- People Selection Dialog -->
 <sug-people-selection-dialog
   [(visible)]="isPeopleDialogVisible"
-  [isFromTextMessage]="isFromTextMessage"
+  [isFromTextMessage]="hasWaitlistSlots"
   [messageTypeId]="selectedValue === 'emailoptionone' ? 14 : 15"
   [formType]="'emailParticipants'"
   [groupOptions]="groupData"

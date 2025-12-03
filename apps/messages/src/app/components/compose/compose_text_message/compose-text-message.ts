@@ -73,6 +73,8 @@ import {
   saveDraftMessage,
   handleDraftLoadError,
   initializeDraftEditMode,
+  checkForWaitlistSlots,
+  isWaitlistRelatedMessage,
 } from '../../utils/services/draft-message.util';
 import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
 import { ToastrService } from 'ngx-toastr';
@@ -123,7 +125,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   isLoading = false;
   showProfile = false;
   showEmail = false;
-  isFromTextMessage = false;
+  hasWaitlistSlots = false;
   userProfile: MemberProfile | null = null;
   @Input() readonly siteKey: string = environment.siteKey;
   private readonly destroy$ = new Subject<void>();
@@ -964,13 +966,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
             case 'peopleOnWaitlist':
               payload.sendtotype = SendToType.WAITLIST;
-              payload.sentto = SentTo.SIGNED_UP;
+              payload.sentto = SentTo.WAITLIST;
               payload.groupids = [];
               break;
 
             case 'peopleSignedUpAndWaitlist':
               payload.sendtotype = SendToType.SIGNUP_WAITLIST;
-              payload.sentto = SentTo.SIGNED_UP;
+              payload.sentto = SentTo.SIGNED_UP_AND_WAITLIST;
               payload.groupids = [];
               break;
 
@@ -1383,7 +1385,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               (response.data.sendtotype?.toLowerCase() === 'signedup' &&
                 response.data.sentto?.toLowerCase() === 'signedup') ||
               (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup');
+                response.data.sentto?.toLowerCase() === 'notsignedup') ||
+              isWaitlistRelatedMessage(
+                response.data.sendtotype || '',
+                response.data.sentto || ''
+              );
 
             if (skipGroupRestoration) {
               const signupIds = this.stateService.selectedSignups.map(
@@ -1507,6 +1513,16 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
                 ?.updateValueAndValidity();
             }, 0);
 
+            // Check if draft has waitlist-related sendtotype to set hasWaitlistSlots flag
+            if (
+              isWaitlistRelatedMessage(
+                response.data.sendtotype || '',
+                response.data.sentto || ''
+              )
+            ) {
+              this.hasWaitlistSlots = true;
+            }
+
             this.restorePeopleSelection(
               response.data.sentto,
               response.data.sendtotype
@@ -1528,7 +1544,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               (response.data.sendtotype?.toLowerCase() === 'signedup' &&
                 response.data.sentto?.toLowerCase() === 'signedup') ||
               (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup');
+                response.data.sentto?.toLowerCase() === 'notsignedup') ||
+              isWaitlistRelatedMessage(
+                response.data.sendtotype || '',
+                response.data.sentto || ''
+              );
 
             const responseData = response.data as IMessageByIdDataExtended;
             if (responseData.to && Array.isArray(responseData.to)) {
@@ -1934,28 +1954,20 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
   getSlotsForSignup(signupId: number): void {
     this.isLoading = true;
-    const payload = {
-      includeSignedUpMembers: true,
-    };
-    this.composeService
-      .getDateSlots(signupId, payload)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response && response.success && response.data) {
-            this.isFromTextMessage =
-              response.data.filter((item) => item.waitlist === true).length > 0;
-          }
-          this.isLoading = false;
-          const urlPath = this.getSelectedSignup()[0]?.urlid?.split('go/')[1];
-          if (urlPath) {
-            this.getShortUrl(urlPath);
-          }
-        },
-        error: () => {
-          this.isLoading = false;
-        },
-      });
+
+    checkForWaitlistSlots({
+      signupId: signupId,
+      composeService: this.composeService,
+      destroy$: this.destroy$,
+      onResult: (hasWaitlistSlots) => {
+        this.hasWaitlistSlots = hasWaitlistSlots;
+        this.isLoading = false;
+        const urlPath = this.getSelectedSignup()[0]?.urlid?.split('go/')[1];
+        if (urlPath) {
+          this.getShortUrl(urlPath);
+        }
+      },
+    });
   }
 
   getShortUrl(urlPath: string): void {

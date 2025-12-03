@@ -138,11 +138,11 @@ export class ComposeService {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'waitlist') {
+    } else if (sentToTypeLower === 'waitlisted') {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'waitlistwithsignedup') {
+    } else if (sentToTypeLower === 'signedupandwaitlisted') {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }

@@ -201,16 +201,13 @@ export function mapSelectedValueToApi(
       };
 
     case 'specificRsvpResponse':
-      return { sentto: 'rsvp:', sendtotype: 'specificrsvp' };
+      return { sentto: 'rsvp:', sendtotype: 'specificrsvpresponse' };
 
     case 'ManuallyEnterEmail':
-      return { sentto: 'manual', sendtotype: 'manual' };
-
-    case 'sendMessagePeopleIselect':
-      return { sentto: 'specificslots', sendtotype: 'specificdateslot' };
+      return { sentto: 'manual', sendtotype: 'custom' };
 
     case 'ImportEmailFromProvider':
-      return { sentto: 'custom', sendtotype: 'custom' };
+      return { sentto: 'import', sendtotype: 'custom' };
 
     default:
       return { sentto: 'all', sendtotype: 'signedup' };
@@ -243,16 +240,15 @@ export function mapApiToSelectedValue(
   }
 
   if (
-    (normalizedSentTo === 'waitlisted' || normalizedSentTo === 'waitlist') &&
-    (normalizedSendToType === 'waitlisted' ||
-      normalizedSendToType === 'waitlist')
+    normalizedSentTo === 'waitlisted' &&
+    normalizedSendToType === 'waitlisted'
   ) {
     return 'peopleOnWaitlist';
   }
 
   if (
-    normalizedSentTo === 'waitlist' ||
-    normalizedSendToType === 'waitlistwithsignedup'
+    normalizedSentTo === 'signedupandwaitlisted' &&
+    normalizedSendToType === 'signedupandwaitlisted'
   ) {
     return 'peopleSignedUpAndWaitlist';
   }
@@ -601,4 +597,81 @@ export function shouldSkipGroupRestoration(
     (sendtotypeLower === 'peopleingroups' && senttoLower === 'notsignedup') ||
     sendtotypeLower === 'manual'
   );
+}
+
+// ============================================================================
+// WAITLIST DETECTION UTILITIES
+// ============================================================================
+
+/**
+ * Checks if a message is waitlist-related based on sendToType and sentTo values
+ * Used to determine if waitlist options should be shown or if draft contains waitlist data
+ *
+ * @param sendToType - The sendToType value from the message
+ * @param sentTo - The sentTo value from the message
+ * @returns true if the message is waitlist-related, false otherwise
+ */
+export function isWaitlistRelatedMessage(
+  sendToType: string,
+  sentTo: string
+): boolean {
+  const sendToTypeLower = sendToType?.toLowerCase() || '';
+  const sentToLower = sentTo?.toLowerCase() || '';
+
+  return (
+    (sendToTypeLower === 'waitlisted' && sentToLower === 'waitlisted') ||
+    (sendToTypeLower === 'signedupandwaitlisted' &&
+      sentToLower === 'signedupandwaitlisted')
+  );
+}
+
+/**
+ * Options for checking waitlist slots
+ */
+interface CheckWaitlistSlotsOptions {
+  signupId: number;
+  composeService: ComposeService;
+  destroy$: Observable<void>;
+  onResult: (hasWaitlistSlots: boolean) => void;
+}
+
+/**
+ * Checks if the selected signup has any waitlist-enabled slots
+ * Used to conditionally show waitlist options in people selection dialog
+ * Shared by both compose-email and compose-text-message components
+ *
+ * @param options - Configuration object with signup ID, services, and callback
+ */
+export function checkForWaitlistSlots(
+  options: CheckWaitlistSlotsOptions
+): void {
+  const { signupId, composeService, destroy$, onResult } = options;
+
+  const payload = {
+    includeSignedUpMembers: true,
+  };
+
+  composeService
+    .getDateSlots(signupId, payload)
+    .pipe(takeUntil(destroy$))
+    .subscribe({
+      next: (response) => {
+        if (response && response.success && response.data) {
+          const hasWaitlistSlots = response.data.some(
+            (item) => item.waitlist === true
+          );
+          onResult(hasWaitlistSlots);
+        } else {
+          onResult(false);
+        }
+      },
+      error: (error) => {
+        console.error(
+          'Failed to fetch waitlist slots for signup:',
+          signupId,
+          error
+        );
+        onResult(false);
+      },
+    });
 }

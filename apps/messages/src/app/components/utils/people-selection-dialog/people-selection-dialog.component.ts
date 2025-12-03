@@ -73,6 +73,7 @@ export class PeopleSelectionDialogComponent
   @Input() sendtotype = '';
   @Input() selectedCustomUserIds: string[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
+  @Input() hasWaitlistSlots = false;
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() peopleSelected = new EventEmitter<void>();
@@ -156,17 +157,20 @@ export class PeopleSelectionDialogComponent
   // Form Two radio options
   get formTwoRadioOptions() {
     const selectedSignups = this.selectedSignups;
-    const hasMultipleSignups = selectedSignups.length > 1;
+    const hasSingleSignup = selectedSignups.length === 1;
 
     const hasRsvpSignup = selectedSignups.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (signup: any) => signup.mode?.toLowerCase() === 'rsvp'
     );
 
-    // If multiple signups are selected (only for emailParticipants - "Email people participating in a sign up")
-    // Show multi-signup options with waitlist support
+    // Show waitlist options only when:
+    // - Single signup with waitlist slots for emailParticipants
+    // - OR text message (isFromTextMessage already indicates waitlist is available)
     if (
-      (hasMultipleSignups && this.formType === 'emailParticipants') ||
+      (hasSingleSignup &&
+        this.hasWaitlistSlots &&
+        this.formType === 'emailParticipants') ||
       this.isFromTextMessage
     ) {
       return [
@@ -1122,8 +1126,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'waitlist',
-      sentTo: 'waitlist',
+      sentToType: 'waitlisted',
+      sentTo: 'waitlisted',
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {
@@ -1152,8 +1156,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'waitlistwithsignedup',
-      sentTo: 'waitlist',
+      sentToType: 'signedupandwaitlisted',
+      sentTo: 'signedupandwaitlisted',
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {

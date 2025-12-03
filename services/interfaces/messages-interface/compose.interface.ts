@@ -717,6 +717,8 @@ export interface IMessagePreviewResponse {
 export enum SentTo {
   NOT_SIGNED_UP = 'notsignedup',
   SIGNED_UP = 'signedup',
+  SIGNED_UP_AND_WAITLIST = 'signedupandwaitlisted',
+  WAITLIST = 'waitlisted',
   CUSTOM = 'custom',
   ALL = 'all',
   MEMBERS = 'members',
@@ -738,9 +740,9 @@ export enum SendToType {
   PEOPLE_IN_GROUPS = 'peopleingroups',
   NOT_SIGNED_UP = 'notsignedup',
   MANUAL = 'manual',
-  WAITLIST = 'waitlist',
+  WAITLIST = 'waitlisted',
   ALL = 'all',
-  SIGNUP_WAITLIST = 'waitlistwithsignedup',
+  SIGNUP_WAITLIST = 'signedupandwaitlisted',
   ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
 }
 
