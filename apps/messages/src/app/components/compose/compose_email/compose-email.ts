@@ -691,9 +691,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       form.value.selectedPortalPages.length >= 1
     ) {
       payload.signuptype = SignUPType.PORTALS;
-      payload.portalids = form.value.selectedPortalPages.map(
-        (pp: any) => pp.id
-      );
+      payload.portalids = form.value.selectedPortalPages
+        .map((pp: ISelectPortalOption) => pp.id)
+        .filter((id: number | undefined): id is number => id !== undefined);
     }
 
     if (form.value.selectedTabGroups.length > 0) {
@@ -767,12 +767,20 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // Clear errors if validation passes
     this.formValidationErrors = [];
 
-    this.availableThemes = [
-      1,
-      ...((form.value.selectedSignups || []) as ISignUpItem[]).map(
-        (su: ISignUpItem) => su.themeid
-      ),
-    ];
+    // Collect themes from signups
+    const signupThemes = ((form.value.selectedSignups || []) as ISignUpItem[])
+      .map((su: ISignUpItem) => su.themeid)
+      .filter((theme) => theme !== undefined && theme !== null);
+
+    // Collect themes from portal pages
+    const portalThemes = (
+      (form.value.selectedPortalPages || []) as ISelectPortalOption[]
+    )
+      .flatMap((portal: ISelectPortalOption) => portal.associatedthemes || [])
+      .filter((theme) => theme !== undefined && theme !== null);
+
+    // Combine and deduplicate themes
+    this.availableThemes = [1, ...new Set([...signupThemes, ...portalThemes])];
     if (form.invalid) {
       // Mark all controls as touched to show validation errors
       Object.keys(form.controls).forEach((key) => {
@@ -930,11 +938,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       }
 
       if (this.stateService.selectedPortalPages.length > 0) {
-        payload.portals = this.stateService.selectedPortalPages.map((p) => ({
-          id: p.id,
-          title: p.title,
-          urlkey: p.urlkey,
-        }));
+        payload.portalids = form.value.selectedPortalPages
+          .map((pp: ISelectPortalOption) => pp.id)
+          .filter((id: number | undefined): id is number => id !== undefined);
       }
 
       if (this.stateService.isSignUpIndexPageSelected) {
@@ -1169,7 +1175,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               group.value !== 'manual_entry' && !isNaN(Number(group.value))
           )
           .map((group) => Number(group.value)),
-        portals: form.selectedPortalPages.map(
+        portalids: form.selectedPortalPages.map(
           (pp: ISelectPortalOption) => pp.id
         ),
         attachmentids: this.stateService.selectedAttachment.map(

@@ -73,15 +73,15 @@ export class PreviewEmailComponent {
       const date = new Date(this.scheduledDate);
       const time = new Date(this.scheduledTime);
 
-      // Combine: use year, month, day from date; hours, minutes, seconds, ms from time
+      // Combine: use year, month, day from date; hours, minutes from time, seconds always 00
       const combined = new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate(),
         time.getHours(),
         time.getMinutes(),
-        time.getSeconds(),
-        time.getMilliseconds()
+        0, // Always set seconds to 00
+        0 // Always set milliseconds to 0
       );
       const formatted = format(combined, 'yyyy-MM-dd HH:mm');
       this.scheduleEmail.emit(formatted);
