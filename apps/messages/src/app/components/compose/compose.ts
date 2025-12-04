@@ -98,7 +98,6 @@ export class Compose implements OnInit, OnDestroy {
     this.composeService.showSuccessPage$
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        console.log(data);
         if (data && data.type) {
           this.showSuccessPageWithType(data.type, data.selectedSignups);
         }

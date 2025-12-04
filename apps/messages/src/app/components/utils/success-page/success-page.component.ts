@@ -17,10 +17,9 @@ export class SuccessPageComponent {
   @Input() showBackToCompose = false;
   @Input() selectedSignups: ISignUpItem[] = [];
   @Output() backToCompose = new EventEmitter<void>();
-  @Input() isCustom = false;
 
   get shouldShowViewSignUpButton(): boolean {
-    return this.selectedSignups && this.selectedSignups.length == 1;
+    return this.selectedSignups && this.selectedSignups.length === 1;
   }
 
   composeAnother(): void {

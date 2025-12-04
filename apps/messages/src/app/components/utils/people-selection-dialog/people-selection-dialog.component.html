@@ -468,9 +468,9 @@
 @if(infoDialog){
 <sug-information-dialog
   [(visible)]="infoDialog"
-  [title]="'Opps!!'"
+  [title]="'Oops!!'"
   [message]="infoMessage"
-  (close)="closeInfoDialog()"
+  (visibleChange)="closeInfoDialog()"
 >
 </sug-information-dialog>
 }
