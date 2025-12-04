@@ -20,7 +20,6 @@ export class SuccessPageComponent {
   @Input() isCustom = false;
 
   get shouldShowViewSignUpButton(): boolean {
-    console.log('Selected signups in success page:', this.selectedSignups);
     return this.selectedSignups && this.selectedSignups.length == 1;
   }
 

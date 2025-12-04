@@ -207,10 +207,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.composeService.createMessage(payload).subscribe({
       next: (response) => {
         if (response.success === true && response.data) {
-          const array = this.signupOptionApiData.filter((su) =>
-            form.assignTo.includes(String(su.signupid))
-          );
-          this.composeService.triggerSuccessPage('custom', array);
+          // const array = this.signupOptionApiData.filter((su) =>
+          //   form.assignTo.includes(String(su.signupid))
+          // );
+          this.composeService.triggerSuccessPage('custom', []);
         }
         this.isLoading = false;
       },
