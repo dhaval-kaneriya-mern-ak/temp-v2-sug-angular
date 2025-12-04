@@ -117,6 +117,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   stateService = inject(ComposeEmailStateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  formValidationErrors: string[] = [];
   inviteTextForm!: FormGroup;
   sendTextEmailForm!: FormGroup;
   isDateSlotsDialogVisible = false;
@@ -422,19 +423,27 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
           if (formType === 'inviteToSignUp') {
             const toValue = this.inviteTextForm.get('to')?.value;
             if (!toValue || toValue.length === 0) {
-              this.toastr.error(
-                'Please select recipients in the "To" field',
-                'Validation Error'
+              // this.toastr.error(
+              //   'Please select recipients in the "To" field',
+              //   'Validation Error'
+              // );
+              this.formValidationErrors.push(
+                'Please select recipients in the "To" field'
               );
+              this.cdr.markForCheck();
               return;
             }
           } else {
             const peopleSelectionData = this.stateService.peopleSelectionData;
             if (!peopleSelectionData.selectedValue) {
-              this.toastr.error(
-                'Please select recipients in the "To" field',
-                'Validation Error'
+              // this.toastr.error(
+              //   'Please select recipients in the "To" field',
+              //   'Validation Error'
+              // );
+              this.formValidationErrors.push(
+                'Please select recipients in the "To" field'
               );
+              this.cdr.markForCheck();
               return;
             }
           }
@@ -1034,14 +1043,30 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (response) => {
                 if (response.success === true) {
-                  this.toastr.success('Message saved successfully', 'Success');
-                  this.showOptionsAgain();
+                  // this.toastr.success('Message saved successfully', 'Success');
+                  const successType =
+                    status === MessageStatus.DRAFT
+                      ? 'draft'
+                      : status === MessageStatus.SCHEDULED
+                      ? 'scheduled'
+                      : 'send';
+                  const array = this.signupOptionsData.filter((su) =>
+                    form.selectedSignups?.includes(String(su.signupid))
+                  );
+                  this.composeService.triggerSuccessPage(successType, array);
                 }
                 this.isLoading = false;
               },
               error: (err) => {
                 this.isLoading = false;
-                this.toastr.error(err.error.message[0]?.details, 'Error');
+                err?.error?.message?.forEach(
+                  (errorMsg: { details: string }) => {
+                    this.formValidationErrors.push(errorMsg.details);
+                  }
+                );
+                this.cdr.markForCheck();
+
+                // this.toastr.error(err.error.message[0]?.details, 'Error');
                 if (
                   this.sendTextEmailForm.get('includefallback')?.value ===
                     true &&
@@ -1739,10 +1764,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             this.currentDraftMessageId = null;
             this.stateService.setDraftEditMode(false);
 
-            this.toastr.error(
+            // this.toastr.error(
+            //   `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
+            //   'Unsupported Message Type'
+            // );
+            this.formValidationErrors = [
               `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
-              'Unsupported Message Type'
-            );
+            ];
             this.router.navigate(['/messages/compose']);
           }
         },
@@ -2008,7 +2036,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.success) {
-            this.toastr.success('Profile updated successfully', 'Success');
+            // this.toastr.success('Profile updated successfully', 'Success');
           }
           this.isLoading = false;
         },
@@ -2018,7 +2046,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             error.error?.message?.[0]?.details ||
             error.message ||
             'Failed to update profile';
-          this.toastr.error(errorMessage, 'Error');
+          // this.toastr.error(errorMessage, 'Error');
+          error?.error?.message?.forEach((err: { details: string }) => {
+            this.formValidationErrors.push(err.details);
+          });
+          this.cdr.markForCheck();
         },
       });
   }

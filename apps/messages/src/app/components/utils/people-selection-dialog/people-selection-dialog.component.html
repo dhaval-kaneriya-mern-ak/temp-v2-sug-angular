@@ -465,3 +465,12 @@
   </sug-update-group-section>
   }
 </sug-ui-dialog>
+@if(infoDialog){
+<sug-information-dialog
+  [(visible)]="infoDialog"
+  [title]="'Oops!!'"
+  [message]="infoMessage"
+  (visibleChange)="closeInfoDialog()"
+>
+</sug-information-dialog>
+}

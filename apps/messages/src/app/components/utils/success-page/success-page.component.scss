@@ -1,0 +1,58 @@
+.success-page-wrapper {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+// Success Container
+.success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: start;
+  text-align: start;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// Success Title
+.success-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+// Success Messages
+.success-messages {
+  margin-bottom: 30px;
+  max-width: 750px;
+
+  .secondary-message {
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.7;
+
+    .highlight {
+      color: #ff6b35;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+}
+
+// Action Buttons
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: start;
+  flex-wrap: wrap;
+  margin-top: 10px;
+
+  ::ng-deep .success-btn {
+    font-size: 16px;
+    border-radius: 3px;
+    padding: 10px 15px;
+  }
+}

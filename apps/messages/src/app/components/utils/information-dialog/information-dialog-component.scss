@@ -1,0 +1,37 @@
+::ng-deep {
+  .dialog-content .msg-para {
+    font-size: large !important;
+    line-height: 1.6;
+    color: #374151;
+  }
+
+  .dialog-footer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .p-dialog-footer {
+    justify-content: center !important;
+  }
+
+  .confirm-btn {
+    width: 15vw;
+    font-size: large;
+    border-radius: 5px;
+    background-color: #acc034 !important;
+    border: none !important;
+  }
+
+  .confirm-btn:hover {
+    background-color: #91a92a !important;
+  }
+}
+
+::ng-deep .information-dialog .confirm-btn {
+  width: 15vw;
+  font-size: large;
+  border-radius: 5px;
+  background-color: #acc034 !important;
+  border: none !important;
+}

@@ -152,12 +152,12 @@ export class Draft implements OnDestroy, OnInit {
             this.isLoading = false;
             this.selectedItem = null;
             this.isVisible = false;
-            this.toastr.success('Message deleted successfully');
+            // this.toastr.success('Message deleted successfully');
             this.getDraftMessages();
           } else {
-            this.toastr.error(
-              'Failed to delete the message. Please try again.'
-            );
+            // this.toastr.error(
+            //   'Failed to delete the message. Please try again.'
+            // );
             this.isLoading = false;
             this.selectedItem = null;
             this.isVisible = false;
@@ -171,11 +171,11 @@ export class Draft implements OnDestroy, OnInit {
           this.isVisible = false;
           this.selectedItem = null;
 
-          this.toastr.error('Failed to delete the message. Please try again.');
+          // this.toastr.error('Failed to delete the message. Please try again.');
         },
       });
     } else {
-      this.toastr.error('Message not selected yet.');
+      // this.toastr.error('Message not selected yet.');
     }
   }
 
