@@ -11,7 +11,7 @@ import { SugApiService } from '@services/sug-api.service';
 import { UserStateService } from '@services/user-state.service';
 import { DashboardService } from './dashboard.service';
 import { environment } from '@environments/environment';
-import { MessageItem } from '@services/interfaces';
+import { MemberProfile, MessageItem } from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
 import { Subject, takeUntil } from 'rxjs';
@@ -38,6 +38,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   // User plan display
   planName = 'Loading...';
+  userData: MemberProfile | null = null;
 
   // Progress tracking properties
   progressToday = '0 of 10,000 email messages sent today';
@@ -99,6 +100,7 @@ export class Dashboard implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (profile) => {
+          this.userData = profile;
           this.planName = profile
             ? this.userStateService.getPlanDisplayName(profile)
             : 'Loading...';
@@ -169,12 +171,11 @@ export class Dashboard implements OnInit, OnDestroy {
             : response.data;
           this.tableData = flatData.map((item: MessageItem) => ({
             messageid: item.messageid,
-            sentdate: item.sentdate
-              ? format(
-                  new Date(Number(item.sentdate) * 1000),
-                  'yyyy-MM-dd h:mmaaa'
-                )
-              : '',
+            sentdate: this.userStateService.convertESTtoUserTZ(
+              Number(item?.sentdate || 0),
+              this.userData?.zonename || 'UTC',
+              this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
+            ),
             subject: item.subject,
             sentTo: item.sentTo || `${item.totalsent || 0}`,
             action: `<i class="pi pi-chart-bar chart-icon" 
