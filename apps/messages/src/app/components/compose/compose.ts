@@ -15,6 +15,8 @@ import { ComposeService } from './compose.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserStateService } from '@services/user-state.service';
+import { SuccessPageComponent } from '../utils/success-page/success-page.component';
+import { ISignUpItem } from '@services/interfaces';
 interface ComposeTab extends Tabs {
   restricted?: boolean;
   badge?: string;
@@ -29,6 +31,7 @@ interface ComposeTab extends Tabs {
     RouterOutlet,
     SugUiMenuTabsComponent,
     SugUiButtonComponent,
+    SuccessPageComponent,
     // SugUiRadioCheckboxButtonComponent,
   ],
   templateUrl: './compose.html',
@@ -44,6 +47,10 @@ export class Compose implements OnInit, OnDestroy {
   public isTrialUser = false;
   public isVisible = false;
   public dialogType: 'template' | 'text' | null = null;
+  public isSuccessRoute = false;
+  isShowSuccessPage = false;
+  successPageType: 'send' | 'draft' | 'scheduled' | 'custom' = 'send';
+  successPageSelectedSignups: ISignUpItem[] = [];
 
   // Navigation tabs
   navigationComposeTabs: ComposeTab[] = [
@@ -70,6 +77,12 @@ export class Compose implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.initializeActiveTab();
+    this.checkIfSuccessRoute();
+
+    // Subscribe to router events to detect route changes
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.checkIfSuccessRoute();
+    });
 
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
@@ -80,6 +93,19 @@ export class Compose implements OnInit, OnDestroy {
         this.isTrialUser = profile.istrial ?? false;
         this.checkDirectAccess();
       });
+
+    // Subscribe to success page events from compose service
+    this.composeService.showSuccessPage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (data && data.type) {
+          this.showSuccessPageWithType(data.type, data.selectedSignups);
+        }
+      });
+  }
+
+  private checkIfSuccessRoute() {
+    this.isSuccessRoute = this.router.url.includes('/success');
   }
 
   ngOnDestroy() {
@@ -170,5 +196,19 @@ export class Compose implements OnInit, OnDestroy {
     this.router
       .navigateByUrl('/', { skipLocationChange: true })
       .then(() => this.router.navigateByUrl('/' + this.currentActiveTab));
+  }
+
+  showSuccessPageWithType(
+    type: 'send' | 'draft' | 'scheduled' | 'custom',
+    selectedSignups?: ISignUpItem[]
+  ) {
+    this.successPageType = type;
+    this.successPageSelectedSignups = selectedSignups || [];
+    this.isShowSuccessPage = true;
+    window.scrollTo(0, 0);
+  }
+
+  hideSuccessPage() {
+    this.isShowSuccessPage = false;
   }
 }

@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
 import {
   IMemberInfoData,
   ISignUpListResponse,
@@ -24,13 +25,29 @@ import {
   SentTo,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ComposeService {
   private sugApiClient = inject(SugApiService);
+
+  // Subject for success page communication
+  private showSuccessPageSubject = new Subject<{
+    type: 'send' | 'draft' | 'scheduled' | 'custom';
+    selectedSignups?: ISignUpItem[];
+    isCustom?: boolean;
+  }>();
+  public showSuccessPage$ = this.showSuccessPageSubject.asObservable();
+
+  // Method to trigger success page display
+  triggerSuccessPage(
+    type: 'send' | 'draft' | 'scheduled' | 'custom',
+    selectedSignups?: ISignUpItem[]
+  ): void {
+    this.showSuccessPageSubject.next({ type, selectedSignups });
+  }
 
   getMemberInfo(): Observable<IMemberInfoData> {
     return this.sugApiClient.get(`messages/compose/member-info`);

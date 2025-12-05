@@ -34,6 +34,7 @@ import { SugUpdateGroupSectionComponent } from '../update-group-section/update-g
 import { Subject, takeUntil } from 'rxjs';
 import { MemberProfile, SendToType, SentTo } from '@services/interfaces';
 import { IMemberInfoDto } from '@services/interfaces';
+import { SugInformationDialogComponent } from '../information-dialog/information-dialog.component';
 
 @Component({
   selector: 'sug-people-selection-dialog',
@@ -48,6 +49,7 @@ import { IMemberInfoDto } from '@services/interfaces';
     InputTextModule,
     ChipModule,
     SugUpdateGroupSectionComponent,
+    SugInformationDialogComponent,
   ],
   templateUrl: './people-selection-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
@@ -104,6 +106,9 @@ export class PeopleSelectionDialogComponent
   private fb = inject(FormBuilder);
   private composeService = inject(ComposeService);
   private userStateService = inject(UserStateService);
+
+  infoDialog = false;
+  infoMessage = '';
 
   groupDialogVisible = false;
   peopleDialogForm!: FormGroup;
@@ -527,7 +532,8 @@ export class PeopleSelectionDialogComponent
 
       // Validate that a radio option is selected
       if (!selectedValue) {
-        this.toastr.error('Please select a recipient option', 'Error');
+        this.openInfoDialog('Please select a recipient option.');
+        // this.toastr.error('Please select a recipient option', 'Error');
         return;
       }
 
@@ -539,7 +545,10 @@ export class PeopleSelectionDialogComponent
         const groupIds = formValue.selectedGroups || [];
 
         if (groupIds.length === 0) {
-          this.toastr.error('Please select at least one group', 'Error');
+          this.openInfoDialog(
+            'You must select a group from the dropdown list.'
+          );
+          // this.toastr.error('Please select at least one group', 'Error');
           return;
         }
 
@@ -611,7 +620,10 @@ export class PeopleSelectionDialogComponent
         const allEmails = [...manualEmailList, ...aliasEmailList];
 
         if (allEmails.length === 0) {
-          this.toastr.error('Please enter at least one email address', 'Error');
+          // this.toastr.error('Please enter at least one email address', 'Error');
+          this.openInfoDialog(
+            'There are no emails defined. You must enter the emails manually or via import.'
+          );
           return;
         }
 
@@ -621,9 +633,12 @@ export class PeopleSelectionDialogComponent
         );
 
         if (invalidEmails.length > 0) {
-          this.toastr.error(
-            `The following email(s) are invalid:\n${invalidEmails.join(', ')}`,
-            'Error'
+          // this.toastr.error(
+          //   `The following email(s) are invalid:\n${invalidEmails.join(', ')}`,
+          //   'Error'
+          // );
+          this.openInfoDialog(
+            `The following email(s) are invalid:\n${invalidEmails.join(', ')}`
           );
           return;
         }
@@ -657,10 +672,11 @@ export class PeopleSelectionDialogComponent
         const responses = this.getSelectedRsvpResponses();
 
         if (responses.length === 0) {
-          this.toastr.error(
-            'Please select at least one RSVP response',
-            'Error'
-          );
+          // this.toastr.error(
+          //   'Please select at least one RSVP response',
+          //   'Error'
+          // );
+          this.openInfoDialog('Please select at least one RSVP response.');
           return;
         }
 
@@ -754,7 +770,7 @@ export class PeopleSelectionDialogComponent
         if (this.messageTypeId === 4) {
           // For messageTypeId = 4, only check member groups
           if (this.selectedMemberGroups.length === 0) {
-            this.toastr.error('Please select people from groups', 'Error');
+            this.openInfoDialog('Please select people from groups');
             return;
           }
         } else {
@@ -763,10 +779,11 @@ export class PeopleSelectionDialogComponent
             this.selectedDateSlots.length === 0 &&
             this.selectedMemberGroups.length === 0
           ) {
-            this.toastr.error(
-              'Please select people from groups or sign up',
-              'Error'
-            );
+            // this.toastr.error(
+            //   'Please select people from groups or sign up',
+            //   'Error'
+            // );
+            this.openInfoDialog('Please select people from groups or sign up');
             return;
           }
         }
@@ -910,7 +927,8 @@ export class PeopleSelectionDialogComponent
   private getSignupIds(showErrorIfEmpty = false): number[] {
     if (this.selectedSignups.length === 0) {
       if (showErrorIfEmpty) {
-        this.toastr.error('Please select a signup', 'Error');
+        // this.toastr.error('Please select a signup', 'Error');
+        this.openInfoDialog('Please select a signup.');
       }
       return [];
     }
@@ -1284,5 +1302,15 @@ export class PeopleSelectionDialogComponent
       });
       this.cdr.markForCheck();
     }, 0);
+  }
+
+  openInfoDialog(msg: string): void {
+    this.infoMessage = msg;
+    this.infoDialog = true;
+  }
+
+  closeInfoDialog(): void {
+    this.infoMessage = '';
+    this.infoDialog = false;
   }
 }

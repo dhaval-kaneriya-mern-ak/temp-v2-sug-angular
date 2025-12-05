@@ -22,6 +22,15 @@
   <!-- Email Form Section -->
   @if (!showRadioButtons && selectedValue) {
   <div>
+    <!-- Validation Errors Display -->
+    @if (formValidationErrors && formValidationErrors.length > 0) {
+    <ul class="form-validation-errors">
+      @for (error of formValidationErrors; track error) {
+      <li class="error-item">{{ error }}</li>
+      }
+    </ul>
+    }
+
     <!-- Email Form Component (Reusable for both form types) -->
     <sug-email-form
       [emailForm]="currentForm"
@@ -64,8 +73,6 @@
   </div>
   }
 </div>
-
-<!-- Child Dialog Components -->
 
 <!-- Signup Selection Dialog -->
 <sug-signup-selection-dialog
@@ -216,7 +223,7 @@
 <!-- Preview Email Dialog -->
 <sug-preview-email
   [(visible)]="isPreviewDialogVisible"
-  [showThemeSelection]="!userStateService.isBasicUser()"
+  [showThemeSelection]="!userStateService.isBasicUser(userProfile)"
   (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   (scheduleEmail)="scheduleEmail($event)"

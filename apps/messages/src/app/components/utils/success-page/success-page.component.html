@@ -1,0 +1,121 @@
+<div class="success-page-wrapper">
+  <!-- Success Content -->
+  <div class="success-container">
+    <!-- Success Title -->
+    @if (type === 'send') {
+    <h1 class="success-title">Message Sent!</h1>
+    } @else if (type === 'draft') {
+    <h1 class="success-title">Draft Saved!</h1>
+    } @else if(type === 'scheduled') {
+    <h1 class="success-title">Message Scheduled!</h1>
+    } @else if(type === 'custom') {
+    <h1 class="success-title">Success!</h1>
+    }
+
+    <!-- Success Messages -->
+    <div class="success-messages">
+      @if (type === 'send') {
+      <p class="secondary-message">
+        Great work! Your message has been added to our queue and will be sent
+        out immediately.
+      </p>
+      <br />
+      <p class="secondary-message">
+        You will be notified by email once the message is sent. You can also
+        click the "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewSentMessages()"
+          (keydown.enter)="viewSentMessages()"
+          role="button"
+          aria-label="Go to Sent Messages"
+          >Sent</span
+        >" tab in the Messages area to check the status of your message.
+      </p>
+      } @else if (type === 'draft') {
+      <p class="secondary-message">
+        Your work has been saved and is available for you to work on at a later
+        time. To continue your work on the draft message, return to the Messages
+        area and click on the "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewDrafts()"
+          (keydown.enter)="viewDrafts()"
+          role="button"
+          aria-label="Go to Drafts & Templates"
+          >Drafts & Templates</span
+        >" tab.
+      </p>
+      } @else if (type === 'scheduled') {
+      <p class="secondary-message">
+        Nice work! Your message has been scheduled and will be sent out at the
+        designated time.
+      </p>
+      <br />
+      <p class="secondary-message">
+        If you need to edit this message before the send time, click on the
+        "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewScheduled()"
+          (keydown.enter)="viewScheduled()"
+          role="button"
+          aria-label="Go to Scheduled Messages"
+          >Scheduled</span
+        >" tab in the Messages area. Once the message has been sent, you will be
+        notified by email and you will be able to click the "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewSentMessages()"
+          (keydown.enter)="viewSentMessages()"
+          role="button"
+          aria-label="Go to Sent Messages"
+          >Sent</span
+        >" tab for details about the delivery.
+      </p>
+      } @else if (type === 'custom') {
+      <p class="secondary-message">
+        You did it! Your custom reminder template is saved and ready for use. If
+        you need to edit it in the future, simply click on the "<span
+          class="highlight"
+          tabindex="0"
+          (click)="viewDrafts()"
+          (keydown.enter)="viewDrafts()"
+          role="button"
+          aria-label="Go to Drafts & Templates"
+          >Drafts & Templates</span
+        >" tab in the Messages area.
+      </p>
+      <br />
+      <p class="secondary-message">
+        To assign this template to a new sign up that you create in the future,
+        go to the “Settings” tab in the builder, and scroll down to the
+        "Notifications" area within the sign up Preferences. Expand "Custom
+        Confirmation Emails & Reminders" to select your saved template.
+      </p>
+      }
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <sug-ui-button
+        label="Compose Another"
+        [severity]="'success'"
+        [outlined]="false"
+        (buttonClick)="composeAnother()"
+        styleClass="success-btn"
+      >
+      </sug-ui-button>
+      @if (shouldShowViewSignUpButton) {
+      <sug-ui-button
+        label="View Sign Up"
+        [severity]="'secondary'"
+        [outlined]="true"
+        (buttonClick)="viewSignUp()"
+        styleClass="success-btn"
+      >
+      </sug-ui-button>
+      }
+    </div>
+  </div>
+</div>

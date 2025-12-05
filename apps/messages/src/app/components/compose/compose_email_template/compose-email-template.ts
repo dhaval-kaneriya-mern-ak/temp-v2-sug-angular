@@ -84,10 +84,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   protected readonly userStateService = inject(UserStateService);
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
-  private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private httpClient = inject(HttpClient);
+  private toastr = inject(ToastrService);
   reminderEmailForm!: FormGroup;
   confirmationEmailForm!: FormGroup;
   isLoading = false;
@@ -112,6 +112,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       value: 'emailoptiontwo',
     },
   ];
+  formValidationErrors: string[] = [];
   selectedValue: string | null = null;
   isPreviewVisible = false;
   emailHtmlPreview = '';
@@ -291,20 +292,19 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       this.composeService.createMessage(payload).subscribe({
         next: (response) => {
           if (response.success === true && response.data) {
-            this.toastr.success('Message saved successfully', 'Success');
-            // Clear URL parameter before showing options again
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: {},
-              replaceUrl: true,
-            });
-            this.showOptionsAgain();
+            // const array = this.signupOptionApiData.filter((su) =>
+            //   form.assignTo.includes(String(su.signupid))
+            // );
+            this.composeService.triggerSuccessPage('custom', []);
           }
           this.isLoading = false;
         },
         error: (err) => {
           this.isLoading = false;
-          this.toastr.error(err.error.message[0]?.details, 'Error');
+          // this.toastr.error(err.error.message[0]?.details, 'Error');
+          err?.error?.message?.forEach((element: { details: string }) => {
+            this.formValidationErrors.push(element.details);
+          });
           this.onPreviewAndSend(this.currentEmailForm);
         },
       });
@@ -364,10 +364,13 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.isPreviewVisible = false;
-          this.toastr.error(
-            err?.error?.message?.[0]?.details || 'Failed to load preview',
-            'Error'
-          );
+          // this.toastr.error(
+          //   err?.error?.message?.[0]?.details || 'Failed to load preview',
+          //   'Error'
+          // );
+          err?.error?.message?.forEach((element: { details: string }) => {
+            this.formValidationErrors.push(element.details);
+          });
         },
       });
   }
@@ -649,10 +652,13 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (!response.success) {
             this.isLoading = false;
-            this.toastr.error(
+            // this.toastr.error(
+            //   'Failed to load message. Invalid message ID.',
+            //   'Error'
+            // );
+            this.formValidationErrors = [
               'Failed to load message. Invalid message ID.',
-              'Error'
-            );
+            ];
             this.router.navigate(['/messages/compose']);
             return;
           }
@@ -729,21 +735,27 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             this.isLoading = false;
           } else {
             this.isLoading = false;
-            this.toastr.error(
+            // this.toastr.error(
+            //   `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
+            //   'Unsupported Message Type'
+            // );
+            this.formValidationErrors = [
               `This message type (${response.data.messagetypeid}) cannot be edited in this form.`,
-              'Unsupported Message Type'
-            );
+            ];
             this.router.navigate(['/messages/compose']);
           }
         },
 
         error: (error) => {
           this.isLoading = false;
-          console.error('Failed to load message', error);
-          this.toastr.error(
+          // console.error('Failed to load message', error);
+          // this.toastr.error(
+          //   'Failed to load message. Please try again.',
+          //   'Error'
+          // );
+          this.formValidationErrors = [
             'Failed to load message. Please try again.',
-            'Error'
-          );
+          ];
           this.router.navigate(['/messages/compose']);
         },
       });

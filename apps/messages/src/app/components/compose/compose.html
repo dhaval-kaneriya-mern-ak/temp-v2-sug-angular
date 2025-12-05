@@ -1,5 +1,7 @@
 <div class="row">
+  @if(!isShowSuccessPage){
   <div class="col-md-12">
+    @if (!isSuccessRoute) {
     <div class="account-overview">
       <h3>
         Compose Message
@@ -157,6 +159,7 @@
     <p class="compose-subtext">
       Select the type of message you would like to compose.
     </p>
+    }
   </div>
   <div class="compose-tab">
     <sug-ui-menu-tabs
@@ -171,6 +174,14 @@
     <!-- (ComposeEmailComponent, ComposeEmailTemplateComponent, etc.) -->
     <router-outlet></router-outlet>
   </div>
+  } @else {
+  <sug-success-page
+    [type]="successPageType"
+    [showBackToCompose]="true"
+    [selectedSignups]="successPageSelectedSignups"
+    (backToCompose)="hideSuccessPage()"
+  ></sug-success-page>
+  }
 </div>
 <!-- <div class="compose-message">
   <h2>Compose New Message</h2>
