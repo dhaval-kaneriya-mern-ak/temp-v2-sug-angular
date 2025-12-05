@@ -275,3 +275,178 @@
     justify-content: center;
   }
 }
+
+// Attachments Section Styles
+.attachments-container {
+  width: 70%;
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  .storage-header {
+    margin-bottom: 12px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+  }
+
+  .storage-info {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #d1d5db;
+
+    .storage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .storage-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .storage-size {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+      }
+    }
+  }
+
+  .attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    gap: 5px;
+
+    &:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .attachment-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+
+      .file-icon-wrapper {
+        flex: 0 0 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 6px;
+        height: 36px;
+
+        i {
+          font-size: 18px;
+          color: #6b7280;
+        }
+      }
+
+      .file-details {
+        flex: 1;
+        min-width: 0;
+
+        .file-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .file-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #111827;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+        }
+
+        .file-size {
+          font-size: 12px;
+          color: #9ca3af;
+          white-space: nowrap;
+          flex: 0 0 auto;
+        }
+      }
+    }
+
+    .remove-attachment-btn,
+    .download-attachment-btn {
+      flex: 0 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #d1d5db;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      i {
+        font-size: 16px;
+      }
+    }
+
+    .remove-attachment-btn {
+      &:hover {
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+    }
+
+    .download-attachment-btn {
+      &:hover {
+        background-color: #dcfce7;
+        color: #16a34a;
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .attachments-container .attachment-item {
+    flex-wrap: wrap;
+
+    .attachment-content {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .remove-attachment-btn,
+    .download-attachment-btn {
+      align-self: flex-start;
+    }
+  }
+}

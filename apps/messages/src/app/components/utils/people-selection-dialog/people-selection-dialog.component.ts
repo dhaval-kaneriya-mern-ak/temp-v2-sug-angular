@@ -32,7 +32,7 @@ import { ChipModule } from 'primeng/chip';
 import { ToastrService } from 'ngx-toastr';
 import { SugUpdateGroupSectionComponent } from '../update-group-section/update-group-section.component';
 import { Subject, takeUntil } from 'rxjs';
-import { MemberProfile } from '@services/interfaces';
+import { MemberProfile, SendToType, SentTo } from '@services/interfaces';
 import { IMemberInfoDto } from '@services/interfaces';
 import { SugInformationDialogComponent } from '../information-dialog/information-dialog.component';
 
@@ -940,8 +940,8 @@ export class PeopleSelectionDialogComponent
 
   private calculateRecipientCountForSlots(): void {
     const payload = {
-      sentToType: 'specificdateslot',
-      sentTo: 'specificdateslot',
+      sentToType: SendToType.SPECIFIC_DATE_SLOT,
+      sentTo: SentTo.SPECIFIC_DATE_SLOT,
       messageTypeId: this.messageTypeId,
       signupIds: this.selectedSignups.map((s) => s.signupid),
       slotItemIds: this.selectedDateSlots.map((slot) => slot.slotitemid),
@@ -978,18 +978,18 @@ export class PeopleSelectionDialogComponent
     const signupIds = this.selectedSignups.map((s) => s.signupid);
 
     // Determine sentTo value based on checkbox state
-    let sentToValue = 'all'; // Default: all group members
+    let sentToValue = SentTo.ALL; // Default: all group members
     let payloadSignupIds: number[] | undefined = undefined;
 
     if (includeNonGroupMembers && signupIds.length > 0) {
       // Include both group members and non-group members who signed up
-      sentToValue = 'includenongroupmembers';
+      sentToValue = SentTo.INCLUDE_NON_GROUP_MEMBERS;
       payloadSignupIds = signupIds;
     }
 
     // Prepare payload
     const payload = {
-      sentToType: 'peopleingroups',
+      sentToType: SendToType.PEOPLE_IN_GROUPS,
       sentTo: sentToValue,
       messageTypeId: this.messageTypeId,
       groupIds: groupIds.map((id) => parseInt(id, 10)),
@@ -1049,7 +1049,7 @@ export class PeopleSelectionDialogComponent
         p_sortBy: string;
       };
     } = {
-      sentToType: 'specificrsvp',
+      sentToType: SendToType.SPECIFIC_RSVP,
       sentTo: `rsvp:${responses.join(',')}`,
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
@@ -1084,8 +1084,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'signedup',
-      sentTo: 'signedup',
+      sentToType: SendToType.SIGNED_UP,
+      sentTo: SentTo.SIGNED_UP,
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {
@@ -1114,8 +1114,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'peopleingroups',
-      sentTo: 'notsignedup',
+      sentToType: SendToType.PEOPLE_IN_GROUPS,
+      sentTo: SentTo.NOT_SIGNED_UP,
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {
@@ -1144,8 +1144,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'waitlisted',
-      sentTo: 'waitlisted',
+      sentToType: SendToType.WAITLIST,
+      sentTo: SentTo.WAITLIST,
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {
@@ -1174,8 +1174,8 @@ export class PeopleSelectionDialogComponent
     if (!signupIds) return;
 
     const payload = {
-      sentToType: 'signedupandwaitlisted',
-      sentTo: 'signedupandwaitlisted',
+      sentToType: SendToType.SIGNUP_WAITLIST,
+      sentTo: SentTo.SIGNED_UP_AND_WAITLIST,
       messageTypeId: this.messageTypeId,
       signupIds: signupIds,
       filters: {

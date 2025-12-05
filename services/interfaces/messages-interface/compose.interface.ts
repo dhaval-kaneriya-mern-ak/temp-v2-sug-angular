@@ -92,6 +92,8 @@ export interface ISignUpItem {
   favoriteid?: number;
   haspassword?: string | boolean;
   passcode?: string;
+  remindertemplate?: string | number;
+  confirmationtemplate?: string | number;
 }
 
 export interface ISelectPortalOption {
@@ -676,6 +678,11 @@ export interface MessageByIdData {
 
   sendtotype: string;
   signUpType?: string;
+
+  attachments?: {
+    fileid: number;
+    fileurl: string;
+  }[];
 }
 
 export interface IMessagePreviewRequest {
@@ -724,6 +731,7 @@ export enum SentTo {
   MEMBERS = 'members',
   IMPORT = 'import',
   ALL_INCLUDE_NON_GROUP_MEMBERS = 'allincludenongroupmembers',
+  INCLUDE_NON_GROUP_MEMBERS = 'includenongroupmembers',
   MANUAL = 'manual',
   SPECIFIC_DATE_SLOT = 'specificdateslot',
   PEOPLE_IN_GROUPS = 'peopleingroups',
@@ -736,6 +744,7 @@ export enum SendToType {
   CUSTOM = 'custom',
   SIGNED_UP = 'signedup',
   SPECIFIC_RSVP_RESPONSE = 'specificrsvpresponse',
+  SPECIFIC_RSVP = 'specificrsvp',
   SPECIFIC_DATE_SLOT = 'specificdateslot',
   PEOPLE_IN_GROUPS = 'peopleingroups',
   NOT_SIGNED_UP = 'notsignedup',
@@ -853,6 +862,30 @@ export interface IFileItem {
   filedescription?: string;
   filesizekb?: number;
   folderid?: number;
+  fileurl?: string;
+}
+
+/**
+ * File details data structure
+ * Used when fetching file details from GeniusDrive
+ */
+export interface IFileDetailsData {
+  filename: string;
+  s3Presignedurl?: string;
+  fileurl?: string;
+  s3presignedurl?: string;
+  filesizekb?: number;
+  filedescription?: string;
+}
+
+/**
+ * Interface for file details API response
+ * Used when fetching file details from GeniusDrive
+ */
+export interface IFileDetailsResponse {
+  success: boolean;
+  message: string[];
+  data: IFileDetailsData;
 }
 
 export interface IParentFolderResponse {

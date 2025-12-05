@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   Component,
   inject,
@@ -67,6 +68,8 @@ import {
   initializeDraftEditMode,
   checkForWaitlistSlots,
   isWaitlistRelatedMessage,
+  restoreAttachments,
+  downloadFile,
 } from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
@@ -108,6 +111,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   protected stateService = inject(ComposeEmailStateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private httpClient = inject(HttpClient);
 
   @ViewChild(SignupSelectionDialogComponent)
   signupDialog!: SignupSelectionDialogComponent;
@@ -678,6 +682,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       payload.attachmentids = this.stateService.selectedAttachment.map(
         (file) => file.id
       );
+    } else {
+      payload.attachmentids = [];
     }
 
     if (
@@ -844,17 +850,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
       if (
         this.isEditingExistingDraft &&
-        this.currentSendToType.toLowerCase() === 'custom' &&
+        this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
         hasSelectedMemberGroups
       ) {
-        sendtotype = 'custom';
-        sentto = 'members';
+        sendtotype = SendToType.CUSTOM;
+        sentto = SentTo.MEMBERS;
       } else if (
         this.isEditingExistingDraft &&
-        this.currentSendToType.toLowerCase() === 'custom' &&
+        this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
         this.selectedCustomUserIds.length > 0
       ) {
-        sendtotype = 'custom';
+        sendtotype = SendToType.CUSTOM;
         sentto = this.selectedCustomUserIds.join(',');
       } else {
         const mapped = mapSelectedValueToApi(
@@ -885,8 +891,16 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             : true,
       };
 
-      if (formValue.attachments && formValue.attachments.length > 0) {
-        payload.attachmentids = formValue.attachments;
+      // Always send attachmentids array to reflect current state (additions/removals)
+      // Get attachment IDs from the state service (the single source of truth)
+      const attachmentIds = this.stateService.selectedAttachment.map(
+        (file) => file.id
+      );
+      // Only include attachmentids if there are any attachments
+      if (attachmentIds.length > 0) {
+        payload.attachmentids = attachmentIds;
+      } else {
+        payload.attachmentids = [];
       }
 
       if (this.isEditingExistingDraft) {
@@ -932,12 +946,15 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         .filter((id) => !isNaN(id));
       payload.groupids = groupIds.length > 0 ? groupIds : [];
 
-      if (sendtotypeLower === 'manual' && peopleSelectionData.manualEmails) {
+      if (
+        sendtotypeLower === SendToType.MANUAL &&
+        peopleSelectionData.manualEmails
+      ) {
         payload.addEmails = peopleSelectionData.manualEmails;
       }
 
       if (
-        sendtotypeLower === 'specificdateslot' &&
+        sendtotypeLower === SendToType.SPECIFIC_DATE_SLOT &&
         this.stateService.selectedDateSlots.length > 0
       ) {
         payload.slotids = this.stateService.selectedDateSlots.map((slot) =>
@@ -954,7 +971,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (sendtotypeLower === 'specificrsvp') {
+      if (sendtotypeLower === SendToType.SPECIFIC_RSVP) {
         const responses: string[] = [];
         if (peopleSelectionData.rsvpResponseyes) responses.push('yes');
         if (peopleSelectionData.rsvpResponseno) responses.push('no');
@@ -966,7 +983,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (sendtotypeLower === 'custom' && hasSelectedMemberGroups) {
+      if (sendtotypeLower === SendToType.CUSTOM && hasSelectedMemberGroups) {
         payload.to = this.stateService.selectedMemberGroups.map((member) => ({
           memberid: member.id,
           firstname: member.firstname || '',
@@ -1621,7 +1638,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           );
 
           if (
-            response.data.sendtotype?.toLowerCase() === 'custom' &&
+            response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
             response.data.sentto
           ) {
             if (response.data.messagetypeid === 4) {
@@ -1707,9 +1724,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             ).map((item) => String(item.memberid));
 
             const isRsvpSignup =
-              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
               response.data.sendtotype?.toLowerCase() ===
-                'specificrsvpresponse';
+                SendToType.SPECIFIC_RSVP ||
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_RSVP_RESPONSE;
 
             const mappedSignups: ISignUpItem[] = (
               response.data?.signups || []
@@ -1804,8 +1822,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               response.data.addEmails
             );
 
+            // Restore attachments if present
             if (
-              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
+
+            if (
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_DATE_SLOT &&
               response.data.signups &&
               response.data.signups.length > 0
             ) {
@@ -1816,14 +1843,16 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             const skipGroupRestoration =
-              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
-                response.data.sentto?.toLowerCase() === 'signedup') ||
-              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup') ||
-              response.data.sendtotype?.toLowerCase() === 'manual';
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.SIGNED_UP &&
+                response.data.sentto?.toLowerCase() === SentTo.SIGNED_UP) ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.PEOPLE_IN_GROUPS &&
+                response.data.sentto?.toLowerCase() === SentTo.NOT_SIGNED_UP) ||
+              response.data.sendtotype?.toLowerCase() === SendToType.MANUAL;
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
               this.stateService.selectedMemberGroups.length > 0
             ) {
               const memberIds = this.stateService.selectedMemberGroups.map(
@@ -1865,8 +1894,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                     );
                     return this.composeService
                       .fetchRecipients({
-                        sentToType: 'peopleingroups',
-                        sentTo: 'all',
+                        sentToType: SendToType.PEOPLE_IN_GROUPS,
+                        sentTo: SentTo.ALL,
                         messageTypeId: 4,
                         signupIds: signupIds,
                         groupIds: groupIds,
@@ -1968,9 +1997,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             ).map((item) => String(item.memberid));
 
             const isRsvpSignup =
-              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
               response.data.sendtotype?.toLowerCase() ===
-                'specificrsvpresponse';
+                SendToType.SPECIFIC_RSVP ||
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_RSVP_RESPONSE;
 
             const mappedSignups: ISignUpItem[] = (
               response.data?.signups || []
@@ -2075,8 +2105,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               response.data.addEmails
             );
 
+            // Restore attachments if present
             if (
-              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
+
+            if (
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_DATE_SLOT &&
               response.data.signups &&
               response.data.signups.length > 0
             ) {
@@ -2087,18 +2126,20 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             const skipGroupRestoration =
-              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
-                response.data.sentto?.toLowerCase() === 'signedup') ||
-              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup') ||
-              response.data.sendtotype?.toLowerCase() === 'manual' ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.SIGNED_UP &&
+                response.data.sentto?.toLowerCase() === SentTo.SIGNED_UP) ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.PEOPLE_IN_GROUPS &&
+                response.data.sentto?.toLowerCase() === SentTo.NOT_SIGNED_UP) ||
+              response.data.sendtotype?.toLowerCase() === SendToType.MANUAL ||
               isWaitlistRelatedMessage(
                 response.data.sendtotype || '',
                 response.data.sentto || ''
               );
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
               (this.stateService.selectedMemberGroups.length > 0 ||
                 this.selectedCustomUserIds.length > 0)
             ) {
@@ -2156,8 +2197,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                     );
                     return this.composeService
                       .fetchRecipients({
-                        sentToType: 'peopleingroups',
-                        sentTo: 'all',
+                        sentToType: SendToType.PEOPLE_IN_GROUPS,
+                        sentTo: SentTo.ALL,
                         messageTypeId: 1,
                         signupIds: signupIds,
                         groupIds: groupIds,
@@ -2384,7 +2425,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       addEmails
     );
 
-    if (sendtotype.toLowerCase() === 'manual') {
+    if (sendtotype.toLowerCase() === SendToType.MANUAL) {
       if (addEmails) {
         const emailList = parseManualEmails(addEmails);
         this.stateService.setRecipientCount(emailList.length);
@@ -2504,8 +2545,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
                 this.composeService
                   .fetchRecipients({
-                    sentToType: 'specificdateslot',
-                    sentTo: 'specificdateslot',
+                    sentToType: SendToType.SPECIFIC_DATE_SLOT,
+                    sentTo: SentTo.SPECIFIC_DATE_SLOT,
                     messageTypeId: messageTypeId,
                     signupIds: signupIds,
                     slotItemIds: slotItemIds,
@@ -2561,6 +2602,25 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Restores attachments from draft message
+   * Uses the shared restoreAttachments utility to avoid code duplication
+   */
+  private restoreAttachments(
+    attachments: { fileid: number; fileurl: string }[]
+  ): void {
+    restoreAttachments({
+      attachments,
+      composeService: this.composeService,
+      destroy$: this.destroy$,
+      onSuccess: (transformedAttachments) => {
+        if (transformedAttachments.length > 0) {
+          this.stateService.setSelectedAttachment(transformedAttachments);
+        }
+      },
+    });
+  }
+
   onFileSelected(file: IFileItem) {
     // Use state service validation
     const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
@@ -2578,5 +2638,18 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       // Validation failed - could log or emit error
       console.warn('Attachment validation failed:', validationResult.error);
     }
+  }
+
+  /**
+   * Downloads a file attachment using the common download utility
+   */
+  onDownloadFile(file: IFileItem): void {
+    downloadFile({
+      file,
+      composeService: this.composeService,
+      toastr: this.toastr,
+      destroy$: this.destroy$,
+      httpClient: this.httpClient,
+    });
   }
 }
