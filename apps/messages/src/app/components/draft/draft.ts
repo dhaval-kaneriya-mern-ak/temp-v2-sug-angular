@@ -212,9 +212,10 @@ export class Draft implements OnDestroy, OnInit {
         this.totalRecords = response.data.totalcount || 0;
 
         this.tableData = messages.map((item) => ({
-          datecreated: format(
-            new Date(Number(item.datecreated) * 1000),
-            'dd/MM/yyyy h:mmaaa'
+          datecreated: this.userStateService.convertESTtoUserTZ(
+            Number(item.datecreated),
+            this.userData?.zonename || 'UTC',
+            this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
           ),
           subject: item.subject,
           messageid: item.messageid,

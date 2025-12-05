@@ -83,7 +83,7 @@ export class PreviewEmailComponent {
         time.getSeconds(),
         time.getMilliseconds()
       );
-      const formatted = format(combined, "yyyy-MM-dd'T'HH:mm:ssxxx");
+      const formatted = format(combined, 'yyyy-MM-dd HH:mm');
       this.scheduleEmail.emit(formatted);
       this.closeDialog();
     }

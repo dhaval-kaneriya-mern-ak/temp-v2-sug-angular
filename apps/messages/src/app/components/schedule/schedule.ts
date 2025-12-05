@@ -53,15 +53,15 @@ export class Schedule {
   page = 1;
   rows = 10;
   first = 0; // Important for proper pagination tracking
-  sortField = 'datecreated';
+  sortField = 'senddate';
   sortOrder: 'asc' | 'desc' = 'desc';
   tableConfig: ISugTableConfig = {
-    sortField: 'datecreated',
+    sortField: 'senddate',
     sortOrder: -1, // -1 for desc, 1 for asc
   };
   tableColumns: ISugTableColumn[] = [
     {
-      field: 'datecreated',
+      field: 'senddate',
       header: 'Scheduled For',
       sortable: true,
       filterable: false,
@@ -171,17 +171,18 @@ export class Schedule {
             this.isLoading = false;
             this.totalRecords = apiResponse.data.totalcount;
             const mappedData = apiResponse.data.messages.map(
-              (item: Message) => ({
-                ...item,
-                datecreated: format(
-                  new Date(Number(item.senddate) * 1000),
-                  'dd/MM/yyyy h:mmaaa'
-                ),
-                // senddate: format(
-                //   new Date(Number(item.senddate) * 1000),
-                //   'yyyy-MM-dd h:mmaaa'
-                // ),
-              })
+              (item: Message) => {
+                const formattedDate = this.userStateService.convertESTtoUserTZ(
+                  Number(item.senddate),
+                  this.userData?.zonename || 'UTC',
+                  this.userData?.selecteddateformat?.short.toUpperCase() +
+                    ' hh:mma'
+                );
+                return {
+                  ...item,
+                  senddate: formattedDate,
+                };
+              }
             );
             this.tableData = mappedData;
           }

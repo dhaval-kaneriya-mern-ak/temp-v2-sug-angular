@@ -111,9 +111,12 @@ export class Sent {
             const mappedData = apiResponse.data.messages.map(
               (item: SentMessage) => ({
                 messageid: item.messageid,
-                senddate: new Date(
-                  Number(item?.sentdate || 0) * 1000
-                ).toLocaleString(),
+                senddate: this.userStateService.convertESTtoUserTZ(
+                  Number(item?.sentdate || 0),
+                  this.userData?.zonename || 'UTC',
+                  this.userData?.selecteddateformat?.short.toUpperCase() +
+                    ' hh:mma'
+                ),
                 subject: `<div class="subject-text">
                         <span class="subject-text">${
                           item.subject || 'No Subject'

@@ -1161,7 +1161,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       };
 
       if (date) {
-        payload.senddate = date;
+        payload.senddate = date + ':00';
       }
       if (form.isSignUpIndexPageSelected) {
         payload.signuptype = SignUPType.ACCIDEX;
