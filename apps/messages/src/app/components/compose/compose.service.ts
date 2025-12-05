@@ -19,6 +19,7 @@ import {
   IParentFolderResponse,
   IPortalSignupResponse,
   IShortUrlResponse,
+  IFileDetailsResponse,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
@@ -281,5 +282,24 @@ export class ComposeService {
 
   getShortUrl(urlPath: string): Observable<IShortUrlResponse> {
     return this.sugApiClient.get(`/signups/shorturl?urlpath=${urlPath}`);
+  }
+
+  /**
+   * Get file details from GeniusDrive
+   * Fetches metadata including filename, file URL, size, and description
+   * @param fileId - The file ID to get details for
+   * @returns Observable of file details response containing filename, s3Presignedurl, filesizekb, and filedescription
+   * @throws Error if file not found or access denied
+   * @example
+   * this.getFileDetails(123).subscribe(response => {
+   *   if (response.success) {
+   *     console.log(response.data.filename);
+   *   }
+   * });
+   */
+  getFileDetails(fileId: number): Observable<IFileDetailsResponse> {
+    return this.sugApiClient.get<IFileDetailsResponse>(
+      `/geniusdrive/file/${fileId}/details`
+    );
   }
 }

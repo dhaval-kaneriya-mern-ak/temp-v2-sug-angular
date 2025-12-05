@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -34,6 +35,8 @@ import {
   ISignUpItem,
   ISubAdmin,
   ICreateMessageRequest,
+  ISaveDraftMessagePayload,
+  IFileItem,
   MessageStatus,
   SentTo,
   SendToType,
@@ -47,7 +50,11 @@ import { FileSelectionDialogComponent } from '../../utils/file-selection-dialog/
 import { ActivatedRoute, Router } from '@angular/router';
 import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
 import { ToastrService } from 'ngx-toastr';
-import { stripHtml } from '../../utils/services/draft-message.util';
+import {
+  stripHtml,
+  restoreAttachments,
+  downloadFile,
+} from '../../utils/services/draft-message.util';
 
 @Component({
   selector: 'sug-compose-email-template',
@@ -80,6 +87,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private httpClient = inject(HttpClient);
   reminderEmailForm!: FormGroup;
   confirmationEmailForm!: FormGroup;
   isLoading = false;
@@ -110,6 +118,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   availableThemes: Array<number> = [1];
   messageStatus = MessageStatus;
   currentEditingMessageId: number | null = null;
+  selectedAttachment: IFileItem[] = [];
 
   ngOnInit(): void {
     this.initializeForms();
@@ -137,6 +146,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
     this.currentEditingMessageId = null; // Clear editing message ID
+    this.selectedAttachment = []; // Clear attachments
     this.reminderEmailForm.reset({
       themeid: 1,
     });
@@ -199,35 +209,106 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   onSaveDraft(status: MessageStatus): void {
     this.isLoading = true;
     const form = this.currentEmailForm.value;
-    const payload: ICreateMessageRequest = {
-      subject: form.subject,
-      body: form.message,
-      sentto: SentTo.ALL,
-      sendtotype: SendToType.PEOPLE_IN_GROUPS,
-      status: status,
-      messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
-      sendasemail: true,
-      sendastext: false,
-      themeid: form.themeid,
-      contactname: form.fromName,
-      replytoids: form.replyTo.map((id: string) => Number(id)),
-      signupids: form.assignTo.map((id: string) => Number(id)),
-    };
 
-    this.composeService.createMessage(payload).subscribe({
-      next: (response) => {
-        if (response.success === true && response.data) {
-          this.toastr.success('Message saved successfully', 'Success');
-          this.showOptionsAgain();
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.toastr.error(err.error.message[0]?.details, 'Error');
-        this.onPreviewAndSend(this.currentEmailForm);
-      },
-    });
+    // Check if we're editing an existing draft or creating a new one
+    if (this.currentEditingMessageId) {
+      // Update existing draft using PATCH API
+      const payload: ISaveDraftMessagePayload = {
+        subject: form.subject,
+        body: form.message,
+        sentto: SentTo.ALL,
+        sendtotype: SendToType.PEOPLE_IN_GROUPS,
+        status: 'draft',
+        messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
+        sendasemail: true,
+        sendastext: false,
+        themeid: form.themeid,
+        contactname: form.fromName,
+        replytoids: form.replyTo.map((id: string) => Number(id)),
+        signupids: form.assignTo.map((id: string) => Number(id)),
+      };
+
+      // Only include attachmentids if there are any attachments
+      const attachmentIds = this.selectedAttachment.map((file) => file.id);
+      if (attachmentIds.length > 0) {
+        payload.attachmentids = attachmentIds;
+      }
+
+      this.composeService
+        .saveDraftMessage(this.currentEditingMessageId, payload)
+        .subscribe({
+          next: (response) => {
+            this.isLoading = false;
+            if (response.success) {
+              this.toastr.success(
+                'Draft message saved successfully!',
+                'Success'
+              );
+              // Clear URL parameter before showing options again
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: {},
+                replaceUrl: true,
+              });
+              this.showOptionsAgain();
+            } else {
+              this.toastr.error('Failed to save draft', 'Error');
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.toastr.error(
+              err.error?.message?.[0]?.details ||
+                'Failed to save draft. Please try again.',
+              'Error'
+            );
+            this.onPreviewAndSend(this.currentEmailForm);
+          },
+        });
+    } else {
+      // Create new draft message
+      const payload: ICreateMessageRequest = {
+        subject: form.subject,
+        body: form.message,
+        sentto: SentTo.ALL,
+        sendtotype: SendToType.PEOPLE_IN_GROUPS,
+        status: status,
+        messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
+        sendasemail: true,
+        sendastext: false,
+        themeid: form.themeid,
+        contactname: form.fromName,
+        replytoids: form.replyTo.map((id: string) => Number(id)),
+        signupids: form.assignTo.map((id: string) => Number(id)),
+      };
+
+      // Only include attachmentids if there are any attachments
+      const attachmentIds = this.selectedAttachment.map((file) => file.id);
+      if (attachmentIds.length > 0) {
+        payload.attachmentids = attachmentIds;
+      }
+
+      this.composeService.createMessage(payload).subscribe({
+        next: (response) => {
+          if (response.success === true && response.data) {
+            this.toastr.success('Message saved successfully', 'Success');
+            // Clear URL parameter before showing options again
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: {},
+              replaceUrl: true,
+            });
+            this.showOptionsAgain();
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.toastr.error(err.error.message[0]?.details, 'Error');
+          this.onPreviewAndSend(this.currentEmailForm);
+        },
+      });
+    }
   }
 
   onPreviewAndSend(form: FormGroup): void {
@@ -251,6 +332,13 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       signuptype: SignUPType.SIGNUP,
       signupids: selectedSignups.map((su) => su.id),
     };
+
+    // Only include attachmentids if there are any attachments
+    const attachmentIds = this.selectedAttachment.map((file) => file.id);
+    if (attachmentIds.length > 0) {
+      payload.attachmentids = attachmentIds;
+    }
+
     this.availableThemes = [
       1,
       ...(selectedSignups || []).map((su) => su.themeid),
@@ -593,6 +681,14 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             // Load and filter signup list after selectedValue is set
             this.getSignUpList();
 
+            // Restore attachments if present
+            if (
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
+
             this.isLoading = false;
           } else if (response.data.messagetypeid == optionTwo) {
             this.selectedValue = 'emailoptiontwo';
@@ -622,6 +718,14 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             // Load and filter signup list after selectedValue is set
             this.getSignUpList();
 
+            // Restore attachments if present
+            if (
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
+
             this.isLoading = false;
           } else {
             this.isLoading = false;
@@ -643,6 +747,139 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
           this.router.navigate(['/messages/compose']);
         },
       });
+  }
+
+  /**
+   * Restores attachments from draft message
+   * Uses the shared restoreAttachments utility to avoid code duplication
+   */
+  private restoreAttachments(
+    attachments: { fileid: number; fileurl: string }[]
+  ): void {
+    restoreAttachments({
+      attachments,
+      composeService: this.composeService,
+      destroy$: this.destroy$,
+      onSuccess: (transformedAttachments) => {
+        if (transformedAttachments.length > 0) {
+          this.selectedAttachment = transformedAttachments;
+        }
+      },
+    });
+  }
+
+  /**
+   * Handles file selection from file dialog
+   * Validates and adds the selected file to attachments
+   */
+  onFileSelected(file: IFileItem): void {
+    const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
+
+    // Check if file already exists
+    const fileExists = this.selectedAttachment.some((f) => f.id === file.id);
+    if (fileExists) {
+      console.warn('File already attached:', file.filename);
+      return;
+    }
+
+    // Validate file size
+    const fileSizeInBytes = (file.filesizekb || 0) * 1024;
+    if (fileSizeInBytes > MAX_FILE_SIZE) {
+      this.toastr.error(
+        `File size exceeds maximum allowed size of 7MB`,
+        'File Too Large'
+      );
+      return;
+    }
+
+    // Add file to attachments
+    this.selectedAttachment = [...this.selectedAttachment, file];
+  }
+
+  /**
+   * Removes an attachment from the list
+   */
+  removeAttachment(fileId: number): void {
+    this.selectedAttachment = this.selectedAttachment.filter(
+      (file) => file.id !== fileId
+    );
+  }
+
+  /**
+   * Gets the appropriate icon class based on file type
+   */
+  getFileTypeIcon(filename: string): string {
+    if (!filename) return 'pi-file';
+
+    const extension = filename.split('.').pop()?.toLowerCase();
+
+    switch (extension) {
+      case 'pdf':
+        return 'pi-file-pdf';
+      case 'doc':
+      case 'docx':
+        return 'pi-file-word';
+      case 'xls':
+      case 'xlsx':
+        return 'pi-file-excel';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+      case 'svg':
+        return 'pi-image';
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return 'pi-file-archive';
+      default:
+        return 'pi-file';
+    }
+  }
+
+  /**
+   * Formats file size in bytes to human-readable format
+   */
+  getFormattedFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  /**
+   * Gets total size of all attachments formatted
+   */
+  getTotalAttachmentSizeFormatted(): string {
+    const totalBytes = this.selectedAttachment.reduce(
+      (sum, file) => sum + (file.filesizekb || 0) * 1024,
+      0
+    );
+    return this.getFormattedFileSize(totalBytes);
+  }
+
+  /**
+   * Gets maximum allowed attachment size formatted
+   */
+  getMaxAttachmentSizeFormatted(): string {
+    return '7 MB';
+  }
+
+  /**
+   * Downloads a file attachment using the common download utility
+   */
+  downloadFile(file: IFileItem): void {
+    downloadFile({
+      file,
+      composeService: this.composeService,
+      toastr: this.toastr,
+      destroy$: this.destroy$,
+      httpClient: this.httpClient,
+    });
   }
 
   /**

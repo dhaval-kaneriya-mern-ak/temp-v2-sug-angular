@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   Component,
   inject,
@@ -67,6 +68,8 @@ import {
   initializeDraftEditMode,
   checkForWaitlistSlots,
   isWaitlistRelatedMessage,
+  restoreAttachments,
+  downloadFile,
 } from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 
@@ -108,6 +111,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   protected stateService = inject(ComposeEmailStateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private httpClient = inject(HttpClient);
 
   @ViewChild(SignupSelectionDialogComponent)
   signupDialog!: SignupSelectionDialogComponent;
@@ -872,8 +876,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             : true,
       };
 
-      if (formValue.attachments && formValue.attachments.length > 0) {
-        payload.attachmentids = formValue.attachments;
+      // Always send attachmentids array to reflect current state (additions/removals)
+      // Get attachment IDs from the state service (the single source of truth)
+      const attachmentIds = this.stateService.selectedAttachment.map(
+        (file) => file.id
+      );
+      // Only include attachmentids if there are any attachments
+      if (attachmentIds.length > 0) {
+        payload.attachmentids = attachmentIds;
       }
 
       if (this.isEditingExistingDraft) {
@@ -1778,6 +1788,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               response.data.addEmails
             );
 
+            // Restore attachments if present
+            if (
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
+
             if (
               response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
               response.data.signups &&
@@ -2048,6 +2066,14 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
               response.data.sendtotype,
               response.data.addEmails
             );
+
+            // Restore attachments if present
+            if (
+              response.data.attachments &&
+              response.data.attachments.length > 0
+            ) {
+              this.restoreAttachments(response.data.attachments);
+            }
 
             if (
               response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
@@ -2534,6 +2560,25 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Restores attachments from draft message
+   * Uses the shared restoreAttachments utility to avoid code duplication
+   */
+  private restoreAttachments(
+    attachments: { fileid: number; fileurl: string }[]
+  ): void {
+    restoreAttachments({
+      attachments,
+      composeService: this.composeService,
+      destroy$: this.destroy$,
+      onSuccess: (transformedAttachments) => {
+        if (transformedAttachments.length > 0) {
+          this.stateService.setSelectedAttachment(transformedAttachments);
+        }
+      },
+    });
+  }
+
   onFileSelected(file: IFileItem) {
     // Use state service validation
     const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
@@ -2551,5 +2596,18 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       // Validation failed - could log or emit error
       console.warn('Attachment validation failed:', validationResult.error);
     }
+  }
+
+  /**
+   * Downloads a file attachment using the common download utility
+   */
+  onDownloadFile(file: IFileItem): void {
+    downloadFile({
+      file,
+      composeService: this.composeService,
+      toastr: this.toastr,
+      destroy$: this.destroy$,
+      httpClient: this.httpClient,
+    });
   }
 }

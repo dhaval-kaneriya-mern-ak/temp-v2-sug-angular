@@ -1,9 +1,20 @@
-import { Observable, takeUntil } from 'rxjs';
+import {
+  Observable,
+  takeUntil,
+  switchMap,
+  tap,
+  of,
+  catchError,
+  forkJoin,
+} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
-import { ISaveDraftMessagePayload } from '@services/interfaces';
+import { ISaveDraftMessagePayload, IFileItem } from '@services/interfaces';
+import { IFileDetailsData } from '@services/interfaces/messages-interface/compose.interface';
 import { ComposeService } from '../../compose/compose.service';
 import { ComposeEmailStateService } from './compose-email-state.service';
+import { environment } from '@environments/environment';
 
 /**
  * Utility functions for draft message operations and recipient mapping
@@ -674,4 +685,415 @@ export function checkForWaitlistSlots(
         onResult(false);
       },
     });
+}
+
+// ============================================================================
+// ATTACHMENT RESTORATION UTILITIES
+// ============================================================================
+
+/**
+ * Attachment from API response
+ */
+export interface ApiAttachment {
+  fileid: number;
+  fileurl: string;
+}
+
+/**
+ * Options for restoring attachments from draft
+ */
+export interface RestoreAttachmentsOptions {
+  attachments: ApiAttachment[];
+  composeService: ComposeService;
+  destroy$: Observable<void>;
+  onSuccess: (attachments: IFileItem[]) => void;
+  onError?: (error: unknown) => void;
+}
+
+/**
+ * Restores attachments from draft message
+ * Fetches file details for each attachment and transforms them to IFileItem format
+ * This is a shared utility to avoid code duplication between components
+ *
+ * @param options - Configuration object with attachments, services, and callbacks
+ */
+export function restoreAttachments(options: RestoreAttachmentsOptions): void {
+  const { attachments, composeService, destroy$, onSuccess, onError } = options;
+
+  if (!attachments || attachments.length === 0) {
+    onSuccess([]);
+    return;
+  }
+
+  // Fetch file details for all attachments in parallel
+  const fileDetailRequests = attachments.map((attachment) =>
+    composeService.getFileDetails(attachment.fileid).pipe(
+      catchError((error) => {
+        if (!environment.production) {
+          console.error(
+            `Failed to fetch file details for file ID ${attachment.fileid}:`,
+            error
+          );
+        }
+        return of(null);
+      })
+    )
+  );
+
+  forkJoin(fileDetailRequests)
+    .pipe(takeUntil(destroy$))
+    .subscribe({
+      next: (fileDetailsResponses) => {
+        const fileDetailsMap = new Map<number, IFileDetailsData>();
+
+        // Build map of file ID to file details
+        fileDetailsResponses.forEach((response, index) => {
+          if (response && response.success && response.data) {
+            fileDetailsMap.set(attachments[index].fileid, response.data);
+          }
+        });
+
+        // Transform attachments to IFileItem format
+        const transformedAttachments = transformAttachmentsToFileItems(
+          attachments,
+          fileDetailsMap
+        );
+
+        onSuccess(transformedAttachments);
+      },
+      error: (error) => {
+        if (!environment.production) {
+          console.error('Failed to restore attachments:', error);
+        }
+        if (onError) {
+          onError(error);
+        } else {
+          onSuccess([]);
+        }
+      },
+    });
+}
+
+/**
+ * Transforms API attachments to IFileItem format
+ * Converts the attachment format from getMessageById to the format used by the attachment UI
+ *
+ * @param apiAttachments - Array of attachments from getMessageById API
+ * @param fileDetailsMap - Map of file ID to file details data
+ * @returns Array of IFileItem objects for use in the attachment UI
+ */
+export function transformAttachmentsToFileItems(
+  apiAttachments: ApiAttachment[],
+  fileDetailsMap: Map<number, IFileDetailsData>
+): IFileItem[] {
+  const items: IFileItem[] = [];
+
+  for (const attachment of apiAttachments) {
+    const fileDetails = fileDetailsMap.get(attachment.fileid);
+
+    if (!fileDetails) {
+      if (!environment.production) {
+        console.warn(
+          `File details not found for file ID: ${attachment.fileid}`
+        );
+      }
+      continue;
+    }
+
+    // Try multiple property names for the file URL (API might use different names)
+    const fileUrl =
+      fileDetails.s3Presignedurl ||
+      fileDetails.fileurl ||
+      fileDetails.s3presignedurl;
+
+    if (!fileUrl) {
+      if (!environment.production) {
+        console.error(`No file URL found for file ${attachment.fileid}`);
+      }
+      continue;
+    }
+
+    if (!environment.production) {
+      console.log(`File ${attachment.fileid} details:`, {
+        filename: fileDetails.filename,
+        hasUrl: !!fileUrl,
+        urlSource: fileDetails.s3Presignedurl
+          ? 's3Presignedurl'
+          : fileDetails.fileurl
+          ? 'fileurl'
+          : fileDetails.s3presignedurl
+          ? 's3presignedurl'
+          : 'none',
+      });
+    }
+
+    items.push({
+      id: attachment.fileid,
+      filename: fileDetails.filename,
+      filesizekb: fileDetails.filesizekb || 0,
+      isfolder: false,
+      filedescription: fileDetails.filedescription,
+      fileurl: fileUrl,
+    });
+  }
+
+  return items;
+}
+
+// ============================================================================
+// FILE DOWNLOAD UTILITIES
+// ============================================================================
+
+/**
+ * Constants for file download operations
+ */
+const BLOB_URL_CLEANUP_DELAY_MS = 100;
+const DEFAULT_FILENAME = 'download';
+
+/**
+ * MIME type mapping for file extensions
+ * Used to set correct MIME type for downloaded files
+ */
+const MIME_TYPE_MAP: Record<string, string> = {
+  // Images
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  bmp: 'image/bmp',
+  svg: 'image/svg+xml',
+  webp: 'image/webp',
+
+  // Documents
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  txt: 'text/plain',
+  csv: 'text/csv',
+  rtf: 'application/rtf',
+
+  // Archives
+  zip: 'application/zip',
+  rar: 'application/x-rar-compressed',
+  '7z': 'application/x-7z-compressed',
+  tar: 'application/x-tar',
+  gz: 'application/gzip',
+
+  // Media
+  mp3: 'audio/mpeg',
+  mp4: 'video/mp4',
+  avi: 'video/x-msvideo',
+  mov: 'video/quicktime',
+  wav: 'audio/wav',
+
+  // Web
+  html: 'text/html',
+  css: 'text/css',
+  js: 'application/javascript',
+  json: 'application/json',
+  xml: 'application/xml',
+};
+
+/**
+ * Options for downloading a file
+ */
+export interface DownloadFileOptions {
+  file: IFileItem;
+  composeService: ComposeService;
+  toastr: ToastrService;
+  destroy$: Observable<void>;
+  httpClient: HttpClient;
+}
+
+/**
+ * Downloads a file using file URL if available, otherwise fetches file details first
+ * - For draft messages: Uses cached file URL (no API call needed)
+ * - For new messages: Fetches file details to get the URL (API call required)
+ * Uses Angular HttpClient for HTTP requests (proper Angular way)
+ * Shared utility for compose-email and compose-email-template components
+ *
+ * @param options - Configuration object with file, services, and observables
+ */
+export function downloadFile(options: DownloadFileOptions): void {
+  const { file, composeService, toastr, destroy$, httpClient } = options;
+
+  // If file URL is already available (from draft restore), use it directly
+  if (file.fileurl) {
+    if (!environment.production) {
+      console.log('Using cached file URL for download (no API call)');
+    }
+    downloadFileFromUrl({
+      fileUrl: file.fileurl,
+      filename: file.filename || DEFAULT_FILENAME,
+      toastr,
+      httpClient,
+      destroy$,
+    });
+    return;
+  }
+
+  // Otherwise, fetch file details to get the URL (for new messages with file picker attachments)
+  if (!environment.production) {
+    console.log('File URL not cached, fetching file details from API');
+  }
+
+  if (!file.id) {
+    toastr.error('File ID is missing', 'Error');
+    return;
+  }
+
+  composeService
+    .getFileDetails(file.id)
+    .pipe(
+      takeUntil(destroy$),
+      switchMap((detailsResponse) => {
+        if (
+          !detailsResponse ||
+          !detailsResponse.success ||
+          !detailsResponse.data
+        ) {
+          throw new Error('Failed to fetch file details');
+        }
+
+        const fileDetails = detailsResponse.data;
+        const filename =
+          fileDetails.filename || file.filename || DEFAULT_FILENAME;
+        const fileUrl =
+          fileDetails.fileurl ||
+          fileDetails.s3Presignedurl ||
+          fileDetails.s3presignedurl;
+
+        if (!fileUrl) {
+          throw new Error('File URL not available');
+        }
+
+        if (!environment.production) {
+          console.log('Fetched file details for download:', filename);
+        }
+
+        downloadFileFromUrl({
+          fileUrl,
+          filename,
+          toastr,
+          httpClient,
+          destroy$,
+        });
+        return of(null);
+      }),
+      catchError((error) => {
+        if (!environment.production) {
+          console.error('Error fetching file details for download:', error);
+        }
+        toastr.error('Failed to download file', 'Error');
+        return of(null);
+      })
+    )
+    .pipe(takeUntil(destroy$))
+    .subscribe();
+}
+
+/**
+ * Options for downloading file from URL
+ */
+interface DownloadFileFromUrlOptions {
+  fileUrl: string;
+  filename: string;
+  toastr: ToastrService;
+  httpClient: HttpClient;
+  destroy$: Observable<void>;
+}
+
+/**
+ * Helper function to download file from a URL using Angular HttpClient
+ * Handles the actual HTTP request and browser download logic
+ * Uses HttpClient instead of fetch API for proper Angular integration
+ *
+ * @param options - Configuration object with URL, filename, and services
+ */
+function downloadFileFromUrl(options: DownloadFileFromUrlOptions): void {
+  const { fileUrl, filename, toastr, httpClient, destroy$ } = options;
+
+  if (!environment.production) {
+    console.log('Downloading file:', filename);
+  }
+
+  httpClient
+    .get(fileUrl, { responseType: 'blob', observe: 'response' })
+    .pipe(
+      takeUntil(destroy$),
+      tap((response) => {
+        const blob = response.body;
+
+        if (!blob) {
+          throw new Error('No blob received from server');
+        }
+
+        if (!environment.production) {
+          console.log('Blob received from URL:', {
+            type: blob.type,
+            size: blob.size,
+            filename: filename,
+          });
+        }
+
+        // Determine MIME type from filename if blob type is generic or missing
+        let mimeType = blob.type;
+        if (
+          !mimeType ||
+          mimeType === 'application/octet-stream' ||
+          mimeType === 'binary/octet-stream'
+        ) {
+          mimeType = getMimeTypeFromFilename(filename);
+          if (!environment.production) {
+            console.log('Using derived MIME type:', mimeType);
+          }
+        }
+
+        // Create a new blob with correct MIME type
+        const typedBlob = new Blob([blob], { type: mimeType });
+
+        // Create blob URL and trigger download
+        const blobUrl = window.URL.createObjectURL(typedBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.style.display = 'none';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up blob URL after a short delay
+        setTimeout(() => {
+          window.URL.revokeObjectURL(blobUrl);
+        }, BLOB_URL_CLEANUP_DELAY_MS);
+
+        toastr.success(
+          `File "${filename}" downloaded successfully`,
+          'Download Complete'
+        );
+      }),
+      catchError((error) => {
+        if (!environment.production) {
+          console.error('Error downloading file:', error);
+        }
+        toastr.error('Failed to download file', 'Error');
+        return of(null);
+      })
+    )
+    .subscribe();
+}
+
+/**
+ * Helper function to get MIME type from filename extension
+ * @param filename - The filename to extract MIME type from
+ * @returns MIME type string
+ */
+function getMimeTypeFromFilename(filename: string): string {
+  const extension = filename.split('.').pop()?.toLowerCase() || '';
+  return MIME_TYPE_MAP[extension] || 'application/octet-stream';
 }

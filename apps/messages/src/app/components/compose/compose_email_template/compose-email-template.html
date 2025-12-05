@@ -73,6 +73,78 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+        } @if (selectedAttachment.length > 0) {
+        <div class="form-wrapper">
+          <label for="attachments-list"></label>
+          <div class="attachments-container">
+            <div class="storage-header">
+              <h3>Attachments</h3>
+            </div>
+
+            <!-- Attachments List -->
+            <div class="attachments-list">
+              @for (file of selectedAttachment; track file.id || $index; let i =
+              $index) {
+              <div class="attachment-item">
+                <!-- File Icon and Info -->
+                <div class="attachment-content">
+                  <div class="file-icon-wrapper">
+                    <i
+                      [class]="
+                        'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                      "
+                    ></i>
+                  </div>
+                  <div class="file-details">
+                    <div class="file-header">
+                      <span
+                        class="file-name"
+                        [title]="file.title || file.filename"
+                        >{{ file.title || file.filename }}</span
+                      >
+                      <span class="file-size"
+                        >{{ getFormattedFileSize((file.filesizekb || 0) * 1024)
+                        }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <button
+                  type="button"
+                  class="download-attachment-btn ml-1"
+                  (click)="downloadFile(file)"
+                  aria-label="Download attachment"
+                  title="Download attachment"
+                >
+                  <i class="pi pi-download"></i>
+                </button>
+
+                <!-- Remove Button -->
+                <button
+                  type="button"
+                  class="remove-attachment-btn ml-1"
+                  (click)="removeAttachment(file.id)"
+                  aria-label="Remove attachment"
+                  title="Remove attachment"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+              }
+            </div>
+
+            <div class="storage-info">
+              <div class="storage-header">
+                <span class="storage-size"
+                  >{{ getTotalAttachmentSizeFormatted() }} / {{
+                  getMaxAttachmentSizeFormatted() }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
         }
         <div class="form-wrapper">
           <label for="assign-to">Assign To</label>
@@ -166,6 +238,78 @@
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
         </div>
+        } @if (selectedAttachment.length > 0) {
+        <div class="form-wrapper">
+          <label for="attachments-list"></label>
+          <div class="attachments-container">
+            <div class="storage-header">
+              <h3>Attachments</h3>
+            </div>
+
+            <!-- Attachments List -->
+            <div class="attachments-list">
+              @for (file of selectedAttachment; track file.id || $index; let i =
+              $index) {
+              <div class="attachment-item">
+                <!-- File Icon and Info -->
+                <div class="attachment-content">
+                  <div class="file-icon-wrapper">
+                    <i
+                      [class]="
+                        'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                      "
+                    ></i>
+                  </div>
+                  <div class="file-details">
+                    <div class="file-header">
+                      <span
+                        class="file-name"
+                        [title]="file.title || file.filename"
+                        >{{ file.title || file.filename }}</span
+                      >
+                      <span class="file-size"
+                        >{{ getFormattedFileSize((file.filesizekb || 0) * 1024)
+                        }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <button
+                  type="button"
+                  class="download-attachment-btn ml-1"
+                  (click)="downloadFile(file)"
+                  aria-label="Download attachment"
+                  title="Download attachment"
+                >
+                  <i class="pi pi-download"></i>
+                </button>
+
+                <!-- Remove Button -->
+                <button
+                  type="button"
+                  class="remove-attachment-btn ml-1"
+                  (click)="removeAttachment(file.id)"
+                  aria-label="Remove attachment"
+                  title="Remove attachment"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+              }
+            </div>
+
+            <div class="storage-info">
+              <div class="storage-header">
+                <span class="storage-size"
+                  >{{ getTotalAttachmentSizeFormatted() }} / {{
+                  getMaxAttachmentSizeFormatted() }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
         }
         <div class="form-wrapper">
           <label for="assign-to">Assign To</label>
@@ -251,7 +395,10 @@
     the "Drafts & Templates" tab.
   </p>
 </sug-help-dialog>
-<sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
+<sug-file-selection-dialog
+  [(visible)]="isSelectFileDialogVisible"
+  (fileSelected)="onFileSelected($event)"
+>
 </sug-file-selection-dialog>
 <sug-preview-email
   [(visible)]="isPreviewVisible"

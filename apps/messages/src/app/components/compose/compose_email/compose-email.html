@@ -50,6 +50,7 @@
       (removeTabGroupItem)="stateService.removeTabGroup($event)"
       (removePortalPageItem)="stateService.removePortalPage($event)"
       (removeSignUpIndexPageItem)="stateService.setSignUpIndexPageSelected(false)"
+      (downloadFileEvent)="onDownloadFile($event)"
       [selectedPortalPages]="stateService.selectedPortalPages"
       [selectedAttachments]="stateService.selectedAttachment"
       [isBasicUser]="getIsBasicUser()"

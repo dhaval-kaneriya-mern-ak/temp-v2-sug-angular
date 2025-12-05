@@ -678,6 +678,11 @@ export interface MessageByIdData {
 
   sendtotype: string;
   signUpType?: string;
+
+  attachments?: {
+    fileid: number;
+    fileurl: string;
+  }[];
 }
 
 export interface IMessagePreviewRequest {
@@ -855,6 +860,30 @@ export interface IFileItem {
   filedescription?: string;
   filesizekb?: number;
   folderid?: number;
+  fileurl?: string;
+}
+
+/**
+ * File details data structure
+ * Used when fetching file details from GeniusDrive
+ */
+export interface IFileDetailsData {
+  filename: string;
+  s3Presignedurl?: string;
+  fileurl?: string;
+  s3presignedurl?: string;
+  filesizekb?: number;
+  filedescription?: string;
+}
+
+/**
+ * Interface for file details API response
+ * Used when fetching file details from GeniusDrive
+ */
+export interface IFileDetailsResponse {
+  success: boolean;
+  message: string[];
+  data: IFileDetailsData;
 }
 
 export interface IParentFolderResponse {
