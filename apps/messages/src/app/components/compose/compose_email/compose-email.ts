@@ -682,6 +682,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       payload.attachmentids = this.stateService.selectedAttachment.map(
         (file) => file.id
       );
+    } else {
+      payload.attachmentids = [];
     }
 
     if (
@@ -897,6 +899,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       // Only include attachmentids if there are any attachments
       if (attachmentIds.length > 0) {
         payload.attachmentids = attachmentIds;
+      } else {
+        payload.attachmentids = [];
       }
 
       if (this.isEditingExistingDraft) {

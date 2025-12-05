@@ -233,6 +233,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       const attachmentIds = this.selectedAttachment.map((file) => file.id);
       if (attachmentIds.length > 0) {
         payload.attachmentids = attachmentIds;
+      } else {
+        payload.attachmentids = [];
       }
 
       this.composeService
@@ -287,6 +289,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       const attachmentIds = this.selectedAttachment.map((file) => file.id);
       if (attachmentIds.length > 0) {
         payload.attachmentids = attachmentIds;
+      } else {
+        payload.attachmentids = [];
       }
 
       this.composeService.createMessage(payload).subscribe({
@@ -337,6 +341,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     const attachmentIds = this.selectedAttachment.map((file) => file.id);
     if (attachmentIds.length > 0) {
       payload.attachmentids = attachmentIds;
+    } else {
+      payload.attachmentids = [];
     }
 
     this.availableThemes = [
