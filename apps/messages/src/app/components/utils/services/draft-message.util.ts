@@ -11,7 +11,11 @@ import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { ISaveDraftMessagePayload, IFileItem } from '@services/interfaces';
-import { IFileDetailsData } from '@services/interfaces/messages-interface/compose.interface';
+import {
+  IFileDetailsData,
+  SendToType,
+  SentTo,
+} from '@services/interfaces/messages-interface/compose.interface';
 import { ComposeService } from '../../compose/compose.service';
 import { ComposeEmailStateService } from './compose-email-state.service';
 import { environment } from '@environments/environment';
@@ -190,38 +194,43 @@ export function mapSelectedValueToApi(
 ): { sentto: string; sendtotype: string } {
   switch (selectedValue) {
     case 'peopleWhoSignedUp':
-      return { sentto: 'signedup', sendtotype: 'signedup' };
+      return { sentto: SentTo.SIGNED_UP, sendtotype: SendToType.SIGNED_UP };
 
     case 'peopleOnWaitlist':
-      return { sentto: 'waitlisted', sendtotype: 'waitlisted' };
+      return { sentto: SentTo.WAITLIST, sendtotype: SendToType.WAITLIST };
 
     case 'peopleSignedUpAndWaitlist':
       return {
-        sentto: 'signedupandwaitlisted',
-        sendtotype: 'signedupandwaitlisted',
+        sentto: SentTo.SIGNED_UP_AND_WAITLIST,
+        sendtotype: SendToType.SIGNUP_WAITLIST,
       };
 
     case 'peopleWhoNotSignedUp':
-      return { sentto: 'notsignedup', sendtotype: 'peopleingroups' };
+      return {
+        sentto: SentTo.NOT_SIGNED_UP,
+        sendtotype: SendToType.PEOPLE_IN_GROUPS,
+      };
 
     case 'sendMessagePeopleRadio':
     case 'peopleingroups':
       return {
-        sentto: includeNonGroupMembers ? 'includenongroupmembers' : 'all',
-        sendtotype: 'peopleingroups',
+        sentto: includeNonGroupMembers
+          ? SentTo.INCLUDE_NON_GROUP_MEMBERS
+          : SentTo.ALL,
+        sendtotype: SendToType.PEOPLE_IN_GROUPS,
       };
 
     case 'specificRsvpResponse':
-      return { sentto: 'rsvp:', sendtotype: 'specificrsvpresponse' };
+      return { sentto: 'rsvp:', sendtotype: SendToType.SPECIFIC_RSVP_RESPONSE };
 
     case 'ManuallyEnterEmail':
-      return { sentto: 'manual', sendtotype: 'custom' };
+      return { sentto: SentTo.MANUAL, sendtotype: SendToType.CUSTOM };
 
     case 'ImportEmailFromProvider':
-      return { sentto: 'import', sendtotype: 'custom' };
+      return { sentto: SentTo.IMPORT, sendtotype: SendToType.CUSTOM };
 
     default:
-      return { sentto: 'all', sendtotype: 'signedup' };
+      return { sentto: SentTo.ALL, sendtotype: SendToType.SIGNED_UP };
   }
 }
 
@@ -240,74 +249,74 @@ export function mapApiToSelectedValue(
   const normalizedSendToType = sendtotype?.toLowerCase() || '';
 
   if (
-    normalizedSendToType === 'specificrsvp' ||
+    normalizedSendToType === SendToType.SPECIFIC_RSVP ||
     normalizedSentTo.startsWith('rsvp:')
   ) {
     return 'specificRsvpResponse';
   }
 
-  if (normalizedSentTo === 'signedup' && normalizedSendToType === 'signedup') {
+  if (
+    normalizedSentTo === SentTo.SIGNED_UP &&
+    normalizedSendToType === SendToType.SIGNED_UP
+  ) {
     return 'peopleWhoSignedUp';
   }
 
   if (
-    normalizedSentTo === 'waitlisted' &&
-    normalizedSendToType === 'waitlisted'
+    normalizedSentTo === SentTo.WAITLIST &&
+    normalizedSendToType === SendToType.WAITLIST
   ) {
     return 'peopleOnWaitlist';
   }
 
   if (
-    normalizedSentTo === 'signedupandwaitlisted' &&
-    normalizedSendToType === 'signedupandwaitlisted'
+    normalizedSentTo === SentTo.SIGNED_UP_AND_WAITLIST &&
+    normalizedSendToType === SendToType.SIGNUP_WAITLIST
   ) {
     return 'peopleSignedUpAndWaitlist';
   }
 
   if (
-    normalizedSentTo === 'notsignedup' &&
-    normalizedSendToType === 'peopleingroups'
+    normalizedSentTo === SentTo.NOT_SIGNED_UP &&
+    normalizedSendToType === SendToType.PEOPLE_IN_GROUPS
   ) {
     return 'peopleWhoNotSignedUp';
   }
 
-  if (
-    normalizedSendToType === 'peopleingroups' ||
-    normalizedSendToType === 'peoplesingroups'
-  ) {
+  if (normalizedSendToType === SendToType.PEOPLE_IN_GROUPS) {
     if (
-      normalizedSentTo === 'all' ||
-      normalizedSentTo === 'includenongroupmembers' ||
-      normalizedSentTo === 'allincludenongroupmembers'
+      normalizedSentTo === SentTo.ALL ||
+      normalizedSentTo === SentTo.INCLUDE_NON_GROUP_MEMBERS ||
+      normalizedSentTo === SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS
     ) {
       return 'sendMessagePeopleRadio';
     }
 
-    if (normalizedSentTo === 'all') {
+    if (normalizedSentTo === SentTo.ALL) {
       return 'sendMessagePeopleRadio';
     }
   }
 
-  if (normalizedSendToType === 'manual' || normalizedSentTo === 'manual') {
+  if (
+    normalizedSendToType === SendToType.MANUAL ||
+    normalizedSentTo === SentTo.MANUAL
+  ) {
     return 'ManuallyEnterEmail';
   }
 
-  if (normalizedSendToType === 'importfromprovider') {
-    return 'ImportEmailFromProvider';
-  }
+  // if (normalizedSendToType === 'importfromprovider') {
+  //   return 'ImportEmailFromProvider';
+  // }
 
-  if (normalizedSendToType === 'specificdateslot') {
+  if (normalizedSendToType === SendToType.SPECIFIC_DATE_SLOT) {
     return 'sendMessagePeopleIselect';
   }
 
-  if (
-    normalizedSendToType === 'custom' ||
-    normalizedSendToType === 'customselection'
-  ) {
+  if (normalizedSendToType === SendToType.CUSTOM) {
     return 'sendMessagePeopleIselect';
   }
 
-  if (normalizedSendToType === 'peopleingroups') {
+  if (normalizedSendToType === SendToType.PEOPLE_IN_GROUPS) {
     return 'peopleingroups';
   }
 
@@ -341,7 +350,7 @@ export function extractPeopleSelectionData(
   const data: ReturnType<typeof extractPeopleSelectionData> = {};
 
   if (
-    normalizedSendToType === 'specificrsvp' ||
+    normalizedSendToType === SendToType.SPECIFIC_RSVP ||
     normalizedSentTo.startsWith('rsvp:')
   ) {
     const rsvpPart = normalizedSentTo.replace('rsvp:', '');
@@ -356,13 +365,13 @@ export function extractPeopleSelectionData(
   }
 
   if (
-    normalizedSentTo === 'includenongroupmembers' ||
-    normalizedSentTo === 'allincludenongroupmembers'
+    normalizedSentTo === SentTo.INCLUDE_NON_GROUP_MEMBERS ||
+    normalizedSentTo === SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS
   ) {
     data.includeNonGroupMembers = true;
   }
 
-  if (normalizedSendToType === 'custom' && sentto) {
+  if (normalizedSendToType === SendToType.CUSTOM && sentto) {
     const userIds = sentto
       .split(',')
       .map((id) => id.trim())
@@ -465,10 +474,10 @@ export function applyBackendWorkarounds(
   const correctedSendtotype = sendtotype;
 
   if (
-    sendtotype?.toLowerCase() === 'manual' &&
+    sendtotype?.toLowerCase() === SendToType.MANUAL &&
     (!sentto || sentto.trim() === '')
   ) {
-    correctedSentto = 'manual';
+    correctedSentto = SentTo.MANUAL;
   }
 
   return {
@@ -604,9 +613,11 @@ export function shouldSkipGroupRestoration(
   const senttoLower = sentto?.toLowerCase() || '';
 
   return (
-    (sendtotypeLower === 'signedup' && senttoLower === 'signedup') ||
-    (sendtotypeLower === 'peopleingroups' && senttoLower === 'notsignedup') ||
-    sendtotypeLower === 'manual'
+    (sendtotypeLower === SendToType.SIGNED_UP &&
+      senttoLower === SentTo.SIGNED_UP) ||
+    (sendtotypeLower === SendToType.PEOPLE_IN_GROUPS &&
+      senttoLower === SentTo.NOT_SIGNED_UP) ||
+    sendtotypeLower === SendToType.MANUAL
   );
 }
 
@@ -630,9 +641,10 @@ export function isWaitlistRelatedMessage(
   const sentToLower = sentTo?.toLowerCase() || '';
 
   return (
-    (sendToTypeLower === 'waitlisted' && sentToLower === 'waitlisted') ||
-    (sendToTypeLower === 'signedupandwaitlisted' &&
-      sentToLower === 'signedupandwaitlisted')
+    (sendToTypeLower === SendToType.WAITLIST &&
+      sentToLower === SentTo.WAITLIST) ||
+    (sendToTypeLower === SendToType.SIGNUP_WAITLIST &&
+      sentToLower === SentTo.SIGNED_UP_AND_WAITLIST)
   );
 }
 

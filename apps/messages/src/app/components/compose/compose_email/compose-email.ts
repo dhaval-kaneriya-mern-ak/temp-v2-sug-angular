@@ -835,17 +835,17 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
       if (
         this.isEditingExistingDraft &&
-        this.currentSendToType.toLowerCase() === 'custom' &&
+        this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
         hasSelectedMemberGroups
       ) {
-        sendtotype = 'custom';
-        sentto = 'members';
+        sendtotype = SendToType.CUSTOM;
+        sentto = SentTo.MEMBERS;
       } else if (
         this.isEditingExistingDraft &&
-        this.currentSendToType.toLowerCase() === 'custom' &&
+        this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
         this.selectedCustomUserIds.length > 0
       ) {
-        sendtotype = 'custom';
+        sendtotype = SendToType.CUSTOM;
         sentto = this.selectedCustomUserIds.join(',');
       } else {
         const mapped = mapSelectedValueToApi(
@@ -929,12 +929,15 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         .filter((id) => !isNaN(id));
       payload.groupids = groupIds.length > 0 ? groupIds : [];
 
-      if (sendtotypeLower === 'manual' && peopleSelectionData.manualEmails) {
+      if (
+        sendtotypeLower === SendToType.MANUAL &&
+        peopleSelectionData.manualEmails
+      ) {
         payload.addEmails = peopleSelectionData.manualEmails;
       }
 
       if (
-        sendtotypeLower === 'specificdateslot' &&
+        sendtotypeLower === SendToType.SPECIFIC_DATE_SLOT &&
         this.stateService.selectedDateSlots.length > 0
       ) {
         payload.slotids = this.stateService.selectedDateSlots.map((slot) =>
@@ -951,7 +954,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (sendtotypeLower === 'specificrsvp') {
+      if (sendtotypeLower === SendToType.SPECIFIC_RSVP) {
         const responses: string[] = [];
         if (peopleSelectionData.rsvpResponseyes) responses.push('yes');
         if (peopleSelectionData.rsvpResponseno) responses.push('no');
@@ -963,7 +966,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (sendtotypeLower === 'custom' && hasSelectedMemberGroups) {
+      if (sendtotypeLower === SendToType.CUSTOM && hasSelectedMemberGroups) {
         payload.to = this.stateService.selectedMemberGroups.map((member) => ({
           memberid: member.id,
           firstname: member.firstname || '',
@@ -1605,7 +1608,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           );
 
           if (
-            response.data.sendtotype?.toLowerCase() === 'custom' &&
+            response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
             response.data.sentto
           ) {
             if (response.data.messagetypeid === 4) {
@@ -1691,9 +1694,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             ).map((item) => String(item.memberid));
 
             const isRsvpSignup =
-              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
               response.data.sendtotype?.toLowerCase() ===
-                'specificrsvpresponse';
+                SendToType.SPECIFIC_RSVP ||
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_RSVP_RESPONSE;
 
             const mappedSignups: ISignUpItem[] = (
               response.data?.signups || []
@@ -1797,7 +1801,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_DATE_SLOT &&
               response.data.signups &&
               response.data.signups.length > 0
             ) {
@@ -1808,14 +1813,16 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             const skipGroupRestoration =
-              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
-                response.data.sentto?.toLowerCase() === 'signedup') ||
-              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup') ||
-              response.data.sendtotype?.toLowerCase() === 'manual';
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.SIGNED_UP &&
+                response.data.sentto?.toLowerCase() === SentTo.SIGNED_UP) ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.PEOPLE_IN_GROUPS &&
+                response.data.sentto?.toLowerCase() === SentTo.NOT_SIGNED_UP) ||
+              response.data.sendtotype?.toLowerCase() === SendToType.MANUAL;
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
               this.stateService.selectedMemberGroups.length > 0
             ) {
               const memberIds = this.stateService.selectedMemberGroups.map(
@@ -1857,8 +1864,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                     );
                     return this.composeService
                       .fetchRecipients({
-                        sentToType: 'peopleingroups',
-                        sentTo: 'all',
+                        sentToType: SendToType.PEOPLE_IN_GROUPS,
+                        sentTo: SentTo.ALL,
                         messageTypeId: 4,
                         signupIds: signupIds,
                         groupIds: groupIds,
@@ -1960,9 +1967,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             ).map((item) => String(item.memberid));
 
             const isRsvpSignup =
-              response.data.sendtotype?.toLowerCase() === 'specificrsvp' ||
               response.data.sendtotype?.toLowerCase() ===
-                'specificrsvpresponse';
+                SendToType.SPECIFIC_RSVP ||
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_RSVP_RESPONSE;
 
             const mappedSignups: ISignUpItem[] = (
               response.data?.signups || []
@@ -2076,7 +2084,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'specificdateslot' &&
+              response.data.sendtotype?.toLowerCase() ===
+                SendToType.SPECIFIC_DATE_SLOT &&
               response.data.signups &&
               response.data.signups.length > 0
             ) {
@@ -2087,18 +2096,20 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             }
 
             const skipGroupRestoration =
-              (response.data.sendtotype?.toLowerCase() === 'signedup' &&
-                response.data.sentto?.toLowerCase() === 'signedup') ||
-              (response.data.sendtotype?.toLowerCase() === 'peopleingroups' &&
-                response.data.sentto?.toLowerCase() === 'notsignedup') ||
-              response.data.sendtotype?.toLowerCase() === 'manual' ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.SIGNED_UP &&
+                response.data.sentto?.toLowerCase() === SentTo.SIGNED_UP) ||
+              (response.data.sendtotype?.toLowerCase() ===
+                SendToType.PEOPLE_IN_GROUPS &&
+                response.data.sentto?.toLowerCase() === SentTo.NOT_SIGNED_UP) ||
+              response.data.sendtotype?.toLowerCase() === SendToType.MANUAL ||
               isWaitlistRelatedMessage(
                 response.data.sendtotype || '',
                 response.data.sentto || ''
               );
 
             if (
-              response.data.sendtotype?.toLowerCase() === 'custom' &&
+              response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
               (this.stateService.selectedMemberGroups.length > 0 ||
                 this.selectedCustomUserIds.length > 0)
             ) {
@@ -2156,8 +2167,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                     );
                     return this.composeService
                       .fetchRecipients({
-                        sentToType: 'peopleingroups',
-                        sentTo: 'all',
+                        sentToType: SendToType.PEOPLE_IN_GROUPS,
+                        sentTo: SentTo.ALL,
                         messageTypeId: 1,
                         signupIds: signupIds,
                         groupIds: groupIds,
@@ -2383,7 +2394,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
       addEmails
     );
 
-    if (sendtotype.toLowerCase() === 'manual') {
+    if (sendtotype.toLowerCase() === SendToType.MANUAL) {
       if (addEmails) {
         const emailList = parseManualEmails(addEmails);
         this.stateService.setRecipientCount(emailList.length);
@@ -2503,8 +2514,8 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
                 this.composeService
                   .fetchRecipients({
-                    sentToType: 'specificdateslot',
-                    sentTo: 'specificdateslot',
+                    sentToType: SendToType.SPECIFIC_DATE_SLOT,
+                    sentTo: SentTo.SPECIFIC_DATE_SLOT,
                     messageTypeId: messageTypeId,
                     signupIds: signupIds,
                     slotItemIds: slotItemIds,

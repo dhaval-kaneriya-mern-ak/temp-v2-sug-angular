@@ -20,6 +20,8 @@ import {
   IPortalSignupResponse,
   IShortUrlResponse,
   IFileDetailsResponse,
+  SendToType,
+  SentTo,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { SugApiService } from '@services/sug-api.service';
 import { Observable } from 'rxjs';
@@ -126,24 +128,30 @@ export class ComposeService {
       },
     };
 
-    if (sentToTypeLower === 'signedup' && sentToLower === 'signedup') {
-      if (options.signupIds && options.signupIds.length > 0) {
-        payload.signupIds = options.signupIds;
-      }
-    } else if (
-      sentToTypeLower === 'peopleingroups' &&
-      sentToLower === 'notsignedup'
+    if (
+      sentToTypeLower === SendToType.SIGNED_UP &&
+      sentToLower === SentTo.SIGNED_UP
     ) {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'peopleingroups' && sentToLower === 'all') {
+    } else if (
+      sentToTypeLower === SendToType.PEOPLE_IN_GROUPS &&
+      sentToLower === SentTo.NOT_SIGNED_UP
+    ) {
+      if (options.signupIds && options.signupIds.length > 0) {
+        payload.signupIds = options.signupIds;
+      }
+    } else if (
+      sentToTypeLower === SendToType.PEOPLE_IN_GROUPS &&
+      sentToLower === SentTo.ALL
+    ) {
       if (options.groupIds && options.groupIds.length > 0) {
         payload.groupIds = options.groupIds;
       }
     } else if (
-      sentToTypeLower === 'peopleingroups' &&
-      sentToLower === 'includenongroupmembers'
+      sentToTypeLower === SendToType.PEOPLE_IN_GROUPS &&
+      sentToLower === SentTo.INCLUDE_NON_GROUP_MEMBERS
     ) {
       if (options.groupIds && options.groupIds.length > 0) {
         payload.groupIds = options.groupIds;
@@ -151,22 +159,22 @@ export class ComposeService {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'waitlisted') {
+    } else if (sentToTypeLower === SendToType.WAITLIST) {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'signedupandwaitlisted') {
+    } else if (sentToTypeLower === SendToType.SIGNUP_WAITLIST) {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
-    } else if (sentToTypeLower === 'specificrsvp') {
+    } else if (sentToTypeLower === SendToType.SPECIFIC_RSVP) {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
       }
       if (options.groupIds && options.groupIds.length > 0) {
         payload.groupIds = options.groupIds;
       }
-    } else if (sentToTypeLower === 'specificdateslot') {
+    } else if (sentToTypeLower === SendToType.SPECIFIC_DATE_SLOT) {
       if (options.signupIds && options.signupIds.length > 0) {
         payload.signupIds = options.signupIds;
         payload.slotItemIds = options.slotItemIds;
