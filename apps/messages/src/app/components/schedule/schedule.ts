@@ -150,7 +150,31 @@ export class Schedule {
   }
 
   editMessage(rowData: Message): void {
-    this.router.navigate([`/messages/compose/email`]);
+    const messageId = rowData.messageid;
+
+    // Email Templates (Reminder/Confirmation templates)
+    if (rowData.messagetypeid == 12 || rowData.messagetypeid == 13) {
+      this.router.navigate([`/messages/compose/template`], {
+        queryParams: { id: messageId },
+      });
+    }
+    // Email Messages (Invite/General/Custom emails)
+    else if (
+      rowData.messagetypeid == 1 ||
+      rowData.messagetypeid == 4 ||
+      rowData.messagetypeid == 16 ||
+      rowData.messagetypeid == 17
+    ) {
+      this.router.navigate([`/messages/compose/email`], {
+        queryParams: { id: messageId },
+      });
+    }
+    // Text Messages
+    else if (rowData.messagetypeid == 14 || rowData.messagetypeid == 15) {
+      this.router.navigate([`/messages/compose/text`], {
+        queryParams: { id: messageId },
+      });
+    }
   }
 
   getList(): void {
