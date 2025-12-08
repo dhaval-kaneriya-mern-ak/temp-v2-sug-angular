@@ -198,6 +198,11 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  closeErrorDialog(): void {
+    this.errorVisible = false;
+    this.errorMessage = '';
+  }
+
   /**
    * Initialize reactive forms
    */
