@@ -367,11 +367,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   handleSelection(event: RadioCheckboxChangeEvent) {
     this.selectedValue = event.value; // Update the selected size
     this.showRadioButtons = false; // Hide the radio buttons
+    this.composeService.setOptionSelected(true);
   }
 
   showOptionsAgain() {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+    this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
       themeid: 1,
     });

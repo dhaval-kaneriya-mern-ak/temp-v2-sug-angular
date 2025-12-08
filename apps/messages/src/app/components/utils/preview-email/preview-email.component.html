@@ -70,9 +70,12 @@
     </div>
     } @if (!saveCustomButton) {
     <div class="button-group">
+      <!-- Send Now Button -->
       @if (!scheduledDate) {
       <button class="send-now-btn" (click)="onSendNow()">Send Now</button>
-      } @if (scheduledDate) {
+      } @if (showThemeSelection) {
+      <!-- Schedule Button -->
+      @if (scheduledDate) {
       <button
         class="send-now-btn"
         [disabled]="!isScheduledDateValid()"
@@ -81,6 +84,7 @@
         Schedule
       </button>
       }
+
       <!-- Date & Time Picker -->
       <sug-ui-date-picker
         [(value)]="scheduledDate"
@@ -95,8 +99,9 @@
         [tabindex]="-1"
       >
       </sug-ui-date-picker>
-      <!-- Time Only Picker -->
+
       @if (scheduledDate) {
+      <!-- Time Only Picker -->
       <sug-ui-date-picker
         [(value)]="scheduledTime"
         (valueChange)="isScheduledDateValid()"
@@ -106,7 +111,7 @@
         [tabindex]="-1"
       >
       </sug-ui-date-picker>
-      }
+      } }
     </div>
     }
   </div>

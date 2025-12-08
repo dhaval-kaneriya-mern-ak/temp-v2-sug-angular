@@ -230,6 +230,12 @@ textarea {
 }
 .p-dialog {
   max-width: 95vw !important;
+  .p-dialog-header .p-dialog-header-actions {
+    .p-dialog-close-button {
+      font-size: 18px;
+      color: #f68b1c;
+    }
+  }
 }
 .dialog-overflow-visible {
   overflow: visible !important;
