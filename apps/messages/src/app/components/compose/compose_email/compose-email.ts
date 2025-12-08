@@ -20,6 +20,7 @@ import {
   RadioCheckboxChangeEvent,
   SugUiLoadingSpinnerComponent,
   ISelectOption,
+  SugUiDialogComponent,
 } from '@lumaverse/sug-ui';
 import { ComposeService } from '../compose.service';
 import { ComposeEmailStateService } from '../../utils/services/compose-email-state.service';
@@ -112,6 +113,7 @@ import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
     DateSlotsSelectionComponent,
     MyGroupSelection,
     ConfirmationDialogComponent,
+    SugUiDialogComponent,
   ],
   providers: [
     ComposeEmailStateService, // Provide at component level
@@ -184,6 +186,7 @@ export class ComposeEmailComponent
   isPreviewDialogVisible = false;
   isDateSlotsDialogVisible = false;
   isMyGroupsDialogVisible = false;
+  errorVisible = false;
 
   // Radio options for main selection
   radioOptions = [
@@ -198,6 +201,7 @@ export class ComposeEmailComponent
   private readonly destroy$ = new Subject<void>();
   private isRestoringDateSlots = false;
   hasWaitlistSlots = false;
+  errorMessage = '';
 
   ngOnInit(): void {
     // Initialize unsaved changes manager
@@ -286,6 +290,11 @@ export class ComposeEmailComponent
 
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  closeErrorDialog(): void {
+    this.errorVisible = false;
+    this.errorMessage = '';
   }
 
   /**
@@ -633,6 +642,7 @@ export class ComposeEmailComponent
   handleSelection(event: RadioCheckboxChangeEvent): void {
     this.selectedValue = event.value as string;
     this.showRadioButtons = false;
+    this.composeService.setOptionSelected(true);
     this.loadUserProfile();
 
     // Start tracking form changes only after user has selected a message type
@@ -664,6 +674,7 @@ export class ComposeEmailComponent
 
     this.showRadioButtons = true;
     this.selectedValue = null;
+    this.composeService.setOptionSelected(false);
 
     // Reset main forms
     this.emailFormOne.reset({
@@ -810,9 +821,9 @@ export class ComposeEmailComponent
       form.value.selectedPortalPages.length >= 1
     ) {
       payload.signuptype = SignUPType.PORTALS;
-      payload.portalids = form.value.selectedPortalPages.map(
-        (pp: any) => pp.id
-      );
+      payload.portalids = form.value.selectedPortalPages
+        .map((pp: ISelectPortalOption) => pp.id)
+        .filter((id: number | undefined): id is number => id !== undefined);
     }
 
     if (form.value.selectedTabGroups.length > 0) {
@@ -863,6 +874,7 @@ export class ComposeEmailComponent
           this.formValidationErrors.push(msg.details);
         });
         this.cdr.markForCheck();
+        console.error('Preview error:', error);
       },
     });
   }
@@ -886,12 +898,20 @@ export class ComposeEmailComponent
     // Clear errors if validation passes
     this.formValidationErrors = [];
 
-    this.availableThemes = [
-      1,
-      ...((form.value.selectedSignups || []) as ISignUpItem[]).map(
-        (su: ISignUpItem) => su.themeid
-      ),
-    ];
+    // Collect themes from signups
+    const signupThemes = ((form.value.selectedSignups || []) as ISignUpItem[])
+      .map((su: ISignUpItem) => su.themeid)
+      .filter((theme) => theme !== undefined && theme !== null);
+
+    // Collect themes from portal pages
+    const portalThemes = (
+      (form.value.selectedPortalPages || []) as ISelectPortalOption[]
+    )
+      .flatMap((portal: ISelectPortalOption) => portal.associatedthemes || [])
+      .filter((theme) => theme !== undefined && theme !== null);
+
+    // Combine and deduplicate themes
+    this.availableThemes = [1, ...new Set([...signupThemes, ...portalThemes])];
     if (form.invalid) {
       // Mark all controls as touched to show validation errors
       Object.keys(form.controls).forEach((key) => {
@@ -1050,11 +1070,9 @@ export class ComposeEmailComponent
       }
 
       if (this.stateService.selectedPortalPages.length > 0) {
-        payload.portals = this.stateService.selectedPortalPages.map((p) => ({
-          id: p.id,
-          title: p.title,
-          urlkey: p.urlkey,
-        }));
+        payload.portalids = form.value.selectedPortalPages
+          .map((pp: ISelectPortalOption) => pp.id)
+          .filter((id: number | undefined): id is number => id !== undefined);
       }
 
       if (this.stateService.isSignUpIndexPageSelected) {
@@ -1114,158 +1132,6 @@ export class ComposeEmailComponent
 
       this.saveDraftToApi(this.currentDraftMessageId, payload);
     } else {
-      // this.isLoading = true;
-      // const groups = this.stateService.selectedGroups;
-      // const form = this.currentForm.value;
-      // const payload: ICreateMessageRequest = {
-      //   subject: form.subject,
-      //   body: form.message,
-      //   sentto: SentTo.SIGNED_UP,
-      //   sendtotype: SendToType.SIGNED_UP,
-      //   status: status,
-      //   messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
-      //   sendasemail: true,
-      //   sendastext: false,
-      //   themeid: form.themeid,
-      //   contactname: form.fromName,
-      //   replytoids: form.replyTo.map((id: string) => Number(id)),
-      //   signupids: this.stateService.selectedSignups.map(
-      //     (signup) => signup.signupid
-      //   ),
-      //   groupids: groups
-      //     .filter(
-      //       (group) =>
-      //         group.value !== 'manual_entry' && !isNaN(Number(group.value))
-      //     )
-      //     .map((group) => Number(group.value)),
-      //   portals: form.selectedPortalPages.map(
-      //     (pp: ISelectPortalOption) => pp.id
-      //   ),
-      //   attachmentids: this.stateService.selectedAttachment.map(
-      //     (file) => file.id
-      //   ),
-      // };
-      // if (date) {
-      //   payload.senddate = date;
-      // }
-      // if (form.isSignUpIndexPageSelected) {
-      //   payload.signUpType = 'acctindex';
-      // }
-
-      // // Handle radio selection logic
-      // switch (this.selectedRadioOption.selectedValue) {
-      //   case 'peopleingroups':
-      //   case 'sendMessagePeopleRadio':
-      //     payload.sentto = SentTo.ALL;
-      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-      //     break;
-
-      //   case 'ManuallyEnterEmail': {
-      //     const emailsString = this.selectedRadioOption.recipients[0] || '';
-      //     const aliasString = this.selectedRadioOption.recipients[1] || '';
-
-      //     // Convert comma-separated string to array of email objects
-      //     payload.to = emailsString
-      //       ? emailsString
-      //           .split(',')
-      //           .map((email: string) => email.trim())
-      //           .filter((email: string) => email)
-      //           .map((email: string) => ({
-      //             email: email,
-      //           }))
-      //       : [];
-
-      //     // Convert comma-separated alias string to array
-      //     payload.alias = aliasString
-      //       ? aliasString
-      //           .split(',')
-      //           .map((email: string) => email.trim())
-      //           .filter((email: string) => email)
-      //       : [];
-
-      //     payload.sendtotype = SendToType.CUSTOM;
-      //     payload.sentto = SentTo.MANUAL;
-      //     break;
-      //   }
-
-      //   case 'specificRsvpResponse':
-      //     payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
-      //     payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
-      //       ','
-      //     )}`;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleWhoSignedUp':
-      //     payload.sendtotype = SendToType.SIGNED_UP;
-      //     payload.sentto = SentTo.SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleOnWaitlist':
-      //     payload.sendtotype = SendToType.WAITLIST;
-      //     payload.sentto = SentTo.NOT_SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleSignedUpAndWaitlist':
-      //     payload.sendtotype = SendToType.WAITLIST;
-      //     payload.sentto = SentTo.SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleWhoNotSignedUp':
-      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-      //     payload.sentto = SentTo.NOT_SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'sendMessagePeopleIselect':
-      //     if (this.selectedRadioOption.fromCustomGroup === true) {
-      //       payload.sendtotype = SendToType.CUSTOM;
-      //       payload.sentto = SentTo.MEMBERS;
-      //       payload.to = this.selectedRadioOption.recipients.map((slot) => ({
-      //         memberid: slot.id,
-      //         firstname: slot.firstname,
-      //         lastname: slot.lastname,
-      //         email: slot.email,
-      //       }));
-      //     } else {
-      //       payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
-      //       payload.sentto = SentTo.ALL;
-      //       payload.groupids = [];
-      //       payload.slotids = this.selectedRadioOption.recipients.map(
-      //         (slot) => 'slot_' + slot.slotitemid
-      //       );
-      //       payload.sendToGroups = this.selectedRadioOption.recipients.map(
-      //         (slot) => ({
-      //           id: 'slot_' + slot.slotitemid,
-      //           isWaitlistedRow: slot.waitlist,
-      //         })
-      //       );
-      //     }
-      //     break;
-      // }
-      // // Apply non-group members rule after switch (can override sentto)
-      // if (this.selectedRadioOption.includeNonGroupMembers) {
-      //   payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
-      // }
-
-      // this.composeService.createMessage(payload).subscribe({
-      //   next: (response) => {
-      //     if (response.success === true && response.data) {
-      //       this.toastr.success('Message saved successfully', 'Success');
-      //       this.showOptionsAgain();
-      //     }
-      //     this.isLoading = false;
-      //   },
-      //   error: (err) => {
-      //     this.isLoading = false;
-      //     this.toastr.error(err.error.message[0]?.details, 'Error');
-      //     this.openPreviewDialog(this.currentForm);
-      //   },
-      // });
-
       this.isLoading = true;
       const groups = this.stateService.selectedGroups;
       const form = this.currentForm.value;
@@ -1289,7 +1155,7 @@ export class ComposeEmailComponent
               group.value !== 'manual_entry' && !isNaN(Number(group.value))
           )
           .map((group) => Number(group.value)),
-        portals: form.selectedPortalPages.map(
+        portalids: form.selectedPortalPages.map(
           (pp: ISelectPortalOption) => pp.id
         ),
         attachmentids: this.stateService.selectedAttachment.map(
@@ -1458,9 +1324,11 @@ export class ComposeEmailComponent
             this.formValidationErrors.push(msg.details);
           });
           this.cdr.markForCheck();
-          if (status !== MessageStatus.DRAFT) {
-            this.openPreviewDialog(this.currentForm);
-          }
+          this.errorVisible = true;
+          this.errorMessage = err.error.message[0]?.details || '';
+          // if (status !== MessageStatus.DRAFT) {
+          //   this.openPreviewDialog(this.currentForm);
+          // }
         },
       });
     }

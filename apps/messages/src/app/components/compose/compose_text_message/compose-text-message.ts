@@ -34,7 +34,7 @@ import {
   SugUiButtonComponent,
   SugUiTooltipComponent,
   SugUiMultiSelectDropdownComponent,
-  DialogConfig,
+  RadioCheckboxOption,
   SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 import { ISelectOption } from '@lumaverse/sug-ui';
@@ -60,7 +60,8 @@ import { UserStateService } from '@services/user-state.service';
 import {
   IUpdateUserPayload,
   MemberProfile,
-} from '@services/interfaces/member-profile.interface';
+  MessageLimitsResponse,
+} from '@services/interfaces';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
 import { HelpDialogComponent } from '../../utils/help-dialog/help-dialog.component';
@@ -95,6 +96,7 @@ import { MyGroupSelection } from '../../utils/my-group-selection/my-group-select
 import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/confirmation-dialog.component';
 import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
 import { HostListener } from '@angular/core';
+import { DashboardService } from '../../dashboard/dashboard.service';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -132,6 +134,7 @@ export class ComposeTextMessageComponent
     ComponentCanDeactivate,
     IUnsavedChangesComponent
 {
+  dashboardService = inject(DashboardService);
   composeService = inject(ComposeService);
   private cdr = inject(ChangeDetectorRef);
   protected readonly userStateService = inject(UserStateService);
@@ -179,7 +182,7 @@ export class ComposeTextMessageComponent
   currentDraftMessageId: number | null = null;
   originalSendAsText: boolean | undefined;
   originalSendAsEmail: boolean | undefined;
-  radioOptions = [
+  radioOptions: RadioCheckboxOption[] = [
     {
       label: 'Invite people to opt in to text messages',
       value: 'emailoptionone',
@@ -216,10 +219,12 @@ export class ComposeTextMessageComponent
   textRecipientsCount = 0;
   emailRecipientsCount = 0;
   shortUrl = '';
+  limitsData: MessageLimitsResponse | null = null;
   ngOnInit() {
     // Initialize unsaved changes manager
     this.unsavedChangesManager = new UnsavedChangesManager(this);
 
+    this.getLimits();
     this.initializeForms();
     // Listen for changes on selectedSignups
     const controlsToToggle = [
@@ -291,6 +296,61 @@ export class ComposeTextMessageComponent
       });
   }
 
+  getLimits() {
+    this.dashboardService.getMessageLimits().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.limitsData = response.data;
+          this.showFeature();
+        }
+      },
+      error: () => {
+        this.limitsData = null;
+      },
+    });
+  }
+
+  showFeature() {
+    this.radioOptions = this.radioOptions.map((option) => {
+      // Check if text limit exists (similar to second function)
+      let textLimitExists = false;
+      if (
+        this.limitsData?.textmessagelimit !== undefined &&
+        this.limitsData?.senttextforthemonth !== undefined
+      ) {
+        textLimitExists =
+          parseInt(String(this.limitsData.textmessagelimit)) > 0 ||
+          parseInt(String(this.limitsData.senttextforthemonth)) > 0;
+      }
+
+      const isPro = this.userProfile?.ispro === true;
+      const isNotTrial = this.userProfile?.istrial === false;
+      const hasMemberOptIns = this.userProfile?.hasMemberOptIns === true;
+
+      if (option.value === 'emailoptiontwo') {
+        // For 'textmessage' - ENABLE when all conditions are true
+        const isDisabled = !(
+          isPro &&
+          isNotTrial &&
+          hasMemberOptIns &&
+          textLimitExists
+        );
+        option.disabled = isDisabled;
+        option.tooltip = isDisabled
+          ? 'There are no group members opted in to receive text messages.'
+          : undefined;
+      } else {
+        // For 'textoptin' - ENABLE when all conditions are true (except hasMemberOptIns)
+        const isDisabled = !(isPro && isNotTrial && textLimitExists);
+        option.disabled = isDisabled;
+        option.tooltip = isDisabled
+          ? 'Text messaging feature is not available for your account.'
+          : undefined;
+      }
+      return option;
+    });
+  }
+
   // Methods for "Select People" dialog
   openPeopleDialog() {
     this.isPeopleDialogVisible = true;
@@ -341,6 +401,7 @@ export class ComposeTextMessageComponent
   handleSelection(event: RadioCheckboxChangeEvent) {
     this.selectedValue = event.value; // Update the selected size
     this.showRadioButtons = false; // Hide the radio buttons
+    this.composeService.setOptionSelected(true);
 
     // Start tracking form changes after user selects a message type
     setTimeout(() => {
@@ -369,6 +430,7 @@ export class ComposeTextMessageComponent
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
 
+    this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
       themeid: 1,
     });

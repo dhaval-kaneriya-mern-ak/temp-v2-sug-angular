@@ -19,6 +19,7 @@
       [options]="radioOptions"
       inputId="size-selection"
       [(value)]="selectedValue"
+      [tooltipPosition]="'top'"
       (changeEvent)="handleSelection($event)"
     ></sug-ui-radio-checkbox-button>
   </div>
@@ -102,7 +103,7 @@
           <sug-ui-button
             severity="success"
             (buttonClick)="onPreviewAndSend(currentEmailForm)"
-            [disabled]="inviteTextForm.invalid"
+            [disabled]="inviteTextForm.invalid || stateService.recipients.length === 0"
             [outlined]="false"
             class="send-btn"
             icon=""
@@ -356,7 +357,7 @@
         <div class="btn-wrapper">
           <sug-ui-button
             severity="success"
-            [disabled]="sendTextEmailForm.invalid"
+            [disabled]="sendTextEmailForm.invalid || stateService.recipients.length === 0"
             (buttonClick)="sendTextEmailForm
       .get('includefallback')?.value === true ? onPreviewAndSend(currentEmailForm) : onSaveDraft(messageStatus.SEND)"
             [outlined]="false"

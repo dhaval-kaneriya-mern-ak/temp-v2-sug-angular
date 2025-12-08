@@ -339,7 +339,7 @@
         class="send-btn"
         icon=""
         label="Preview & Send"
-        [disabled]="emailForm.invalid"
+        [disabled]="emailForm.invalid || recipientCount === 0"
         (buttonClick)="onPreviewAndSend()"
       >
       </sug-ui-button>

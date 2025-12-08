@@ -797,7 +797,7 @@ export interface ICreateMessageRequest {
   addEmails?: string;
   messageid?: number;
   tabgroupids?: number[];
-  portals?: number[];
+  portalids?: number[];
   signupids?: number[];
   groupids?: number[];
   slotids?: string[];
@@ -925,11 +925,7 @@ export interface ISaveDraftMessagePayload {
   attachmentids?: number[];
   signupids?: number[];
   groupids?: number[];
-  portals?: Array<{
-    id: number | undefined;
-    title: string | undefined;
-    urlkey: string | undefined;
-  }>;
+  portalids?: number[];
   signUpType?: string;
   addEmails?: string;
   to?: Array<{

@@ -41,6 +41,14 @@ export class ComposeService {
   }>();
   public showSuccessPage$ = this.showSuccessPageSubject.asObservable();
 
+  // Subject for option selection state
+  private isOptionSelectedSubject = new Subject<boolean>();
+  public isOptionSelected$ = this.isOptionSelectedSubject.asObservable();
+
+  setOptionSelected(isSelected: boolean): void {
+    this.isOptionSelectedSubject.next(isSelected);
+  }
+
   // Method to trigger success page display
   triggerSuccessPage(
     type: 'send' | 'draft' | 'scheduled' | 'custom',
