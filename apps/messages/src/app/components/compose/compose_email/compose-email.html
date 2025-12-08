@@ -230,3 +230,18 @@
   [emailHtmlPreview]="emailHtmlPreview"
   [availableThemes]="availableThemes"
 ></sug-preview-email>
+
+<sug-ui-dialog [config]="{}" [(visible)]="errorVisible" [showFooter]="true">
+  <h2 slot="header">Error</h2>
+  <div class="row col-sm-12 mb-4">
+    <h4>{{errorMessage}}</h4>
+  </div>
+  <div slot="footer">
+    <button
+      class="send-now-btn"
+      (click)="errorVisible = false; errorMessage = ''"
+    >
+      OK
+    </button>
+  </div>
+</sug-ui-dialog>
