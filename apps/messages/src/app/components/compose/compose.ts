@@ -46,6 +46,7 @@ export class Compose implements OnInit, OnDestroy {
   public isProUser = false;
   public isTrialUser = false;
   public isVisible = false;
+  public isOptionSelected = false;
   public dialogType: 'template' | 'text' | null = null;
   public isSuccessRoute = false;
   isShowSuccessPage = false;
@@ -102,6 +103,13 @@ export class Compose implements OnInit, OnDestroy {
           this.showSuccessPageWithType(data.type, data.selectedSignups);
         }
       });
+
+    // Subscribe to option selection changes
+    this.composeService.isOptionSelected$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isSelected) => {
+        this.isOptionSelected = isSelected;
+      });
   }
 
   private checkIfSuccessRoute() {
@@ -135,7 +143,6 @@ export class Compose implements OnInit, OnDestroy {
     const activeTab = this.navigationComposeTabs.find((tab) =>
       currentUrl.includes(tab.route)
     );
-
     if (!activeTab) return;
 
     const isAllowed = this.isProUser || this.isTrialUser;
@@ -158,6 +165,10 @@ export class Compose implements OnInit, OnDestroy {
       this.router.navigateByUrl('/' + this.activeTabRoute);
       return;
     }
+
+    // Reset option selection when changing tabs
+    this.isOptionSelected = false;
+    this.composeService.setOptionSelected(false);
 
     const isRestricted = selectedTab.restricted ?? false;
     const isAllowed = this.isProUser || this.isTrialUser;
