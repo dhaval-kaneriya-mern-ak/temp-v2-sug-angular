@@ -238,11 +238,6 @@
     <h4>{{errorMessage}}</h4>
   </div>
   <div slot="footer">
-    <button
-      class="send-now-btn"
-      (click)="errorVisible = false; errorMessage = ''"
-    >
-      OK
-    </button>
+    <button class="send-now-btn" (click)="closeErrorDialog()">OK</button>
   </div>
 </sug-ui-dialog>
