@@ -13,6 +13,7 @@ import { ComposeEmailTemplateComponent } from '../components/compose/compose_ema
 import { ComposeTextMessageComponent } from '../components/compose/compose_text_message/compose-text-message';
 import { SentDetails } from '../components/sent/details/sent-details';
 import { scheduleGuard } from '../guards/schedule.guard';
+import { unsavedChangesGuard } from '../guards/unsaved-changes.guard';
 
 export const remoteRoutes: Route[] = [
   {
@@ -27,9 +28,21 @@ export const remoteRoutes: Route[] = [
         children: [
           // Define the nested routes for the inner tabs
           { path: '', redirectTo: 'email', pathMatch: 'full' }, // Default to the email tab
-          { path: 'email', component: ComposeEmailComponent },
-          { path: 'template', component: ComposeEmailTemplateComponent },
-          { path: 'text', component: ComposeTextMessageComponent },
+          {
+            path: 'email',
+            component: ComposeEmailComponent,
+            canDeactivate: [unsavedChangesGuard],
+          },
+          {
+            path: 'template',
+            component: ComposeEmailTemplateComponent,
+            canDeactivate: [unsavedChangesGuard],
+          },
+          {
+            path: 'text',
+            component: ComposeTextMessageComponent,
+            canDeactivate: [unsavedChangesGuard],
+          },
         ],
       },
       { path: 'draft', component: Draft },

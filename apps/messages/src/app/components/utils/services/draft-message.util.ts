@@ -1,5 +1,6 @@
 import {
   Observable,
+  Observer,
   takeUntil,
   switchMap,
   tap,
@@ -115,7 +116,6 @@ export function saveDraftMessage(options: SaveDraftOptions): void {
         if (onLoadingChange) {
           onLoadingChange(false);
         }
-        // console.error('Error saving draft:', error);
 
         const errorMessage = parseApiErrorMessage(
           error,
@@ -825,19 +825,9 @@ export function transformAttachmentsToFileItems(
       continue;
     }
 
-    if (!environment.production) {
-      console.log(`File ${attachment.fileid} details:`, {
-        filename: fileDetails.filename,
-        hasUrl: !!fileUrl,
-        urlSource: fileDetails.s3Presignedurl
-          ? 's3Presignedurl'
-          : fileDetails.fileurl
-          ? 'fileurl'
-          : fileDetails.s3presignedurl
-          ? 's3presignedurl'
-          : 'none',
-      });
-    }
+    // if (!environment.production) {
+    //  //
+    // }
 
     items.push({
       id: attachment.fileid,
@@ -935,9 +925,9 @@ export function downloadFile(options: DownloadFileOptions): void {
 
   // If file URL is already available (from draft restore), use it directly
   if (file.fileurl) {
-    if (!environment.production) {
-      console.log('Using cached file URL for download (no API call)');
-    }
+    // if (!environment.production) {
+
+    // }
     downloadFileFromUrl({
       fileUrl: file.fileurl,
       filename: file.filename || DEFAULT_FILENAME,
@@ -949,9 +939,9 @@ export function downloadFile(options: DownloadFileOptions): void {
   }
 
   // Otherwise, fetch file details to get the URL (for new messages with file picker attachments)
-  if (!environment.production) {
-    console.log('File URL not cached, fetching file details from API');
-  }
+  // if (!environment.production) {
+
+  // }
 
   if (!file.id) {
     toastr.error('File ID is missing', 'Error');
@@ -983,9 +973,9 @@ export function downloadFile(options: DownloadFileOptions): void {
           throw new Error('File URL not available');
         }
 
-        if (!environment.production) {
-          console.log('Fetched file details for download:', filename);
-        }
+        // if (!environment.production) {
+
+        // }
 
         downloadFileFromUrl({
           fileUrl,
@@ -1029,9 +1019,9 @@ interface DownloadFileFromUrlOptions {
 function downloadFileFromUrl(options: DownloadFileFromUrlOptions): void {
   const { fileUrl, filename, toastr, httpClient, destroy$ } = options;
 
-  if (!environment.production) {
-    console.log('Downloading file:', filename);
-  }
+  // if (!environment.production) {
+
+  // }
 
   httpClient
     .get(fileUrl, { responseType: 'blob', observe: 'response' })
@@ -1044,13 +1034,9 @@ function downloadFileFromUrl(options: DownloadFileFromUrlOptions): void {
           throw new Error('No blob received from server');
         }
 
-        if (!environment.production) {
-          console.log('Blob received from URL:', {
-            type: blob.type,
-            size: blob.size,
-            filename: filename,
-          });
-        }
+        // if (!environment.production) {
+
+        // }
 
         // Determine MIME type from filename if blob type is generic or missing
         let mimeType = blob.type;
@@ -1060,9 +1046,9 @@ function downloadFileFromUrl(options: DownloadFileFromUrlOptions): void {
           mimeType === 'binary/octet-stream'
         ) {
           mimeType = getMimeTypeFromFilename(filename);
-          if (!environment.production) {
-            console.log('Using derived MIME type:', mimeType);
-          }
+          // if (!environment.production) {
+
+          // }
         }
 
         // Create a new blob with correct MIME type
@@ -1108,4 +1094,203 @@ function downloadFileFromUrl(options: DownloadFileFromUrlOptions): void {
 function getMimeTypeFromFilename(filename: string): string {
   const extension = filename.split('.').pop()?.toLowerCase() || '';
   return MIME_TYPE_MAP[extension] || 'application/octet-stream';
+}
+
+// ============================================================================
+// UNSAVED CHANGES MANAGEMENT UTILITIES
+// ============================================================================
+
+/**
+ * Delay before starting form change tracking to avoid capturing initial form population
+ * as "unsaved changes". This prevents false positives when loading existing drafts.
+ */
+export const FORM_TRACKING_DELAY = 500;
+
+/**
+ * Dialog title for unsaved changes confirmation
+ */
+export const UNSAVED_CHANGES_DIALOG_TITLE = 'Confirmation';
+
+/**
+ * Dialog message for unsaved changes confirmation
+ */
+export const UNSAVED_CHANGES_DIALOG_MESSAGE =
+  'You are in the process of composing a message. Changes made that are not saved will be lost. Continue?';
+
+/**
+ * Interface for components that use unsaved changes functionality
+ * Components should implement this interface to use UnsavedChangesManager
+ */
+export interface IUnsavedChangesComponent {
+  isConfirmationDialogVisible: boolean;
+  showOptionsAgain(): void;
+  isEditingExistingDraft?: boolean; // Optional: If true, shows confirmation even without changes
+}
+
+/**
+ * Manager class for handling unsaved changes detection and confirmation
+ * Shared across compose-email, compose-email-template, and compose-text-message components
+ * Eliminates code duplication by centralizing unsaved changes logic
+ */
+export class UnsavedChangesManager {
+  private formDirty = false;
+  private isTrackingChanges = false;
+  private deactivateObserver?: Observer<boolean>;
+
+  constructor(private component: IUnsavedChangesComponent) {}
+
+  /**
+   * Marks the form as dirty (has unsaved changes)
+   * Only marks as dirty if tracking is currently active
+   */
+  markAsDirty(): void {
+    if (this.isTrackingChanges) {
+      this.formDirty = true;
+    }
+  }
+
+  /**
+   * Resets the form dirty state (called after successful save/draft)
+   */
+  resetFormDirtyState(): void {
+    this.formDirty = false;
+  }
+
+  /**
+   * Checks if form has unsaved changes
+   */
+  isFormDirty(): boolean {
+    return this.formDirty;
+  }
+
+  /**
+   * Checks if form change tracking is active
+   */
+  isTrackingActive(): boolean {
+    return this.isTrackingChanges;
+  }
+
+  /**
+   * Marks form change tracking as active
+   * Should be called when setupFormChangeTracking is initiated
+   */
+  setTrackingActive(): void {
+    this.isTrackingChanges = true;
+  }
+
+  /**
+   * Resets tracking state
+   * Should be called when user goes back to radio selection
+   */
+  resetTrackingState(): void {
+    this.isTrackingChanges = false;
+    this.formDirty = false;
+  }
+
+  /**
+   * Handles browser close/refresh events
+   * Should be called from component's @HostListener('window:beforeunload')
+   *
+   * @param event - BeforeUnloadEvent from browser
+   */
+  handleBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.formDirty) {
+      event.preventDefault();
+      event.returnValue = true;
+    }
+  }
+
+  /**
+   * CanDeactivate guard implementation
+   * Returns true if navigation is allowed, Observable<boolean> otherwise
+   *
+   * @returns boolean or Observable<boolean>
+   */
+  canDeactivate(): Observable<boolean> | boolean {
+    // If no unsaved changes and not editing a draft, permit navigation
+    const shouldConfirm =
+      this.formDirty || this.component.isEditingExistingDraft;
+
+    if (!shouldConfirm) {
+      return true;
+    }
+
+    // Show confirmation dialog
+    this.component.isConfirmationDialogVisible = true;
+
+    // Return Observable that resolves based on user's choice
+    return new Observable<boolean>((observer) => {
+      // Clean up previous observer if exists (edge case handling)
+      if (this.deactivateObserver) {
+        this.deactivateObserver.complete();
+      }
+      // Store the observer for later use in dialog handlers
+      this.deactivateObserver = observer;
+    });
+  }
+
+  /**
+   * Handles confirmation dialog OK button click
+   * Either goes back to radio selection or allows navigation to proceed
+   */
+  onConfirmNavigation(): void {
+    this.component.isConfirmationDialogVisible = false;
+
+    // Check if this is from route navigation guard or back button
+    if (this.deactivateObserver) {
+      // Route navigation - allow navigation to proceed
+      this.deactivateObserver.next(true);
+      this.deactivateObserver.complete();
+      this.deactivateObserver = undefined;
+    } else {
+      // Back button - go back to radio selection
+      this.component.showOptionsAgain();
+    }
+  }
+
+  /**
+   * Handles confirmation dialog cancel (X button click)
+   * Prevents navigation
+   */
+  onCancelNavigation(): void {
+    this.component.isConfirmationDialogVisible = false;
+
+    // Resolve the canDeactivate observable with false
+    if (this.deactivateObserver) {
+      this.deactivateObserver.next(false);
+      this.deactivateObserver.complete();
+      this.deactivateObserver = undefined;
+    }
+  }
+
+  /**
+   * Handles back button click
+   * Shows confirmation dialog if there are unsaved changes OR if editing an existing draft
+   */
+  handleBackButton(): void {
+    // Show confirmation if form is dirty OR if editing an existing draft
+    const shouldConfirm =
+      this.formDirty || this.component.isEditingExistingDraft;
+
+    if (shouldConfirm) {
+      // Show confirmation dialog if there are unsaved changes or editing a draft
+
+      this.component.isConfirmationDialogVisible = true;
+    } else {
+      // No unsaved changes and not editing a draft, go back directly
+
+      this.component.showOptionsAgain();
+    }
+  }
+
+  /**
+   * Cleanup method to be called in component's ngOnDestroy
+   * Completes any pending observers to prevent memory leaks
+   */
+  cleanup(): void {
+    if (this.deactivateObserver) {
+      this.deactivateObserver.complete();
+      this.deactivateObserver = undefined;
+    }
+  }
 }
