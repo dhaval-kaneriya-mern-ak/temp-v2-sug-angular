@@ -19,6 +19,7 @@ import {
   RadioCheckboxChangeEvent,
   SugUiLoadingSpinnerComponent,
   ISelectOption,
+  SugUiDialogComponent,
 } from '@lumaverse/sug-ui';
 import { ComposeService } from '../compose.service';
 import { ComposeEmailStateService } from '../../utils/services/compose-email-state.service';
@@ -95,6 +96,7 @@ import { MyGroupSelection } from '../../utils/my-group-selection/my-group-select
     FileSelectionDialogComponent,
     DateSlotsSelectionComponent,
     MyGroupSelection,
+    SugUiDialogComponent,
   ],
   providers: [
     ComposeEmailStateService, // Provide at component level
@@ -153,6 +155,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   isPreviewDialogVisible = false;
   isDateSlotsDialogVisible = false;
   isMyGroupsDialogVisible = false;
+  errorVisible = false;
 
   // Radio options for main selection
   radioOptions = [
@@ -167,6 +170,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private isRestoringDateSlots = false;
   hasWaitlistSlots = false;
+  errorMessage = '';
 
   ngOnInit(): void {
     this.initializeForms();
@@ -539,6 +543,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   handleSelection(event: RadioCheckboxChangeEvent): void {
     this.selectedValue = event.value as string;
     this.showRadioButtons = false;
+    this.composeService.setOptionSelected(true);
     this.loadUserProfile();
   }
 
@@ -548,6 +553,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   showOptionsAgain(): void {
     this.showRadioButtons = true;
     this.selectedValue = null;
+    this.composeService.setOptionSelected(false);
 
     // Reset main forms
     this.emailFormOne.reset({
@@ -744,6 +750,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
           this.formValidationErrors.push(msg.details);
         });
         this.cdr.markForCheck();
+        console.error('Preview error:', error);
       },
     });
   }
@@ -1000,158 +1007,6 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
 
       this.saveDraftToApi(this.currentDraftMessageId, payload);
     } else {
-      // this.isLoading = true;
-      // const groups = this.stateService.selectedGroups;
-      // const form = this.currentForm.value;
-      // const payload: ICreateMessageRequest = {
-      //   subject: form.subject,
-      //   body: form.message,
-      //   sentto: SentTo.SIGNED_UP,
-      //   sendtotype: SendToType.SIGNED_UP,
-      //   status: status,
-      //   messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
-      //   sendasemail: true,
-      //   sendastext: false,
-      //   themeid: form.themeid,
-      //   contactname: form.fromName,
-      //   replytoids: form.replyTo.map((id: string) => Number(id)),
-      //   signupids: this.stateService.selectedSignups.map(
-      //     (signup) => signup.signupid
-      //   ),
-      //   groupids: groups
-      //     .filter(
-      //       (group) =>
-      //         group.value !== 'manual_entry' && !isNaN(Number(group.value))
-      //     )
-      //     .map((group) => Number(group.value)),
-      //   portals: form.selectedPortalPages.map(
-      //     (pp: ISelectPortalOption) => pp.id
-      //   ),
-      //   attachmentids: this.stateService.selectedAttachment.map(
-      //     (file) => file.id
-      //   ),
-      // };
-      // if (date) {
-      //   payload.senddate = date;
-      // }
-      // if (form.isSignUpIndexPageSelected) {
-      //   payload.signUpType = 'acctindex';
-      // }
-
-      // // Handle radio selection logic
-      // switch (this.selectedRadioOption.selectedValue) {
-      //   case 'peopleingroups':
-      //   case 'sendMessagePeopleRadio':
-      //     payload.sentto = SentTo.ALL;
-      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-      //     break;
-
-      //   case 'ManuallyEnterEmail': {
-      //     const emailsString = this.selectedRadioOption.recipients[0] || '';
-      //     const aliasString = this.selectedRadioOption.recipients[1] || '';
-
-      //     // Convert comma-separated string to array of email objects
-      //     payload.to = emailsString
-      //       ? emailsString
-      //           .split(',')
-      //           .map((email: string) => email.trim())
-      //           .filter((email: string) => email)
-      //           .map((email: string) => ({
-      //             email: email,
-      //           }))
-      //       : [];
-
-      //     // Convert comma-separated alias string to array
-      //     payload.alias = aliasString
-      //       ? aliasString
-      //           .split(',')
-      //           .map((email: string) => email.trim())
-      //           .filter((email: string) => email)
-      //       : [];
-
-      //     payload.sendtotype = SendToType.CUSTOM;
-      //     payload.sentto = SentTo.MANUAL;
-      //     break;
-      //   }
-
-      //   case 'specificRsvpResponse':
-      //     payload.sendtotype = SendToType.SPECIFIC_RSVP_RESPONSE;
-      //     payload.sentto = `rsvp:${this.selectedRadioOption.recipients.join(
-      //       ','
-      //     )}`;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleWhoSignedUp':
-      //     payload.sendtotype = SendToType.SIGNED_UP;
-      //     payload.sentto = SentTo.SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleOnWaitlist':
-      //     payload.sendtotype = SendToType.WAITLIST;
-      //     payload.sentto = SentTo.NOT_SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleSignedUpAndWaitlist':
-      //     payload.sendtotype = SendToType.WAITLIST;
-      //     payload.sentto = SentTo.SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'peopleWhoNotSignedUp':
-      //     payload.sendtotype = SendToType.PEOPLE_IN_GROUPS;
-      //     payload.sentto = SentTo.NOT_SIGNED_UP;
-      //     payload.groupids = [];
-      //     break;
-
-      //   case 'sendMessagePeopleIselect':
-      //     if (this.selectedRadioOption.fromCustomGroup === true) {
-      //       payload.sendtotype = SendToType.CUSTOM;
-      //       payload.sentto = SentTo.MEMBERS;
-      //       payload.to = this.selectedRadioOption.recipients.map((slot) => ({
-      //         memberid: slot.id,
-      //         firstname: slot.firstname,
-      //         lastname: slot.lastname,
-      //         email: slot.email,
-      //       }));
-      //     } else {
-      //       payload.sendtotype = SendToType.SPECIFIC_DATE_SLOT;
-      //       payload.sentto = SentTo.ALL;
-      //       payload.groupids = [];
-      //       payload.slotids = this.selectedRadioOption.recipients.map(
-      //         (slot) => 'slot_' + slot.slotitemid
-      //       );
-      //       payload.sendToGroups = this.selectedRadioOption.recipients.map(
-      //         (slot) => ({
-      //           id: 'slot_' + slot.slotitemid,
-      //           isWaitlistedRow: slot.waitlist,
-      //         })
-      //       );
-      //     }
-      //     break;
-      // }
-      // // Apply non-group members rule after switch (can override sentto)
-      // if (this.selectedRadioOption.includeNonGroupMembers) {
-      //   payload.sentto = SentTo.ALL_INCLUDE_NON_GROUP_MEMBERS;
-      // }
-
-      // this.composeService.createMessage(payload).subscribe({
-      //   next: (response) => {
-      //     if (response.success === true && response.data) {
-      //       this.toastr.success('Message saved successfully', 'Success');
-      //       this.showOptionsAgain();
-      //     }
-      //     this.isLoading = false;
-      //   },
-      //   error: (err) => {
-      //     this.isLoading = false;
-      //     this.toastr.error(err.error.message[0]?.details, 'Error');
-      //     this.openPreviewDialog(this.currentForm);
-      //   },
-      // });
-
       this.isLoading = true;
       const groups = this.stateService.selectedGroups;
       const form = this.currentForm.value;
@@ -1343,9 +1198,11 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             this.formValidationErrors.push(msg.details);
           });
           this.cdr.markForCheck();
-          if (status !== MessageStatus.DRAFT) {
-            this.openPreviewDialog(this.currentForm);
-          }
+          this.errorVisible = true;
+          this.errorMessage = err.error.message[0]?.details || '';
+          // if (status !== MessageStatus.DRAFT) {
+          //   this.openPreviewDialog(this.currentForm);
+          // }
         },
       });
     }

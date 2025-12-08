@@ -132,6 +132,10 @@
       }
       ::ng-deep .p-button {
         width: 100%;
+        &:disabled {
+          background-color: #f5f5f5 !important;
+          border: 1px solid #cbd5e1;
+        }
       }
     }
     .error-message {
@@ -183,6 +187,9 @@
 ::ng-deep {
   sug-ui-multi-select-dropdown {
     width: 70%;
+    .p-disabled {
+      background-color: #f5f5f5 !important;
+    }
     .p-overlay {
       top: 100%;
       left: 0;
@@ -819,4 +826,28 @@
   bottom: 0;
   left: 0;
   z-index: 10;
+}
+
+.send-now-btn {
+  background-color: #a8c939;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:hover:not(:disabled) {
+    background-color: #96b532;
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  &:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
