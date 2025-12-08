@@ -1,7 +1,7 @@
 <div class="row">
   @if(!isShowSuccessPage){
   <div class="col-md-12">
-    @if (!isSuccessRoute) {
+    @if (!isSuccessRoute && !isOptionSelected) {
     <div class="account-overview">
       <h3>
         Compose Message
@@ -83,7 +83,7 @@
             </a>
           </div>
         </sug-ui-dialog>
-        } @if (dialogType === 'text') {
+        } @else if (dialogType === 'text') {
         <sug-ui-dialog
           [config]="dialogConf"
           [(visible)]="isVisible"
@@ -153,6 +153,126 @@
           </div>
         </sug-ui-dialog>
 
+        } @else {
+        <sug-ui-dialog
+          [config]="dialogConf"
+          [(visible)]="isVisible"
+          [showFooter]="true"
+          (hide)="hideDialog()"
+        >
+          <div slot="header">
+            <h2 class="d-inline gap-2 align-items-center">
+              Help: Compose Message
+            </h2>
+          </div>
+          <div class="maincontent">
+            <!-- selection first --->
+            <p>
+              SignUpGenius provides a simple and powerful messaging tool to make
+              communicating with your group members easy. Our "Compose" tab in
+              the Messages area allows you to create a variety of messages.
+            </p>
+
+            <h4>Invite People to a Sign Up</h4>
+            <p>
+              Select this option to compose an email that will send members a
+              link to your sign up page and invite them to participate. You can
+              send it to an existing group of email addresses in your account or
+              upload a new list of contacts.
+            </p>
+
+            <h4>Email People Participating in a Sign Up</h4>
+            <p>
+              Select this option to compose an email to people who have already
+              been invited to a sign up. Need to send out directions to your
+              participants? Want to only contact those who haven't signed up and
+              encourage them to get involved? It's easy to send a message to the
+              specific group you need to reach.
+            </p>
+
+            <h4>
+              Create a Custom Reminder Email Template
+              <img [src]="badgeUrl" style="width: 2%" alt="pro" />
+            </h4>
+            <p>
+              With our premium plans, you can compose a custom reminder message
+              that takes place of the standard reminder message. Build a
+              template and assign it to one or more sign ups in your account.
+              You can also add attachments to the email message.
+              <a
+                href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm"
+                target="_blank"
+                >Learn More</a
+              >
+            </p>
+
+            <h4>
+              Create a Custom Confirmation Email Template
+              <img [src]="badgeUrl" style="width: 2%" alt="pro" />
+            </h4>
+            <p>
+              A confirmation email is sent to participants immediately after
+              they sign up. With a premium subscription, the sign up creator can
+              customize the confirmation email. You can build a template message
+              and assign it to one or more sign ups in your account. To edit
+              your confirmation template later, look for it in the "Drafts &
+              Templates" tab of the Messages area.
+              <a
+                href="https://www.signupgenius.com/blog/feature-custom-reminders-confirmations.cfm"
+                target="_blank"
+                >Learn More</a
+              >
+            </p>
+            <h4>
+              Invite People to Opt in to Text Messages
+              <img [src]="badgeUrl" style="width: 2%" alt="pro" />
+            </h4>
+            <p>
+              Select this option to compose an email that will send members a
+              link to opt in to receive text messages. You can send it to an
+              existing group of email addresses in your account or upload a new
+              list of contacts. Once opted in, you can text participants
+              regarding any sign up in your account.
+              <a
+                href="https://www.signupgenius.com/blog/feature-text-messaging.cfm"
+                target="_blank"
+                >Learn More</a
+              >
+            </p>
+            <h4>
+              Send a Text Message to People Participating in a Sign Up
+              <img [src]="badgeUrl" style="width: 2%" alt="pro" />
+            </h4>
+            <p>
+              Select this option to compose a text message. You can send the
+              text to an entire group, only those signed up, individual group
+              members, or even participants signed up for specific sign up
+              slots, including those on a waitlist. If some of the selected
+              recipients have not opted in to text messages, they can receive
+              your message via email.
+              <a
+                href="https://www.signupgenius.com/blog/feature-text-messaging.cfm"
+                target="_blank"
+                >Learn More</a
+              >
+            </p>
+          </div>
+          <span class="spacer"></span>
+          <div
+            slot="footer"
+            class="d-flex justify-content-center align-items-center w-100 mt-4"
+          >
+            <sug-ui-button
+              label="Close"
+              icon=""
+              [rounded]="false"
+              [size]="'large'"
+              [severity]="'success'"
+              [outlined]="false"
+              (click)="isVisible = false"
+            ></sug-ui-button>
+          </div>
+        </sug-ui-dialog>
         }
       </h3>
     </div>
@@ -161,6 +281,7 @@
     </p>
     }
   </div>
+  @if (!isOptionSelected) {
   <div class="compose-tab">
     <sug-ui-menu-tabs
       [tabs]="navigationComposeTabs"
@@ -169,6 +290,7 @@
     >
     </sug-ui-menu-tabs>
   </div>
+  }
   <div class="compose-content">
     <!-- This outlet renders the content FOR THE INNER TABS -->
     <!-- (ComposeEmailComponent, ComposeEmailTemplateComponent, etc.) -->

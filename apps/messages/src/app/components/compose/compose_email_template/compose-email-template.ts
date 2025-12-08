@@ -141,6 +141,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.showRadioButtons = false; // Hide the radio buttons
     // Re-filter signup list based on the selected template type (client-side)
     this.applySignupFilter();
+    this.composeService.setOptionSelected(true);
   }
 
   showOptionsAgain() {
@@ -148,6 +149,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.selectedValue = null; // Reset the selected size
     this.currentEditingMessageId = null; // Clear editing message ID
     this.selectedAttachment = []; // Clear attachments
+    this.composeService.setOptionSelected(false);
     this.reminderEmailForm.reset({
       themeid: 1,
     });
