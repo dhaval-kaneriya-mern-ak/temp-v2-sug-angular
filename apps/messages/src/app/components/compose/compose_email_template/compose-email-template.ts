@@ -183,6 +183,14 @@ export class ComposeEmailTemplateComponent
   }
 
   showOptionsAgain() {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
     this.currentEditingMessageId = null; // Clear editing message ID
@@ -290,11 +298,11 @@ export class ComposeEmailTemplateComponent
                 'Success'
               );
               // Clear URL parameter before showing options again
-              this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: {},
-                replaceUrl: true,
-              });
+              // this.router.navigate([], {
+              //   relativeTo: this.route,
+              //   queryParams: {},
+              //   replaceUrl: true,
+              // });
               this.showOptionsAgain();
             } else {
               this.toastr.error('Failed to save draft', 'Error');

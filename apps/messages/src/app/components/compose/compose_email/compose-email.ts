@@ -653,6 +653,15 @@ export class ComposeEmailComponent
    * Show options again (back button)
    */
   showOptionsAgain(): void {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+
     this.showRadioButtons = true;
     this.selectedValue = null;
 

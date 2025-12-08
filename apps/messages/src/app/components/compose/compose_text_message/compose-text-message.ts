@@ -357,6 +357,15 @@ export class ComposeTextMessageComponent
   }
 
   showOptionsAgain() {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
 

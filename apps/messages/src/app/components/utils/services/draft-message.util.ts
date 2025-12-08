@@ -1208,10 +1208,7 @@ export class UnsavedChangesManager {
    */
   canDeactivate(): Observable<boolean> | boolean {
     // If no unsaved changes and not editing a draft, permit navigation
-    const shouldConfirm =
-      this.formDirty || this.component.isEditingExistingDraft;
-
-    if (!shouldConfirm) {
+    if (!this.formDirty) {
       return true;
     }
 
@@ -1235,7 +1232,6 @@ export class UnsavedChangesManager {
    */
   onConfirmNavigation(): void {
     this.component.isConfirmationDialogVisible = false;
-
     // Check if this is from route navigation guard or back button
     if (this.deactivateObserver) {
       // Route navigation - allow navigation to proceed
