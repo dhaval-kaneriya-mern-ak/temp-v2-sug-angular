@@ -1,6 +1,17 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import {
+  Router,
+  RouterOutlet,
+  NavigationEnd,
+  NavigationCancel,
+} from '@angular/router';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { Subject, filter, take, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
@@ -28,6 +39,7 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
 
   private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   public isProUser = false;
   public isTrialUser = false;
@@ -48,6 +60,23 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.initializeActiveTab();
+      });
+
+    // Listen for navigation cancellation (e.g., when guard prevents navigation)
+    // and force the tab component to reset back to the current tab
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationCancel),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        // Force the menu tabs component to re-render with the current active tab
+        // by temporarily clearing and then restoring the value
+        const currentTab = this.currentActiveTab;
+        this.currentActiveTab = '';
+        this.cdr.detectChanges();
+        this.currentActiveTab = currentTab;
+        this.cdr.detectChanges();
       });
   }
 

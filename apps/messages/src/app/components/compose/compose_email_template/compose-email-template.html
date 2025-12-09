@@ -354,7 +354,7 @@
       </form>
     </div>
     } }
-    <button (click)="showOptionsAgain()" class="back-btn">
+    <button (click)="handleBackButton()" class="back-btn">
       <i class="pi pi-arrow-left"></i> Back
     </button>
   </div>
@@ -416,3 +416,10 @@
   [emailHtmlPreview]="emailHtmlPreview"
   [availableThemes]="availableThemes"
 ></sug-preview-email>
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (Cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>

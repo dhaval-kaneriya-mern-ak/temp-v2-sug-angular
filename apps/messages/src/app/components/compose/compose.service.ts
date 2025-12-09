@@ -1,5 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { ISignUpItem } from '@services/interfaces/messages-interface/compose.interface';
+import {
+  ISignUpItem,
+  ITabGroupResponse,
+} from '@services/interfaces/messages-interface/compose.interface';
 import {
   IMemberInfoData,
   ISignUpListResponse,
@@ -334,5 +337,9 @@ export class ComposeService {
     return this.sugApiClient.get<IFileDetailsResponse>(
       `/geniusdrive/file/${fileId}/details`
     );
+  }
+
+  getTabGroupList(): Observable<ITabGroupResponse> {
+    return this.sugApiClient.get('tabgroups/list');
   }
 }

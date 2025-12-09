@@ -109,6 +109,12 @@
 }
 .email-form-section {
   max-width: 800px;
+  position: relative;
+  h3 {
+    @media (max-width: 767px) {
+      padding-right: 70px;
+    }
+  }
   .form-wrapper {
     display: flex;
     margin-bottom: 20px;

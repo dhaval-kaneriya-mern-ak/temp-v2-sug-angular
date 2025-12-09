@@ -125,6 +125,7 @@ export class PeopleSelectionDialogComponent
     appendTo: 'body',
     position: 'center',
     width: '800px',
+    contentStyleClass: 'dialog-overflow-visible',
   };
 
   // Form One radio options

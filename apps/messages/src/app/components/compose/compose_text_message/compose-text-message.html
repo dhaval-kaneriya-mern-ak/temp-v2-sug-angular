@@ -288,7 +288,7 @@
                 <i class="pi pi-cog optionone-label"> </i>
               </a>
               <a
-                [ngClass]="{'disabled': !sendTextEmailForm.get('selectedSignups')?.value || sendTextEmailForm.get('includefallback')?.value === false}"
+                [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
                 tabindex="-1"
                 (click)="showEmailData()"
                 (keyup)="false"
@@ -378,12 +378,20 @@
       </form>
     </div>
     } }
-    <button (click)="showOptionsAgain()" class="back-btn">
+    <button (click)="handleBackButton()" class="back-btn">
       <i class="pi pi-arrow-left"></i> Back
     </button>
   </div>
   }
 </div>
+<!-- Confirmation Dialog for Unsaved Changes -->
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (Cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>
 <sug-help-dialog
   [(visible)]="isHelpDialogVisible"
   [title]="selectedValue === 'emailoptionone' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"

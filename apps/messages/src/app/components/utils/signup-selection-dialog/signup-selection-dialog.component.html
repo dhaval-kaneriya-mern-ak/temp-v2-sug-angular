@@ -28,6 +28,7 @@
           [placeholder]="'Select Sign Up(s)'"
           panelStyleClass="custom-dropdown"
           appendTo="parent"
+          panelStyleClass="custom-dropdown"
           (valueChanged)="onSignUpSelectionChange($event)"
           formControlName="selectedSignups"
         >
@@ -70,8 +71,10 @@
       <div class="signup-radio-content">
         <sug-ui-multi-select-dropdown
           [placeholder]="'Select Tab Group(s)'"
-          [options]="tabGroupsData"
+          [options]="tabGroupsForDropdown"
           formControlName="selectedTabGroups"
+          panelStyleClass="custom-dropdown"
+          appendTo="parent"
           (valueChanged)="onTabGroupSelectionChange($event)"
         >
         </sug-ui-multi-select-dropdown>

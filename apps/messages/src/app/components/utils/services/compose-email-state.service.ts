@@ -8,6 +8,7 @@ import {
   ISelectPortalOption,
   IMemberInfoDto,
   IFileItem,
+  ITabGroupItem,
 } from '@services/interfaces/messages-interface/compose.interface';
 
 /**
@@ -25,7 +26,7 @@ export class ComposeEmailStateService {
   selectedSignups$ = this.selectedSignupsSubject.asObservable();
 
   // Selected tab groups state
-  private selectedTabGroupsSubject = new BehaviorSubject<ISelectOption[]>([]);
+  private selectedTabGroupsSubject = new BehaviorSubject<ITabGroupItem[]>([]);
   selectedTabGroups$ = this.selectedTabGroupsSubject.asObservable();
 
   // Sign up index page selection state
@@ -64,6 +65,7 @@ export class ComposeEmailStateService {
     selectedValue: string | null;
     selectedGroups: string[];
     selectedPortalPages: string[];
+    selectedTabGroups: string[];
     manualEmails: string;
     groupEmailAlias: string;
     useGroupAlias: boolean;
@@ -77,6 +79,7 @@ export class ComposeEmailStateService {
     selectedValue: null,
     selectedGroups: [],
     selectedPortalPages: [],
+    selectedTabGroups: [],
     manualEmails: '',
     groupEmailAlias: '',
     useGroupAlias: false,
@@ -113,9 +116,6 @@ export class ComposeEmailStateService {
   private signUpOptionsSubject = new BehaviorSubject<ISelectOption[]>([]);
   signUpOptions$ = this.signUpOptionsSubject.asObservable();
 
-  private tabGroupsDataSubject = new BehaviorSubject<ISelectOption[]>([]);
-  tabGroupsData$ = this.tabGroupsDataSubject.asObservable();
-
   private groupOptionsSubject = new BehaviorSubject<ISelectOption[]>([]);
   groupOptions$ = this.groupOptionsSubject.asObservable();
 
@@ -127,12 +127,15 @@ export class ComposeEmailStateService {
   >([]);
   portalSignUpOptions$ = this.portalSignUpOptionsSubject.asObservable();
 
+  private tabGroupsOptionsSubject = new BehaviorSubject<ITabGroupItem[]>([]);
+  tabGroupsOptions$ = this.tabGroupsOptionsSubject.asObservable();
+
   // Getters
   get selectedSignups(): ISignUpItem[] {
     return this.selectedSignupsSubject.value;
   }
 
-  get selectedTabGroups(): ISelectOption[] {
+  get selectedTabGroups(): ITabGroupItem[] {
     return this.selectedTabGroupsSubject.value;
   }
 
@@ -180,8 +183,8 @@ export class ComposeEmailStateService {
     return this.portalSignUpOptionsSubject.value;
   }
 
-  get tabGroupsData(): ISelectOption[] {
-    return this.tabGroupsDataSubject.value;
+  get tabGroupsOptions(): ITabGroupItem[] {
+    return this.tabGroupsOptionsSubject.value;
   }
 
   get groupOptions(): ISelectOption[] {
@@ -227,7 +230,7 @@ export class ComposeEmailStateService {
   }
 
   setSelectedTabGroups(
-    tabGroups: ISelectOption[],
+    tabGroups: ITabGroupItem[],
     skipPeopleReset = false
   ): void {
     this.selectedTabGroupsSubject.next(tabGroups);
@@ -302,8 +305,8 @@ export class ComposeEmailStateService {
     this.portalSignUpOptionsSubject.next(options);
   }
 
-  setTabGroupsData(data: ISelectOption[]): void {
-    this.tabGroupsDataSubject.next(data);
+  setTabGroupsOptions(data: ITabGroupItem[]): void {
+    this.tabGroupsOptionsSubject.next(data);
   }
 
   setGroupOptions(options: ISelectOption[]): void {
@@ -400,6 +403,7 @@ export class ComposeEmailStateService {
       selectedValue: null,
       selectedGroups: [],
       selectedPortalPages: [],
+      selectedTabGroups: [],
       manualEmails: '',
       groupEmailAlias: '',
       useGroupAlias: false,
@@ -440,6 +444,7 @@ export class ComposeEmailStateService {
       selectedValue: null,
       selectedGroups: [],
       selectedPortalPages: [],
+      selectedTabGroups: [],
       manualEmails: '',
       groupEmailAlias: '',
       useGroupAlias: false,

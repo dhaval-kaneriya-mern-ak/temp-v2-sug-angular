@@ -1,4 +1,10 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   SugUiTooltipComponent,
@@ -10,10 +16,15 @@ import {
 } from '@lumaverse/sug-ui';
 
 import { ButtonModule } from 'primeng/button';
-import { Router, RouterOutlet } from '@angular/router';
+import {
+  Router,
+  RouterOutlet,
+  NavigationEnd,
+  NavigationCancel,
+} from '@angular/router';
 import { ComposeService } from './compose.service';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, filter } from 'rxjs/operators';
 import { UserStateService } from '@services/user-state.service';
 import { SuccessPageComponent } from '../utils/success-page/success-page.component';
 import { ISignUpItem } from '@services/interfaces';
@@ -41,6 +52,7 @@ export class Compose implements OnInit, OnDestroy {
   private userStateService = inject(UserStateService);
   composeService = inject(ComposeService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   public currentActiveTab = '';
   public isProUser = false;
@@ -80,10 +92,34 @@ export class Compose implements OnInit, OnDestroy {
     this.initializeActiveTab();
     this.checkIfSuccessRoute();
 
-    // Subscribe to router events to detect route changes
-    this.router.events.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.checkIfSuccessRoute();
-    });
+    // Subscribe to router events to detect route changes and update active tab
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.checkIfSuccessRoute();
+        // Update active tab based on actual route after navigation completes
+        this.initializeActiveTab();
+      });
+
+    // Listen for navigation cancellation (e.g., when guard prevents navigation)
+    // and force the tab component to reset back to the current tab
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationCancel),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        // Force the menu tabs component to re-render with the current active tab
+        // by temporarily clearing and then restoring the value
+        const currentTab = this.currentActiveTab;
+        this.currentActiveTab = '';
+        this.cdr.detectChanges();
+        this.currentActiveTab = currentTab;
+        this.cdr.detectChanges();
+      });
 
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
@@ -135,7 +171,11 @@ export class Compose implements OnInit, OnDestroy {
       );
     });
 
-    this.currentActiveTab = matchingTab ? matchingTab.route : 'email';
+    const activeRoute = matchingTab
+      ? matchingTab.route
+      : 'messages/compose/email';
+    this.currentActiveTab = activeRoute;
+    this.activeTabRoute = activeRoute;
   }
 
   private checkDirectAccess() {
@@ -161,7 +201,6 @@ export class Compose implements OnInit, OnDestroy {
   handleTabSelection(event: ComposeTab): void {
     const selectedTab = event as ComposeTab;
     if (!selectedTab || !selectedTab.route) {
-      this.currentActiveTab = this.activeTabRoute;
       this.router.navigateByUrl('/' + this.activeTabRoute);
       return;
     }
@@ -184,8 +223,9 @@ export class Compose implements OnInit, OnDestroy {
       return;
     }
 
-    this.currentActiveTab = selectedTab.route || this.activeTabRoute;
-    this.router.navigateByUrl('/' + this.currentActiveTab);
+    // Navigate to the selected tab - currentActiveTab will be updated automatically
+    // after successful navigation via the NavigationEnd event subscription
+    this.router.navigateByUrl('/' + selectedTab.route);
   }
 
   dialogConf: DialogConfig = {

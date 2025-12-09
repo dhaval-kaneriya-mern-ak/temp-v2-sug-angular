@@ -24,6 +24,7 @@ import {
   IFileItem,
   ISelectPortalOption,
   ISignUpItem,
+  ITabGroupItem,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
@@ -54,7 +55,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Input() readonly siteKey: string = environment.siteKey;
   // Data inputs - replacing service dependencies
   @Input() selectedSignups: ISignUpItem[] = [];
-  @Input() selectedTabGroups: ISelectOption[] = [];
+  @Input() selectedTabGroups: ITabGroupItem[] = [];
   @Input() selectedPortalPages: ISelectPortalOption[] = [];
   @Input() isSignUpIndexPageSelected = false;
   @Input() showAttachments = false;
@@ -191,6 +192,12 @@ export class EmailFormComponent implements OnInit, OnChanges {
     if (changes['selectedPortalPages'] && this.emailForm) {
       this.emailForm.patchValue({
         selectedPortalPages: this.selectedPortalPages,
+      });
+    }
+
+    if (changes['selectedTabGroups'] && this.emailForm) {
+      this.emailForm.patchValue({
+        selectedTabGroups: this.selectedTabGroups,
       });
     }
 

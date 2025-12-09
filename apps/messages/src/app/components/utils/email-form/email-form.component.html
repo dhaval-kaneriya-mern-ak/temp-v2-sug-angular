@@ -43,12 +43,12 @@
               (onRemove)="removeSignup(i)"
             />
           </span>
-          } @for (item of selectedTabGroups; track item.value || $index; let i =
+          } @for (item of selectedTabGroups; track item.id || $index; let i =
           $index) {
           <span [ngClass]="{ '': selectedSignups.length > 0 || i >= 1 }">
             <p-chip
               class="gap-2"
-              [label]="item.label"
+              [label]="item.name"
               [removable]="true"
               (onRemove)="removeTabGroup(i)"
             />
@@ -338,7 +338,7 @@
         [outlined]="false"
         class="send-btn"
         icon=""
-        label="Preview & Send"
+        label="Preview & Save"
         [disabled]="emailForm.invalid || recipientCount === 0"
         (buttonClick)="onPreviewAndSend()"
       >
