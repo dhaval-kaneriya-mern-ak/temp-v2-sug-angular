@@ -73,6 +73,7 @@ import {
   downloadFile,
 } from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
+import { parse } from 'date-fns';
 
 /**
  * Main Compose Email Component (Refactored)
@@ -146,6 +147,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   selectedCustomUserIds: string[] = [];
   originalSendAsText: boolean | undefined;
   originalSendAsEmail: boolean | undefined;
+  messageOriginalStatus: string | null = null;
+  scheduledDateForPreview: Date | null = null;
+  scheduledTimeForPreview: Date | null = null;
 
   // Dialog visibility flags
   isHelpDialogVisible = false;
@@ -559,7 +563,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     this.showRadioButtons = true;
     this.selectedValue = null;
     this.composeService.setOptionSelected(false);
-
+    this.messageOriginalStatus = null;
+    this.scheduledDateForPreview = null;
+    this.scheduledTimeForPreview = null;
     // Reset main forms
     this.emailFormOne.reset({
       themeid: 1,
@@ -826,7 +832,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
   }
 
   scheduleEmail(event: string): void {
-    this.onSaveDraft(this.messageStatus.SCHEDULED, event);
+    this.onSaveDraft(this.messageStatus.SCHEDULED, event, this.currentFormType);
   }
 
   setSelectedRadio(event: {
@@ -900,7 +906,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         sentto: sentto,
         sendtotype: sendtotype,
         messagetypeid: messagetypeid,
-        status: 'draft',
+        status: status ? status : 'draft',
         sendastext:
           this.isEditingExistingDraft && this.originalSendAsText !== undefined
             ? this.originalSendAsText
@@ -921,6 +927,10 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         payload.attachmentids = attachmentIds;
       } else {
         payload.attachmentids = [];
+      }
+
+      if (date) {
+        payload.senddate = date + ':00';
       }
 
       if (this.isEditingExistingDraft) {
@@ -1490,6 +1500,9 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
             return;
           }
 
+          // Store the original message status
+          this.messageOriginalStatus = response.data.status;
+
           initializeDraftEditMode(
             id,
             this.stateService,
@@ -1578,6 +1591,26 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
                   .filter((id) => id.length > 0);
               }
             }
+          }
+
+          // response.data.senddate = 1765501080;
+
+          if (response.data.senddate) {
+            const formattedDate = this.userStateService.convertESTtoUserTZ(
+              Number(response.data.senddate),
+              this.userProfile?.zonename || 'UTC',
+              this.userProfile?.selecteddateformat?.short.toUpperCase() +
+                ' hh:mma'
+            );
+
+            const parsedDate = parse(
+              formattedDate,
+              'dd/MM/yyyy hh:mmaa',
+              new Date()
+            );
+
+            this.scheduledDateForPreview = parsedDate;
+            this.scheduledTimeForPreview = parsedDate;
           }
 
           if (response.data.messagetypeid == optionOne) {

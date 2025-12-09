@@ -71,7 +71,7 @@
     } @if (!saveCustomButton) {
     <div class="button-group">
       <!-- Send Now Button -->
-      @if (!scheduledDate) {
+      @if (!scheduledDate && !isScheduledMessage) {
       <button class="send-now-btn" (click)="onSendNow()">Send Now</button>
       } @if (showThemeSelection) {
       <!-- Schedule Button -->

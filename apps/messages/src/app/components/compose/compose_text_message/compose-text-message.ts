@@ -81,6 +81,7 @@ import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.c
 import { ToastrService } from 'ngx-toastr';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
 import { DashboardService } from '../../dashboard/dashboard.service';
+import { parse } from 'date-fns';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -151,6 +152,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   currentDraftMessageId: number | null = null;
   originalSendAsText: boolean | undefined;
   originalSendAsEmail: boolean | undefined;
+  messageOriginalStatus: string | null = null;
+  scheduledDateForPreview: Date | null = null;
+  scheduledTimeForPreview: Date | null = null;
   radioOptions: RadioCheckboxOption[] = [
     {
       label: 'Invite people to opt in to text messages',
@@ -373,6 +377,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   showOptionsAgain() {
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+    this.messageOriginalStatus = null;
+    this.scheduledDateForPreview = null;
+    this.scheduledTimeForPreview = null;
     this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
       themeid: 1,
@@ -461,7 +468,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   }
 
   scheduleEmail(event: string): void {
-    this.onSaveDraft(MessageStatus.SCHEDULED, undefined, event);
+    this.onSaveDraft(
+      MessageStatus.SCHEDULED,
+      this.selectedValue == 'inviteToSignUp'
+        ? 'inviteToSignUp'
+        : 'emailParticipants',
+      event
+    );
   }
 
   onSaveDraft(
@@ -553,7 +566,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             sentto: sentto,
             sendtotype: sendtotype,
             messagetypeid: messagetypeid,
-            status: 'draft',
+            status: status ? status : 'draft',
             sendastext:
               this.isEditingExistingDraft &&
               this.originalSendAsText !== undefined
@@ -681,6 +694,10 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               email: email,
               isgroupemail: false,
             }));
+          }
+
+          if (date) {
+            payload.senddate = date + ':00';
           }
 
           if (
@@ -1431,6 +1448,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             return;
           }
 
+          // Store the original message status
+          this.messageOriginalStatus = response.data.status;
+
           initializeDraftEditMode(
             id,
             this.stateService,
@@ -1445,6 +1465,32 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
               this.originalSendAsEmail = data.originalSendAsEmail;
             }
           );
+
+          response.data.senddate = 1765501080;
+
+          if (response.data.senddate) {
+            const formattedDate = this.userStateService.convertESTtoUserTZ(
+              Number(response.data.senddate),
+              this.userProfile?.zonename || 'UTC',
+              this.userProfile?.selecteddateformat?.short.toUpperCase() +
+                ' hh:mma'
+            );
+
+            const parsedDate = parse(
+              formattedDate,
+              'dd/MM/yyyy hh:mmaa',
+              new Date()
+            );
+
+            this.scheduledDateForPreview = parsedDate;
+            this.scheduledTimeForPreview = parsedDate;
+
+            console.log(
+              this.scheduledDateForPreview,
+              this.scheduledTimeForPreview,
+              'date'
+            );
+          }
 
           if (response.data.messagetypeid == optionOne) {
             this.selectedValue = 'emailoptionone';

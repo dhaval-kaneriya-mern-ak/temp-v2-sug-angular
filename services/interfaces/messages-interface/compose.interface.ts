@@ -646,6 +646,7 @@ export interface MessageByIdData {
   sentto: string;
   scheduled: boolean;
   sendastext?: boolean;
+  senddate?: number;
   sendasemail?: boolean;
 
   signups?: {
