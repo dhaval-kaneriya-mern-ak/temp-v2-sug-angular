@@ -291,7 +291,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
 
       const isPro = this.userProfile?.ispro === true;
       const isNotTrial = this.userProfile?.istrial === false;
-      const hasMemberOptIns = this.userProfile?.hasMemberOptIns === true;
+      const hasMemberOptIns = this.userProfile?.hasmemberoptins === true;
 
       if (option.value === 'emailoptiontwo') {
         // For 'textmessage' - ENABLE when all conditions are true
@@ -306,7 +306,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
           ? 'There are no group members opted in to receive text messages.'
           : undefined;
       } else {
-        // For 'textoptin' - ENABLE when all conditions are true (except hasMemberOptIns)
+        // For 'textoptin' - ENABLE when all conditions are true (except hasmemberoptins)
         const isDisabled = !(isPro && isNotTrial && textLimitExists);
         option.disabled = isDisabled;
         option.tooltip = isDisabled

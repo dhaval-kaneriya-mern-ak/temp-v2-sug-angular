@@ -51,15 +51,18 @@
 }
 .email-form-section {
   max-width: 800px;
+  position: relative;
   h3 {
     display: flex;
     font-weight: 400;
     gap: 10px;
+    padding-right: 100px;
     .info-icon {
       font-size: 13px;
     }
     @media (max-width: 767px) {
       font-size: 18px;
+      padding-right: 70px;
     }
   }
   .form-wrapper {

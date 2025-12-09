@@ -15,7 +15,7 @@ export interface MemberProfile {
   organization: Organization | Record<string, never>;
   profilepicture: ProfilePicture;
   issubadmin: boolean;
-  hasMemberOptIns?: boolean;
+  hasmemberoptins?: boolean;
   zonename: string;
   mobile: string;
   subscription: Subscription;
