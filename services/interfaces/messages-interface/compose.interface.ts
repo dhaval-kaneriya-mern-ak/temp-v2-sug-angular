@@ -738,6 +738,15 @@ export enum SentTo {
   PEOPLE_IN_GROUPS = 'peopleingroups',
 }
 
+export enum MessageTypeId {
+  EmailParticipants = 1,
+  InviteToSignUp = 4,
+  ReminderTemplate = 8,
+  ConfirmationTemplate = 2,
+  TextInvite = 14,
+  TextParticipants = 15,
+}
+
 /**
  * Enum for type of recipient selection (sendtotype)
  */

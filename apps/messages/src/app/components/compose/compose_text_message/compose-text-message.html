@@ -495,7 +495,7 @@
   [(visible)]="isPreviewVisible"
   [showTextPreview]="selectedValue === 'emailoptiontwo'"
   [textMessage]="currentEmailForm.get('message')?.value"
-  [isScheduledMessage]="messageOriginalStatus === 'Scheduled'"
+  [isScheduledMessage]="messageOriginalStatus === messageStatus.SCHEDULED"
   [prePopulatedDate]="scheduledDateForPreview"
   [prePopulatedTime]="scheduledTimeForPreview"
   (scheduleEmail)="scheduleEmail($event)"

@@ -41,6 +41,7 @@ import {
   SentTo,
   SendToType,
   SignUPType,
+  MessageTypeId,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { MemberProfile } from '@services/interfaces/member-profile.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
@@ -120,6 +121,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   messageStatus = MessageStatus;
   currentEditingMessageId: number | null = null;
   selectedAttachment: IFileItem[] = [];
+  readonly messageTypeIds = MessageTypeId;
 
   ngOnInit(): void {
     this.initializeForms();
@@ -222,7 +224,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         sentto: SentTo.ALL,
         sendtotype: SendToType.PEOPLE_IN_GROUPS,
         status: 'draft',
-        messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
+        messagetypeid:
+          this.selectedValue === 'emailoptionone'
+            ? this.messageTypeIds.ReminderTemplate
+            : this.messageTypeIds.ConfirmationTemplate,
         sendasemail: true,
         sendastext: false,
         themeid: form.themeid,
@@ -278,7 +283,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
         sentto: SentTo.ALL,
         sendtotype: SendToType.PEOPLE_IN_GROUPS,
         status: status,
-        messagetypeid: this.selectedValue === 'emailoptionone' ? 8 : 2,
+        messagetypeid:
+          this.selectedValue === 'emailoptionone'
+            ? this.messageTypeIds.ReminderTemplate
+            : this.messageTypeIds.ConfirmationTemplate,
         sendasemail: true,
         sendastext: false,
         themeid: form.themeid,
@@ -650,9 +658,6 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
 
     type ReplyToItem = { memberid: number; email: string };
 
-    const optionOne = 8;
-    const optionTwo = 2;
-
     this.composeService
       .getMessageById(id)
       .pipe(takeUntil(this.destroy$))
@@ -671,7 +676,9 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             return;
           }
 
-          if (response.data.messagetypeid == optionOne) {
+          if (
+            response.data.messagetypeid == this.messageTypeIds.ReminderTemplate
+          ) {
             this.selectedValue = 'emailoptionone';
 
             this.showRadioButtons = false;
@@ -704,7 +711,10 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             }
 
             this.isLoading = false;
-          } else if (response.data.messagetypeid == optionTwo) {
+          } else if (
+            response.data.messagetypeid ==
+            this.messageTypeIds.ConfirmationTemplate
+          ) {
             this.selectedValue = 'emailoptiontwo';
 
             this.showRadioButtons = false;
