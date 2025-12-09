@@ -926,6 +926,7 @@ export interface ISaveDraftMessagePayload {
   signupids?: number[];
   groupids?: number[];
   portalids?: number[];
+  tabgroupids?: number[];
   signUpType?: string;
   addEmails?: string;
   to?: Array<{
@@ -1022,3 +1023,25 @@ export const EXCLUDED_RECIPIENT_VALUES = new Set<string>([
   'peopleWhoSignedUp',
   'peopleWhoNotSignedUp',
 ]);
+
+export interface ITabGroupItem {
+  id: number;
+  name: string;
+  memberid: number;
+  showname: boolean;
+  showmore: boolean;
+  urlid: string;
+  numsignups: number;
+  themeids: string;
+}
+
+export interface ITabGroupData {
+  totalcount: number;
+  tabgroups: ITabGroupItem[];
+}
+
+export interface ITabGroupResponse {
+  success: boolean;
+  message: string[];
+  data: ITabGroupData;
+}
