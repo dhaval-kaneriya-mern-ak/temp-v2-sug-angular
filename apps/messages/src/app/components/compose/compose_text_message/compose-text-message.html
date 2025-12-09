@@ -288,7 +288,7 @@
                 <i class="pi pi-cog optionone-label"> </i>
               </a>
               <a
-                [ngClass]="{'disabled': !sendTextEmailForm.get('selectedSignups')?.value || sendTextEmailForm.get('includefallback')?.value === false}"
+                [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
                 tabindex="-1"
                 (click)="showEmailData()"
                 (keyup)="false"

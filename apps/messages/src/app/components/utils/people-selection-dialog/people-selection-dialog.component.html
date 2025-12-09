@@ -80,7 +80,9 @@
               <sug-ui-multi-select-dropdown
                 id="manual-emails-group"
                 [options]="groupOptions"
+                panelStyleClass="custom-dropdown"
                 formControlName="manualEmailsGroup"
+                appendTo="parent"
               >
               </sug-ui-multi-select-dropdown>
             </div>
@@ -292,6 +294,8 @@
               <sug-ui-multi-select-dropdown
                 [options]="groupOptions"
                 formControlName="selectedGroups"
+                panelStyleClass="custom-dropdown"
+                appendTo="parent"
               >
               </sug-ui-multi-select-dropdown>
               @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){

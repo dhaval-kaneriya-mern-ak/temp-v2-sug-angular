@@ -20,15 +20,18 @@
 }
 .email-form-section {
   max-width: 800px;
+  position: relative;
   h3 {
     display: flex;
     gap: 10px;
     font-weight: 400;
+    padding-right: 100px;
     .info-icon {
       font-size: 13px;
     }
     @media (max-width: 767px) {
       font-size: 18px;
+      padding-right: 70px;
     }
   }
   .form-wrapper {
@@ -348,17 +351,28 @@
 .check-option-forms-wrapper .optionthree-label {
   position: absolute;
   top: 75px;
-  right: 170px;
+  left: 380px;
   color: #f68b1c;
   cursor: pointer;
+  font-size: 16px;
+  @media (max-width: 1200px) {
+    left: 350px;
+  }
+  @media (max-width: 991px) {
+    left: 320px;
+  }
+  @media (max-width: 767px) {
+    left: 295px;
+  }
 }
 .check-option-forms-wrapper {
   .optionone-label {
     position: absolute;
     top: 10px;
-    left: 170px;
+    left: 195px;
     color: #f68b1c;
     cursor: pointer;
+    font-size: 16px;
   }
 }
 .check-option-forms-wrapper .optionone-label:hover {
