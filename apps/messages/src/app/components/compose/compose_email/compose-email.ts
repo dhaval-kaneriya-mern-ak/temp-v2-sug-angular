@@ -696,6 +696,13 @@ export class ComposeEmailComponent
     this.selectedValue = null;
     this.composeService.setOptionSelected(false);
     this.resetScheduledMessageState();
+
+    this.isEditingExistingDraft = false;
+    this.currentDraftMessageId = null;
+    this.currentSendToType = '';
+    this.selectedCustomUserIds = [];
+    this.originalSendAsText = undefined;
+    this.originalSendAsEmail = undefined;
     // Reset main forms
     this.emailFormOne.reset({
       themeid: 1,

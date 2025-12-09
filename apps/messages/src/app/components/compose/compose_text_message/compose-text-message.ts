@@ -443,6 +443,16 @@ export class ComposeTextMessageComponent
     this.selectedValue = null; // Reset the selected size
     this.resetScheduledMessageState();
 
+    this.isEditingExistingDraft = false;
+    this.currentDraftMessageId = null;
+    this.originalSendAsText = undefined;
+    this.originalSendAsEmail = undefined;
+    this.currentSendToType = '';
+    this.selectedCustomUserIds = [];
+    this.textRecipientsCount = 0;
+    this.emailRecipientsCount = 0;
+    this.shortUrl = '';
+
     this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
       themeid: 1,
