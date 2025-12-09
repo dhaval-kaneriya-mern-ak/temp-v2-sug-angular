@@ -21,6 +21,7 @@ import {
 import {
   ISelectPortalOption,
   ISignUpItem,
+  ITabGroupItem,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { UserStateService } from '@services/user-state.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -47,9 +48,9 @@ import { SugInformationDialogComponent } from '../information-dialog/information
 export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   @Input() visible = false;
   @Input() signUpOptions: ISelectOption[] = [];
-  @Input() tabGroupsData: ISelectOption[] = [];
+  @Input() tabGroupsData: ITabGroupItem[] = [];
   @Input() selectedSignups: ISignUpItem[] = [];
-  @Input() selectedTabGroups: ISelectOption[] = [];
+  @Input() selectedTabGroups: ITabGroupItem[] = [];
   @Input() isSignUpIndexPageSelected = false;
   @Input() selectedPortalPages: ISelectPortalOption[] = [];
 
@@ -57,7 +58,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   @Output() signupsSelected = new EventEmitter<void>();
   @Output() signUpOptionsChange = new EventEmitter<ISelectOption[]>();
   @Output() selectedSignupsChange = new EventEmitter<ISignUpItem[]>();
-  @Output() selectedTabGroupsChange = new EventEmitter<ISelectOption[]>();
+  @Output() selectedTabGroupsChange = new EventEmitter<ITabGroupItem[]>();
   @Output() signUpIndexPageSelectedChange = new EventEmitter<boolean>();
   @Output() selectedPortalPagesChange = new EventEmitter<
     ISelectPortalOption[]
@@ -87,6 +88,13 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
     return this.composeStateService.portalSignUpOptions.map((option) => ({
       label: option.title || option.label || 'Untitled Portal',
       value: (option.id || option.value || '').toString(),
+    }));
+  }
+
+  get tabGroupsForDropdown(): ISelectOption[] {
+    return this.tabGroupsData.map((tabGroup) => ({
+      label: tabGroup.name || 'Unnamed Tab Group',
+      value: tabGroup.id.toString(),
     }));
   }
 
@@ -157,7 +165,9 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
       });
       this.updateGroupOptionsState(signupIds);
     } else if (this.selectedTabGroups.length > 0) {
-      const tabGroupIds = this.selectedTabGroups.map((group) => group.value);
+      const tabGroupIds = this.selectedTabGroups.map((group) =>
+        group.id?.toString()
+      );
       this.signUpDialogForm.patchValue({
         selectedSignupValue: 'LinkSpecifixTabGroup',
         selectedTabGroups: tabGroupIds,
@@ -245,7 +255,7 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
           return;
         }
         const tabGroups = this.tabGroupsData.filter((group) =>
-          selectedTabGroupIds.includes(group.value)
+          selectedTabGroupIds.includes(group.id.toString())
         );
         this.selectedSignupsChange.emit([]);
         this.selectedTabGroupsChange.emit(tabGroups);

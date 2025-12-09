@@ -61,6 +61,7 @@ import {
   IRecipient,
   SignUPType,
   EXCLUDED_RECIPIENT_VALUES,
+  ITabGroupItem,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -425,6 +426,16 @@ export class ComposeEmailComponent
         }
       },
     });
+    //Load tab groups
+    if (this.userProfile?.features?.signuptabbing) {
+      this.composeService.getTabGroupList().subscribe({
+        next: (response) => {
+          if (response?.data) {
+            this.stateService.setTabGroupsOptions(response.data.tabgroups);
+          }
+        },
+      });
+    }
 
     //Load portal signup info
     if (this.userProfile?.features?.portalpages) {
@@ -564,7 +575,7 @@ export class ComposeEmailComponent
   private loadTabGroups(): void {
     // Tab groups API call - implement when API is available
     // For now, set empty array
-    this.stateService.setTabGroupsData([]);
+    this.stateService.setTabGroupsOptions([]);
   }
 
   /**
@@ -910,8 +921,22 @@ export class ComposeEmailComponent
       .flatMap((portal: ISelectPortalOption) => portal.associatedthemes || [])
       .filter((theme) => theme !== undefined && theme !== null);
 
+    const tabGroupThemes = (
+      (form.value.selectedTabGroups || []) as ITabGroupItem[]
+    ).flatMap((su: ITabGroupItem) =>
+      su.themeids
+        ? su.themeids
+            .split(',')
+            .map((id) => parseInt(id.trim(), 10))
+            .filter((id) => !isNaN(id))
+        : []
+    );
+
     // Combine and deduplicate themes
-    this.availableThemes = [1, ...new Set([...signupThemes, ...portalThemes])];
+    this.availableThemes = [
+      1,
+      ...new Set([...signupThemes, ...portalThemes, ...tabGroupThemes]),
+    ];
     if (form.invalid) {
       // Mark all controls as touched to show validation errors
       Object.keys(form.controls).forEach((key) => {
@@ -1075,6 +1100,12 @@ export class ComposeEmailComponent
           .filter((id: number | undefined): id is number => id !== undefined);
       }
 
+      if (this.stateService.selectedTabGroups.length > 0) {
+        payload.tabgroupids = this.stateService.selectedTabGroups.map(
+          (tg) => tg.id
+        );
+      }
+
       if (this.stateService.isSignUpIndexPageSelected) {
         payload.signUpType = 'acctindex';
       }
@@ -1158,6 +1189,7 @@ export class ComposeEmailComponent
         portalids: form.selectedPortalPages.map(
           (pp: ISelectPortalOption) => pp.id
         ),
+        tabgroupids: form.selectedTabGroups.map((tg: ITabGroupItem) => tg.id),
         attachmentids: this.stateService.selectedAttachment.map(
           (file) => file.id
         ),
@@ -1178,9 +1210,6 @@ export class ComposeEmailComponent
 
       if (form.selectedTabGroups.length > 0) {
         payload.signuptype = SignUPType.TABGROUP;
-        payload.tabgroupids = form.selectedTabGroups.map(
-          (pp: ISelectPortalOption) => pp.id
-        );
       }
 
       // Handle radio selection logic
@@ -1772,6 +1801,30 @@ export class ComposeEmailComponent
               }));
               this.stateService.setSelectedPortalPages(mappedPortals);
             } else if (
+              response.data?.tabgroups &&
+              response.data.tabgroups.length > 0
+            ) {
+              const mappedTabGroups: ITabGroupItem[] =
+                response.data.tabgroups.map(
+                  (tg: {
+                    tabgroupid: number;
+                    tabgroupname: string;
+                    themeids?: string;
+                  }) => ({
+                    id: tg.tabgroupid,
+                    name: tg.tabgroupname,
+                    label: tg.tabgroupname,
+                    value: tg.tabgroupid.toString(),
+                    themeids: tg.themeids || '1',
+                    memberid: 0,
+                    showname: false,
+                    showmore: false,
+                    urlid: '',
+                    numsignups: 0,
+                  })
+                );
+              this.stateService.setSelectedTabGroups(mappedTabGroups, true);
+            } else if (
               response.data?.signUpType === 'acctindex' ||
               ((!response.data?.signups ||
                 response.data.signups.length === 0) &&
@@ -2054,6 +2107,30 @@ export class ComposeEmailComponent
                 value: p.portalid.toString(),
               }));
               this.stateService.setSelectedPortalPages(mappedPortals);
+            } else if (
+              response.data?.tabgroups &&
+              response.data.tabgroups.length > 0
+            ) {
+              const mappedTabGroups: ITabGroupItem[] =
+                response.data.tabgroups.map(
+                  (tg: {
+                    tabgroupid: number;
+                    tabgroupname: string;
+                    themeids?: string;
+                  }) => ({
+                    id: tg.tabgroupid,
+                    name: tg.tabgroupname,
+                    label: tg.tabgroupname,
+                    value: tg.tabgroupid.toString(),
+                    themeids: tg.themeids || '1',
+                    memberid: 0,
+                    showname: false,
+                    showmore: false,
+                    urlid: '',
+                    numsignups: 0,
+                  })
+                );
+              this.stateService.setSelectedTabGroups(mappedTabGroups, true);
             } else if (
               response.data?.signUpType === 'acctindex' ||
               ((!response.data?.signups ||
