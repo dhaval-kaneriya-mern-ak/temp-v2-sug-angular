@@ -19,7 +19,7 @@ export class ConfirmationDialogComponent {
   @Input() message = 'Are you sure you want to continue?';
   @Output() visibleChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() confirm: EventEmitter<void> = new EventEmitter<void>();
-  @Output() cancel: EventEmitter<void> = new EventEmitter<void>();
+  @Output() Cancel: EventEmitter<void> = new EventEmitter<void>();
 
   dialogConfig: DialogConfig = {
     modal: true,
@@ -41,6 +41,6 @@ export class ConfirmationDialogComponent {
   onCancel(): void {
     this.visible = false;
     this.visibleChange.emit(false);
-    this.cancel.emit();
+    this.Cancel.emit();
   }
 }

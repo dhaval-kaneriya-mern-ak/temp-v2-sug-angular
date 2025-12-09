@@ -1026,6 +1026,8 @@ export const EXCLUDED_RECIPIENT_VALUES = new Set<string>([
 
 export interface ITabGroupItem {
   id: number;
+  label?: string;  //use only in FE not getting from API
+  value?: string;  //use only in FE not getting from API
   name: string;
   memberid: number;
   showname: boolean;

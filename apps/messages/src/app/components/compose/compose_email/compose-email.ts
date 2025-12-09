@@ -431,8 +431,6 @@ export class ComposeEmailComponent
       this.composeService.getTabGroupList().subscribe({
         next: (response) => {
           if (response?.data) {
-            console.log(response?.data);
-
             this.stateService.setTabGroupsOptions(response.data.tabgroups);
           }
         },
