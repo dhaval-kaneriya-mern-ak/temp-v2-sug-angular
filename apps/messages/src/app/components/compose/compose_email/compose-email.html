@@ -67,7 +67,7 @@
     </sug-email-form>
 
     <!-- Back Button -->
-    <button (click)="showOptionsAgain()" class="back-btn">
+    <button (click)="handleBackButton()" class="back-btn">
       <i class="pi pi-arrow-left"></i> Back
     </button>
   </div>
@@ -231,6 +231,14 @@
   [emailHtmlPreview]="emailHtmlPreview"
   [availableThemes]="availableThemes"
 ></sug-preview-email>
+<!-- Confirmation Dialog for Unsaved Changes -->
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>
 
 <sug-ui-dialog [config]="{}" [(visible)]="errorVisible" [showFooter]="true">
   <h2 slot="header">Error</h2>

@@ -1,0 +1,27 @@
+<div class="confirmation-dialog-wrapper">
+  <sug-ui-dialog
+    class="confirmation-dialog"
+    [config]="dialogConfig"
+    [(visible)]="visible"
+    (hide)="onCancel()"
+    [showFooter]="true"
+    [showHeader]="true"
+  >
+    <h2 slot="header">{{ title }}</h2>
+    <div class="dialog-content">
+      <p class="msg-para">{{ message }}</p>
+    </div>
+    <div slot="footer" class="dialog-footer">
+      <sug-ui-button
+        label="OK"
+        icon=""
+        [rounded]="false"
+        [size]="'large'"
+        [severity]="'primary'"
+        styleClass="confirm-btn"
+        [outlined]="false"
+        (click)="onConfirm()"
+      ></sug-ui-button>
+    </div>
+  </sug-ui-dialog>
+</div>

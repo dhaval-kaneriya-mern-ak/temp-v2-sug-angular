@@ -47,7 +47,15 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ComposeService } from '../compose.service';
-import { Subject, takeUntil, switchMap, of, catchError, tap } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  switchMap,
+  of,
+  catchError,
+  tap,
+  Observable,
+} from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
 import {
   IUpdateUserPayload,
@@ -76,10 +84,18 @@ import {
   initializeDraftEditMode,
   checkForWaitlistSlots,
   isWaitlistRelatedMessage,
+  UnsavedChangesManager,
+  IUnsavedChangesComponent,
+  FORM_TRACKING_DELAY,
+  UNSAVED_CHANGES_DIALOG_TITLE,
+  UNSAVED_CHANGES_DIALOG_MESSAGE,
 } from '../../utils/services/draft-message.util';
 import { PreviewEmailComponent } from '../../utils/preview-email/preview-email.component';
 import { ToastrService } from 'ngx-toastr';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
+import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/confirmation-dialog.component';
+import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
+import { HostListener } from '@angular/core';
 import { DashboardService } from '../../dashboard/dashboard.service';
 
 @Component({
@@ -104,13 +120,20 @@ import { DashboardService } from '../../dashboard/dashboard.service';
     PreviewEmailComponent,
     SugUiLoadingSpinnerComponent,
     MyGroupSelection,
+    ConfirmationDialogComponent,
   ],
   providers: [ComposeEmailStateService],
   templateUrl: './compose-text-message.html',
   styleUrls: ['./compose-text-message.scss'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
-export class ComposeTextMessageComponent implements OnInit, OnDestroy {
+export class ComposeTextMessageComponent
+  implements
+    OnInit,
+    OnDestroy,
+    ComponentCanDeactivate,
+    IUnsavedChangesComponent
+{
   dashboardService = inject(DashboardService);
   composeService = inject(ComposeService);
   private cdr = inject(ChangeDetectorRef);
@@ -125,6 +148,14 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   sendTextEmailForm!: FormGroup;
   isDateSlotsDialogVisible = false;
   isRecipientDialogVisible = false;
+  isConfirmationDialogVisible = false;
+
+  // Unsaved changes manager - centralizes all unsaved changes logic
+  private unsavedChangesManager!: UnsavedChangesManager;
+
+  // Expose constants for template
+  readonly dialogTitle = UNSAVED_CHANGES_DIALOG_TITLE;
+  readonly dialogMessage = UNSAVED_CHANGES_DIALOG_MESSAGE;
   showTextRecipients = true;
   isLoading = false;
   showProfile = false;
@@ -190,6 +221,9 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   shortUrl = '';
   limitsData: MessageLimitsResponse | null = null;
   ngOnInit() {
+    // Initialize unsaved changes manager
+    this.unsavedChangesManager = new UnsavedChangesManager(this);
+
     this.getLimits();
     this.initializeForms();
     // Listen for changes on selectedSignups
@@ -368,11 +402,34 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     this.selectedValue = event.value; // Update the selected size
     this.showRadioButtons = false; // Hide the radio buttons
     this.composeService.setOptionSelected(true);
+
+    // Start tracking form changes after user selects a message type
+    setTimeout(() => {
+      this.setupFormChangeTracking();
+    }, FORM_TRACKING_DELAY);
+  }
+
+  /**
+   * Handles back button click
+   * Shows confirmation dialog if there are unsaved changes
+   */
+  handleBackButton(): void {
+    this.unsavedChangesManager.handleBackButton();
   }
 
   showOptionsAgain() {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+
     this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
       themeid: 1,
@@ -380,6 +437,13 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
     this.sendTextEmailForm.reset({
       themeid: 1,
     });
+
+    // Clear all selections in state service to prevent reactive updates
+    this.stateService.clearAllSelections();
+
+    // Reset tracking state
+    this.unsavedChangesManager.resetTrackingState();
+
     this.loadUserProfile();
   }
 
@@ -1111,6 +1175,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (response) => {
                 if (response.success === true) {
+                  this.unsavedChangesManager.resetFormDirtyState();
                   // this.toastr.success('Message saved successfully', 'Success');
                   const successType =
                     status === MessageStatus.DRAFT
@@ -1529,6 +1594,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             }
 
             this.isLoading = false;
+
+            // Start tracking form changes after loading existing message
+            setTimeout(() => {
+              this.setupFormChangeTracking();
+            }, FORM_TRACKING_DELAY);
           } else if (response.data.messagetypeid == optionTwo) {
             this.selectedValue = 'emailoptiontwo';
 
@@ -1831,6 +1901,11 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
             }
 
             this.isLoading = false;
+
+            // Start tracking form changes after loading existing message
+            setTimeout(() => {
+              this.setupFormChangeTracking();
+            }, FORM_TRACKING_DELAY);
           } else {
             this.isLoading = false;
 
@@ -1941,6 +2016,7 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
       destroy$: this.destroy$,
       onSuccess: (returnedMessageId) => {
         this.currentDraftMessageId = returnedMessageId;
+        this.unsavedChangesManager.resetFormDirtyState();
       },
       onLoadingChange: (isLoading) => {
         this.isLoading = isLoading;
@@ -2391,9 +2467,69 @@ export class ComposeTextMessageComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Sets up tracking for form value changes to detect unsaved changes
+   */
+  private setupFormChangeTracking(): void {
+    // Prevent duplicate subscriptions
+    if (this.unsavedChangesManager.isTrackingActive()) {
+      return;
+    }
+    this.unsavedChangesManager.setTrackingActive();
+
+    // Track changes in both forms
+    this.inviteTextForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.unsavedChangesManager.markAsDirty();
+      });
+
+    this.sendTextEmailForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.unsavedChangesManager.markAsDirty();
+      });
+  }
+
+  /**
+   * Handles browser close/refresh events
+   * Shows native browser confirmation dialog if there are unsaved changes
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: BeforeUnloadEvent): void {
+    this.unsavedChangesManager.handleBeforeUnload($event);
+  }
+
+  /**
+   * CanDeactivate guard implementation
+   * Returns true if navigation is allowed, false otherwise
+   */
+  canDeactivate(): Observable<boolean> | boolean {
+    return this.unsavedChangesManager.canDeactivate();
+  }
+
+  /**
+   * Handles confirmation dialog OK button click
+   * Either goes back to radio selection or allows navigation to proceed
+   */
+  onConfirmNavigation(): void {
+    this.unsavedChangesManager.onConfirmNavigation();
+  }
+
+  /**
+   * Handles confirmation dialog cancel (X button click)
+   * Prevents navigation
+   */
+  onCancelNavigation(): void {
+    this.unsavedChangesManager.onCancelNavigation();
+  }
+
+  /**
    * Cleanup subscriptions on component destroy
    */
   ngOnDestroy(): void {
+    // Clean up unsaved changes manager
+    this.unsavedChangesManager.cleanup();
+
     this.destroy$.next();
     this.destroy$.complete();
   }

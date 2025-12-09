@@ -8,6 +8,7 @@ import {
   OnDestroy,
   OnInit,
   ChangeDetectorRef,
+  HostListener,
 } from '@angular/core';
 import {
   SugUiRadioCheckboxButtonComponent,
@@ -21,7 +22,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
 import { ComposeService } from '../compose.service';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { Subject, takeUntil, finalize, Observable } from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
 import {
   FormBuilder,
@@ -54,7 +55,14 @@ import {
   stripHtml,
   restoreAttachments,
   downloadFile,
+  UnsavedChangesManager,
+  IUnsavedChangesComponent,
+  FORM_TRACKING_DELAY,
+  UNSAVED_CHANGES_DIALOG_TITLE,
+  UNSAVED_CHANGES_DIALOG_MESSAGE,
 } from '../../utils/services/draft-message.util';
+import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/confirmation-dialog.component';
+import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
 
 @Component({
   selector: 'sug-compose-email-template',
@@ -74,12 +82,19 @@ import {
     HelpDialogComponent,
     PreviewEmailComponent,
     SugUiLoadingSpinnerComponent,
+    ConfirmationDialogComponent,
   ],
   templateUrl: './compose-email-template.html',
   styleUrls: ['./compose-email-template.scss'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
-export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
+export class ComposeEmailTemplateComponent
+  implements
+    OnInit,
+    OnDestroy,
+    ComponentCanDeactivate,
+    IUnsavedChangesComponent
+{
   composeService = inject(ComposeService);
   protected readonly userStateService = inject(UserStateService);
   private cdr = inject(ChangeDetectorRef);
@@ -96,6 +111,14 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   @Input() readonly siteKey: string = environment.siteKey;
   isSelectFileDialogVisible = false;
   isHelpDialogVisible = false;
+  isConfirmationDialogVisible = false;
+
+  // Unsaved changes manager - centralizes all unsaved changes logic
+  private unsavedChangesManager!: UnsavedChangesManager;
+
+  // Expose constants for template
+  readonly dialogTitle = UNSAVED_CHANGES_DIALOG_TITLE;
+  readonly dialogMessage = UNSAVED_CHANGES_DIALOG_MESSAGE;
   subAdminsApiData: ISubAdmin[] = [];
   signupOptionApiData: ISignUpItem[] = [];
   allSignupsData: ISignUpItem[] = []; // Cached unfiltered signup data
@@ -122,6 +145,9 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   selectedAttachment: IFileItem[] = [];
 
   ngOnInit(): void {
+    // Initialize unsaved changes manager
+    this.unsavedChangesManager = new UnsavedChangesManager(this);
+
     this.initializeForms();
 
     this.route.queryParams
@@ -142,9 +168,30 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     // Re-filter signup list based on the selected template type (client-side)
     this.applySignupFilter();
     this.composeService.setOptionSelected(true);
+
+    // Start tracking form changes only after user has selected a message type
+    setTimeout(() => {
+      this.setupFormChangeTracking();
+    }, FORM_TRACKING_DELAY);
+  }
+
+  /**
+   * Handles back button click
+   * Shows confirmation dialog if there are unsaved changes
+   */
+  handleBackButton(): void {
+    this.unsavedChangesManager.handleBackButton();
   }
 
   showOptionsAgain() {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
     this.currentEditingMessageId = null; // Clear editing message ID
@@ -159,6 +206,8 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
     this.loadUserProfile();
     // Re-apply filter to show all signups (client-side)
     this.applySignupFilter();
+    // Reset tracking state
+    this.unsavedChangesManager.resetTrackingState();
   }
 
   // Methods for "Select File" dialog
@@ -245,16 +294,17 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
           next: (response) => {
             this.isLoading = false;
             if (response.success) {
+              this.unsavedChangesManager.resetFormDirtyState();
               this.toastr.success(
                 'Draft message saved successfully!',
                 'Success'
               );
               // Clear URL parameter before showing options again
-              this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: {},
-                replaceUrl: true,
-              });
+              // this.router.navigate([], {
+              //   relativeTo: this.route,
+              //   queryParams: {},
+              //   replaceUrl: true,
+              // });
               this.showOptionsAgain();
             } else {
               this.toastr.error('Failed to save draft', 'Error');
@@ -298,6 +348,7 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
       this.composeService.createMessage(payload).subscribe({
         next: (response) => {
           if (response.success === true && response.data) {
+            this.unsavedChangesManager.resetFormDirtyState();
             // const array = this.signupOptionApiData.filter((su) =>
             //   form.assignTo.includes(String(su.signupid))
             // );
@@ -704,6 +755,11 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             }
 
             this.isLoading = false;
+
+            // Start tracking form changes after loading existing message
+            setTimeout(() => {
+              this.setupFormChangeTracking();
+            }, FORM_TRACKING_DELAY);
           } else if (response.data.messagetypeid == optionTwo) {
             this.selectedValue = 'emailoptiontwo';
 
@@ -741,6 +797,11 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
             }
 
             this.isLoading = false;
+
+            // Start tracking form changes after loading existing message
+            setTimeout(() => {
+              this.setupFormChangeTracking();
+            }, FORM_TRACKING_DELAY);
           } else {
             this.isLoading = false;
             // this.toastr.error(
@@ -903,9 +964,69 @@ export class ComposeEmailTemplateComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Sets up tracking for form value changes to detect unsaved changes
+   */
+  private setupFormChangeTracking(): void {
+    // Prevent duplicate subscriptions
+    if (this.unsavedChangesManager.isTrackingActive()) {
+      return;
+    }
+    this.unsavedChangesManager.setTrackingActive();
+
+    // Track changes in both forms
+    this.reminderEmailForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.unsavedChangesManager.markAsDirty();
+      });
+
+    this.confirmationEmailForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.unsavedChangesManager.markAsDirty();
+      });
+  }
+
+  /**
+   * Handles browser close/refresh events
+   * Shows native browser confirmation dialog if there are unsaved changes
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: BeforeUnloadEvent): void {
+    this.unsavedChangesManager.handleBeforeUnload($event);
+  }
+
+  /**
+   * CanDeactivate guard implementation
+   * Returns true if navigation is allowed, false otherwise
+   */
+  canDeactivate(): Observable<boolean> | boolean {
+    return this.unsavedChangesManager.canDeactivate();
+  }
+
+  /**
+   * Handles confirmation dialog OK button click
+   * Either goes back to radio selection or allows navigation to proceed
+   */
+  onConfirmNavigation(): void {
+    this.unsavedChangesManager.onConfirmNavigation();
+  }
+
+  /**
+   * Handles confirmation dialog cancel (X button click)
+   * Prevents navigation
+   */
+  onCancelNavigation(): void {
+    this.unsavedChangesManager.onCancelNavigation();
+  }
+
+  /**
    * Cleanup subscriptions on component destroy
    */
   ngOnDestroy(): void {
+    // Clean up unsaved changes manager
+    this.unsavedChangesManager.cleanup();
+
     this.destroy$.next();
     this.destroy$.complete();
   }
