@@ -36,6 +36,8 @@
               <sug-ui-multi-select-dropdown
                 [options]="groupOptions"
                 formControlName="selectedGroups"
+                panelStyleClass="custom-dropdown"
+                appendTo="parent"
               >
               </sug-ui-multi-select-dropdown>
               @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){
@@ -72,7 +74,7 @@
           {
           <div class="signup-radio-content send-msg-dialog-content">
             <!-- Show "Assign the email entries to" dropdown when Sign Up Index Page is selected -->
-            @if (isSignUpIndexPageSelected) {
+            @if (isSignUpIndexPageSelected || selectedPortalPages.length > 0) {
             <div class="form-wrapper">
               <label for="manual-emails-group"
                 >Assign the email entries to</label

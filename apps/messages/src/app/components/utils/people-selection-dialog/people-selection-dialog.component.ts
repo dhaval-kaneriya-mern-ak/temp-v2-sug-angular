@@ -32,7 +32,12 @@ import { ChipModule } from 'primeng/chip';
 import { ToastrService } from 'ngx-toastr';
 import { SugUpdateGroupSectionComponent } from '../update-group-section/update-group-section.component';
 import { Subject, takeUntil } from 'rxjs';
-import { MemberProfile, SendToType, SentTo } from '@services/interfaces';
+import {
+  ISelectPortalOption,
+  MemberProfile,
+  SendToType,
+  SentTo,
+} from '@services/interfaces';
 import { IMemberInfoDto } from '@services/interfaces';
 import { SugInformationDialogComponent } from '../information-dialog/information-dialog.component';
 
@@ -63,7 +68,8 @@ export class PeopleSelectionDialogComponent
   @Input() selectedSignups: any[] = [];
   @Input() isSignUpIndexPageSelected = false;
   @Input() isFromTextMessage = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+  @Input() selectedPortalPages: ISelectPortalOption[] = [];
   @Input() selectedTabGroups: any[] = [];
   @Input() groupOptions: ISelectOption[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -294,13 +294,12 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
               page?.id && selectedPortalPageIds.includes(page.id.toString())
           ) ?? []
         );
-
-        this.signupsSelected.emit();
       } else {
         // Reset form to previous values
         this.initializeForm();
       }
 
+      this.signupsSelected.emit();
       this.visible = false;
       this.visibleChange.emit(false);
     }

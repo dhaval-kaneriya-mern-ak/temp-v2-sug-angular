@@ -95,7 +95,7 @@
         [placeholder]="'Schedule Send'"
         [showButtonBar]="true"
         [dateFormat]="'mm/dd/yy'"
-        [appendTo]="'body'"
+        [appendTo]="'self'"
         [tabindex]="-1"
       >
       </sug-ui-date-picker>
@@ -107,7 +107,7 @@
         (valueChange)="isScheduledDateValid()"
         [timeOnly]="true"
         [hourFormat]="'12'"
-        [appendTo]="'body'"
+        [appendTo]="'self'"
         [tabindex]="-1"
       >
       </sug-ui-date-picker>
