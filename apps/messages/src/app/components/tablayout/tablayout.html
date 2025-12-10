@@ -45,3 +45,10 @@
     </p>
   </div>
 </div>
+
+<!-- Verification Modal -->
+<sug-verification-modal
+  [visible]="showVerificationModal"
+  (verified)="onVerificationSuccess()"
+  (closed)="onVerificationModalClosed()"
+></sug-verification-modal>

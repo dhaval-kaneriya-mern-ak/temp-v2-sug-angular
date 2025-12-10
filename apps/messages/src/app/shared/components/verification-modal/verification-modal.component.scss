@@ -1,0 +1,168 @@
+// Error banner styles - direct targeting
+.error-banner {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  padding: 1rem 1.25rem !important;
+  background-color: #d9534f !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.error-banner i {
+  font-size: 1.4rem !important;
+  margin-top: 0.125rem !important;
+  flex-shrink: 0 !important;
+  color: #ffffff !important;
+}
+
+.error-banner .error-banner-content {
+  flex: 1 !important;
+}
+
+.error-banner .error-banner-content strong {
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 1.4rem !important;
+  color: #ffffff !important;
+}
+
+.error-banner .error-banner-content ul {
+  margin: 0 !important;
+  padding-left: 1.25rem !important;
+  list-style-type: disc !important;
+}
+
+.error-banner .error-banner-content ul li {
+  margin: 0.25rem 0 !important;
+  font-size: 1.4rem !important;
+  color: #ffffff !important;
+}
+
+// OTP Input styles - direct targeting
+.otp-input-container {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: center !important;
+  margin-bottom: 1rem !important;
+}
+
+.otp-input {
+  height: 7.5rem !important;
+  width: clamp(4.5rem, 6vw, 6.3rem) !important;
+  margin: 0px 5px !important;
+  padding: 0.5rem !important;
+  font-size: 3rem !important;
+  text-align: center !important;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px !important;
+  outline: none !important;
+  transition: all 0.2s !important;
+  font-family: monospace !important;
+  font-weight: 600 !important;
+}
+
+.otp-input:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+  transform: scale(1.05) !important;
+}
+
+.otp-input:disabled {
+  background-color: #f3f4f6 !important;
+  cursor: not-allowed !important;
+}
+
+// Dialog styles
+.dialog-content {
+  .dialog-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .dialog-content {
+    padding: 1rem 0;
+
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background-color: #d9534f;
+      color: #ffffff;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+
+      i {
+        font-size: 1.25rem;
+        margin-top: 0.125rem;
+      }
+
+      .error-banner-content {
+        flex: 1;
+
+        strong {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-size: 1rem;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 1.25rem;
+          list-style-type: disc;
+
+          li {
+            margin: 0.25rem 0;
+            font-size: 0.9375rem;
+          }
+        }
+      }
+    }
+
+    .description-text {
+      font-size: large;
+      color: #374151;
+      margin-bottom: 1.5rem;
+    }
+
+    .help-text {
+      font-size: large;
+      color: #374151;
+      margin-top: 1rem;
+      margin-bottom: 0;
+    }
+  }
+
+  .dialog-footer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding-top: 1rem;
+  }
+}
+
+.p-dialog-footer {
+  justify-content: center !important;
+}
+
+.continue-btn {
+  font-size: 1.4rem !important;
+  border-radius: 5px !important;
+  background-color: #acc034 !important;
+  border: none !important;
+  transition: background-color 0.2s !important;
+}
+
+.continue-btn:hover:not(:disabled) {
+  background-color: #91a92a !important;
+}
+
+.continue-btn:disabled {
+  background-color: #d1d5db !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}

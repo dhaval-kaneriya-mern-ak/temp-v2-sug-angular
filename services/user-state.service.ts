@@ -31,6 +31,10 @@ export class UserStateService implements OnDestroy {
     null;
   private _isProfileLoaded = false;
 
+  // Verification state (0 = not verified, 1 = verified)
+  private readonly _isVerified = signal<number>(0);
+  readonly isVerified = this._isVerified.asReadonly();
+
   /**
    * Load user profile from API - optimized with shareReplay for single API call
    */
@@ -106,6 +110,21 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.next(null);
     this._isProfileLoaded = false;
     this._loadingObservable = null;
+    this._isVerified.set(0);
+  }
+
+  /**
+   * Set verification status (0 = not verified, 1 = verified)
+   */
+  setVerificationStatus(verified: number): void {
+    this._isVerified.set(verified);
+  }
+
+  /**
+   * Check if user is verified
+   */
+  isUserVerified(): boolean {
+    return this._isVerified() === 1;
   }
 
   /**
