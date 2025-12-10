@@ -1257,6 +1257,15 @@ export class ComposeTextMessageComponent
 
   onPreviewAndSend(form: FormGroup): void {
     this.isLoading = true;
+    // this.scheduledDateForPreview = this.scheduledDateForPreview
+    //   ? new Date(this.scheduledDateForPreview!.getTime())
+    //   : null;
+    const _sd = this.scheduledDateForPreview;
+    this.scheduledDateForPreview = _sd ? new Date(_sd.getTime()) : null;
+    const _st = this.scheduledTimeForPreview;
+    this.scheduledTimeForPreview = _st ? new Date(_st.getTime()) : null;
+    console.log(this.scheduledDateForPreview, this.scheduledTimeForPreview);
+
     const payload: IMessagePreviewRequest = {
       fromname: form.value.fromName || form.value.emailFrom,
       replyto: this.filterReplyToAdmins(
@@ -1564,7 +1573,9 @@ export class ComposeTextMessageComponent
             );
 
             // Use matching parse pattern
-            const parsePattern = `${userDateFormat} hh:mmaa`;
+            const parsePattern = `${userDateFormat
+              .replace(/DD/g, 'dd')
+              .replace(/YYYY/g, 'yyyy')} hh:mma`;
             const parsedDate = parse(formattedDate, parsePattern, new Date());
 
             if (isNaN(parsedDate.getTime())) {

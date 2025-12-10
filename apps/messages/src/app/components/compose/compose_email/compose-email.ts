@@ -910,6 +910,12 @@ export class ComposeEmailComponent
    * Form submission handlers
    */
   onPreviewAndSend(formType: 'inviteToSignUp' | 'emailParticipants'): void {
+    const _sd = this.scheduledDateForPreview;
+    this.scheduledDateForPreview = _sd ? new Date(_sd.getTime()) : null;
+    const _st = this.scheduledTimeForPreview;
+    this.scheduledTimeForPreview = _st ? new Date(_st.getTime()) : null;
+    console.log(this.scheduledDateForPreview, this.scheduledTimeForPreview);
+
     const form =
       formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
 
@@ -1774,7 +1780,9 @@ export class ComposeEmailComponent
             );
 
             // Use matching parse pattern
-            const parsePattern = `${userDateFormat} hh:mmaa`;
+            const parsePattern = `${userDateFormat
+              .replace(/DD/g, 'dd')
+              .replace(/YYYY/g, 'yyyy')} hh:mma`;
             const parsedDate = parse(formattedDate, parsePattern, new Date());
 
             if (isNaN(parsedDate.getTime())) {
