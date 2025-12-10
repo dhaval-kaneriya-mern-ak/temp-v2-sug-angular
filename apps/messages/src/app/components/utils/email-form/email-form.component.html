@@ -97,6 +97,7 @@
     </div>
 
     <!-- Reply To -->
+    @if (!isBasicUser) {
     <div class="form-wrapper">
       <label for="reply-to">Reply To</label>
       <sug-ui-multi-select-dropdown
@@ -106,6 +107,7 @@
       >
       </sug-ui-multi-select-dropdown>
     </div>
+    }
 
     <!-- To (People Selection) -->
     <div class="form-wrapper">
