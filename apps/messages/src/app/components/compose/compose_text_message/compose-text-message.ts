@@ -1264,7 +1264,6 @@ export class ComposeTextMessageComponent
     this.scheduledDateForPreview = _sd ? new Date(_sd.getTime()) : null;
     const _st = this.scheduledTimeForPreview;
     this.scheduledTimeForPreview = _st ? new Date(_st.getTime()) : null;
-    console.log(this.scheduledDateForPreview, this.scheduledTimeForPreview);
 
     const payload: IMessagePreviewRequest = {
       fromname: form.value.fromName || form.value.emailFrom,
