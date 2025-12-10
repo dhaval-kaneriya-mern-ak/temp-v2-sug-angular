@@ -1,3 +1,6 @@
+// Import shared chip component styles
+@import '../../shared/styles/_chip-components';
+
 .form-validation-errors {
   border-radius: 6px;
   padding: 16px;
@@ -80,33 +83,7 @@
   }
 }
 
-.signup-chips-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  width: 70%;
-  @media (max-width: 767px) {
-    width: 100%;
-  }
-  ::ng-deep .p-chip {
-    background-color: white;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 5px 10px;
-    display: flex;
-    align-items: center;
-    .p-chip-remove-icon {
-      color: #f68b1c;
-      cursor: pointer;
-    }
-  }
-}
-.chips-container {
-  flex: 1 1 auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+// Chip styles are now imported from shared partial
 .email-form-section {
   max-width: 800px;
   position: relative;
