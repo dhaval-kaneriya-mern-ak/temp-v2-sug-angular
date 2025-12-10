@@ -596,6 +596,13 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
     // State is already updated by the dialog component
 
     // Update subject and message based on selected signups
+    if (this.userProfile?.features.multinotify === 1) {
+      const user = this.stateService.subAdminsData
+        .filter((x) => x.label === this.userProfile?.email)
+        .map((item) => String(item.value));
+      this.currentForm.get('replyTo')?.setValue(user);
+      this.currentForm.get('replyTo')?.updateValueAndValidity();
+    }
     this.updateSubjectAndMessage();
   }
 
@@ -1288,6 +1295,7 @@ export class ComposeEmailComponent implements OnInit, OnDestroy {
         subjectControl.patchValue('');
         messageControl.patchValue('');
       }
+      this.currentForm.get('replyTo')?.setValue([]);
       return;
     }
 
