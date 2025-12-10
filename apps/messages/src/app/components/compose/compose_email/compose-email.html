@@ -227,6 +227,9 @@
 <sug-preview-email
   [(visible)]="isPreviewDialogVisible"
   [showThemeSelection]="!userStateService.isBasicUser(userProfile)"
+  [isScheduledMessage]="messageOriginalStatus === messageStatus.SCHEDULED"
+  [prePopulatedDate]="scheduledDateForPreview"
+  [prePopulatedTime]="scheduledTimeForPreview"
   (visibleChange)="onPreviewClose()"
   (themeChange)="onThemeChange($event)"
   (scheduleEmail)="scheduleEmail($event)"

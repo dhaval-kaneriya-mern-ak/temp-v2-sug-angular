@@ -14,6 +14,7 @@ import { DraftService } from './draft.service';
 import {
   DraftMessage,
   MemberProfile,
+  MessageTypeId,
   selectedDraft,
 } from '@services/interfaces';
 import { Router } from '@angular/router';
@@ -107,6 +108,7 @@ export class Draft implements OnDestroy, OnInit {
   searchControl = new FormControl('');
   private destroy$ = new Subject<void>();
   private readonly SEARCH_DEBOUNCE_MS = 300;
+  readonly messageTypeIds = MessageTypeId;
 
   private userStateService = inject(UserStateService);
   userData: MemberProfile | null = null;
@@ -259,15 +261,24 @@ export class Draft implements OnDestroy, OnInit {
     // 14 - Text Opt-in
     // 15 - Text
 
-    if (item.messagetypeid == 2 || item.messagetypeid == 8) {
+    if (
+      item.messagetypeid == this.messageTypeIds.ConfirmationTemplate ||
+      item.messagetypeid == this.messageTypeIds.ReminderTemplate
+    ) {
       this.router.navigate([`/messages/compose/template`], {
         queryParams: { id: messageId },
       });
-    } else if (item.messagetypeid == 4 || item.messagetypeid == 1) {
+    } else if (
+      item.messagetypeid == this.messageTypeIds.InviteToSignUp ||
+      item.messagetypeid == this.messageTypeIds.EmailParticipants
+    ) {
       this.router.navigate([`/messages/compose/email`], {
         queryParams: { id: messageId },
       });
-    } else if (item.messagetypeid == 14 || item.messagetypeid == 15) {
+    } else if (
+      item.messagetypeid == this.messageTypeIds.TextInvite ||
+      item.messagetypeid == this.messageTypeIds.TextParticipants
+    ) {
       this.router.navigate([`/messages/compose/text`], {
         queryParams: { id: messageId },
       });

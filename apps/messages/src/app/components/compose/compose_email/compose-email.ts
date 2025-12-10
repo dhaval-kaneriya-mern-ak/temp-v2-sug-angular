@@ -61,6 +61,7 @@ import {
   IRecipient,
   SignUPType,
   EXCLUDED_RECIPIENT_VALUES,
+  MessageTypeId,
   ITabGroupItem,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
@@ -88,6 +89,7 @@ import {
   UNSAVED_CHANGES_DIALOG_MESSAGE,
 } from '../../utils/services/draft-message.util';
 import { MyGroupSelection } from '../../utils/my-group-selection/my-group-selection';
+import { parse } from 'date-fns';
 import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/confirmation-dialog.component';
 import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
 
@@ -142,6 +144,7 @@ export class ComposeEmailComponent
   @ViewChild(SignupSelectionDialogComponent)
   signupDialog!: SignupSelectionDialogComponent;
   messageStatus = MessageStatus;
+  readonly messageTypeIds = MessageTypeId;
   // Forms
   formValidationErrors: string[] = [];
   emailFormOne!: FormGroup;
@@ -178,6 +181,9 @@ export class ComposeEmailComponent
   selectedCustomUserIds: string[] = [];
   originalSendAsText: boolean | undefined;
   originalSendAsEmail: boolean | undefined;
+  messageOriginalStatus: string | null = null;
+  scheduledDateForPreview: Date | null = null;
+  scheduledTimeForPreview: Date | null = null;
 
   // Dialog visibility flags
   isHelpDialogVisible = false;
@@ -670,9 +676,12 @@ export class ComposeEmailComponent
     this.unsavedChangesManager.handleBackButton();
   }
 
-  /**
-   * Show options again (back button)
-   */
+  private resetScheduledMessageState(): void {
+    this.messageOriginalStatus = null;
+    this.scheduledDateForPreview = null;
+    this.scheduledTimeForPreview = null;
+  }
+
   showOptionsAgain(): void {
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
@@ -686,7 +695,14 @@ export class ComposeEmailComponent
     this.showRadioButtons = true;
     this.selectedValue = null;
     this.composeService.setOptionSelected(false);
+    this.resetScheduledMessageState();
 
+    this.isEditingExistingDraft = false;
+    this.currentDraftMessageId = null;
+    this.currentSendToType = '';
+    this.selectedCustomUserIds = [];
+    this.originalSendAsText = undefined;
+    this.originalSendAsEmail = undefined;
     // Reset main forms
     this.emailFormOne.reset({
       themeid: 1,
@@ -901,6 +917,11 @@ export class ComposeEmailComponent
    * Form submission handlers
    */
   onPreviewAndSend(formType: 'inviteToSignUp' | 'emailParticipants'): void {
+    const _sd = this.scheduledDateForPreview;
+    this.scheduledDateForPreview = _sd ? new Date(_sd.getTime()) : null;
+    const _st = this.scheduledTimeForPreview;
+    this.scheduledTimeForPreview = _st ? new Date(_st.getTime()) : null;
+
     const form =
       formType === 'inviteToSignUp' ? this.emailFormOne : this.emailFormTwo;
 
@@ -978,7 +999,7 @@ export class ComposeEmailComponent
   }
 
   scheduleEmail(event: string): void {
-    this.onSaveDraft(this.messageStatus.SCHEDULED, event);
+    this.onSaveDraft(this.messageStatus.SCHEDULED, event, this.currentFormType);
   }
 
   setSelectedRadio(event: {
@@ -1044,7 +1065,10 @@ export class ComposeEmailComponent
         sendtotype = mapped.sendtotype;
       }
 
-      const messagetypeid = formType === 'inviteToSignUp' ? 4 : 1;
+      const messagetypeid =
+        formType === 'inviteToSignUp'
+          ? this.messageTypeIds.InviteToSignUp
+          : this.messageTypeIds.EmailParticipants;
 
       const payload: ISaveDraftMessagePayload = {
         subject: formValue.subject || '',
@@ -1052,7 +1076,7 @@ export class ComposeEmailComponent
         sentto: sentto,
         sendtotype: sendtotype,
         messagetypeid: messagetypeid,
-        status: 'draft',
+        status: status ? status : 'draft',
         sendastext:
           this.isEditingExistingDraft && this.originalSendAsText !== undefined
             ? this.originalSendAsText
@@ -1073,6 +1097,10 @@ export class ComposeEmailComponent
         payload.attachmentids = attachmentIds;
       } else {
         payload.attachmentids = [];
+      }
+
+      if (date) {
+        payload.senddate = date + ':00';
       }
 
       if (this.isEditingExistingDraft) {
@@ -1137,7 +1165,7 @@ export class ComposeEmailComponent
           slot.slotitemid.toString()
         );
 
-        if (messagetypeid === 1) {
+        if (messagetypeid === this.messageTypeIds.EmailParticipants) {
           payload.sendToGroups = this.stateService.selectedDateSlots.map(
             (slot) => ({
               id: 'slot_' + slot.slotitemid,
@@ -1178,7 +1206,10 @@ export class ComposeEmailComponent
         body: form.message,
         signuptype: SignUPType.SIGNUP,
         status: status,
-        messagetypeid: this.selectedValue === 'emailoptionone' ? 4 : 1,
+        messagetypeid:
+          this.selectedValue === 'emailoptionone'
+            ? this.messageTypeIds.InviteToSignUp
+            : this.messageTypeIds.EmailParticipants,
         sendasemail: true,
         sendastext: false,
         themeid: form.themeid,
@@ -1625,9 +1656,6 @@ export class ComposeEmailComponent
 
     type ReplyToItem = { memberid: number; email: string };
 
-    const optionOne = 4;
-    const optionTwo = 1;
-
     this.composeService
       .getMessageById(id)
       .pipe(takeUntil(this.destroy$))
@@ -1648,6 +1676,9 @@ export class ComposeEmailComponent
             return;
           }
 
+          // Store the original message status
+          this.messageOriginalStatus = response.data.status;
+
           initializeDraftEditMode(
             id,
             this.stateService,
@@ -1667,7 +1698,9 @@ export class ComposeEmailComponent
             response.data.sendtotype?.toLowerCase() === SendToType.CUSTOM &&
             response.data.sentto
           ) {
-            if (response.data.messagetypeid === 4) {
+            if (
+              response.data.messagetypeid === this.messageTypeIds.InviteToSignUp
+            ) {
               this.selectedCustomUserIds = response.data.sentto
                 .split(',')
                 .map((id) => id.trim())
@@ -1738,7 +1771,39 @@ export class ComposeEmailComponent
             }
           }
 
-          if (response.data.messagetypeid == optionOne) {
+          if (response.data.senddate) {
+            // Get user's date format with null safety
+            const userDateFormat =
+              this.userProfile?.selecteddateformat?.short?.toUpperCase() ||
+              'MM/DD/YYYY';
+
+            // Build dynamic format string
+            const formatString = `${userDateFormat} hh:mma`;
+
+            const formattedDate = this.userStateService.convertESTtoUserTZ(
+              Number(response.data.senddate),
+              this.userProfile?.zonename || 'UTC',
+              formatString
+            );
+
+            // Use matching parse pattern
+            const parsePattern = `${userDateFormat
+              .replace(/DD/g, 'dd')
+              .replace(/YYYY/g, 'yyyy')} hh:mma`;
+            const parsedDate = parse(formattedDate, parsePattern, new Date());
+
+            if (isNaN(parsedDate.getTime())) {
+              console.error('Failed to parse scheduled date:', formattedDate);
+              return;
+            }
+
+            this.scheduledDateForPreview = parsedDate;
+            this.scheduledTimeForPreview = parsedDate;
+          }
+
+          if (
+            response.data.messagetypeid == this.messageTypeIds.InviteToSignUp
+          ) {
             this.selectedValue = 'emailoptionone';
 
             this.showRadioButtons = false;
@@ -1946,7 +2011,7 @@ export class ComposeEmailComponent
                       .fetchRecipients({
                         sentToType: SendToType.PEOPLE_IN_GROUPS,
                         sentTo: SentTo.ALL,
-                        messageTypeId: 4,
+                        messageTypeId: this.messageTypeIds.InviteToSignUp,
                         signupIds: signupIds,
                         groupIds: groupIds,
                       })
@@ -2000,7 +2065,7 @@ export class ComposeEmailComponent
                 .fetchRecipients({
                   sentToType: response.data.sendtotype,
                   sentTo: response.data.sentto,
-                  messageTypeId: 4,
+                  messageTypeId: this.messageTypeIds.InviteToSignUp,
                   signupIds: signupIds,
                 })
                 .pipe(takeUntil(this.destroy$))
@@ -2045,7 +2110,9 @@ export class ComposeEmailComponent
             setTimeout(() => {
               this.unsavedChangesManager.resetFormDirtyState();
             }, FORM_TRACKING_DELAY * 4);
-          } else if (response.data.messagetypeid == optionTwo) {
+          } else if (
+            response.data.messagetypeid == this.messageTypeIds.EmailParticipants
+          ) {
             this.selectedValue = 'emailoptiontwo';
 
             this.showRadioButtons = false;
@@ -2283,7 +2350,7 @@ export class ComposeEmailComponent
                       .fetchRecipients({
                         sentToType: SendToType.PEOPLE_IN_GROUPS,
                         sentTo: SentTo.ALL,
-                        messageTypeId: 1,
+                        messageTypeId: this.messageTypeIds.EmailParticipants,
                         signupIds: signupIds,
                         groupIds: groupIds,
                       })
@@ -2334,7 +2401,7 @@ export class ComposeEmailComponent
                 .fetchRecipients({
                   sentToType: response.data.sendtotype,
                   sentTo: response.data.sentto,
-                  messageTypeId: 1,
+                  messageTypeId: this.messageTypeIds.EmailParticipants,
                   signupIds: signupIds,
                 })
                 .pipe(takeUntil(this.destroy$))
@@ -2438,14 +2505,19 @@ export class ComposeEmailComponent
     const signupIds = this.stateService.selectedSignups.map((s) => s.signupid);
     const groupIds = groups.map((g) => g.groupid);
 
-    const messageTypeId = this.selectedValue === 'emailoptionone' ? 4 : 1;
+    const messageTypeId =
+      this.selectedValue === 'emailoptionone'
+        ? this.messageTypeIds.InviteToSignUp
+        : this.messageTypeIds.EmailParticipants;
 
     const existingPeopleSelectionData =
       this.stateService.peopleSelectionData || {};
     const updatedPeopleSelectionData = {
       ...existingPeopleSelectionData,
       selectedValue:
-        messageTypeId === 4 ? 'peopleingroups' : 'sendMessagePeopleRadio',
+        messageTypeId === this.messageTypeIds.InviteToSignUp
+          ? 'peopleingroups'
+          : 'sendMessagePeopleRadio',
       selectedGroups: groupIds.map((id) => id.toString()),
     };
     this.stateService.setPeopleSelectionData(updatedPeopleSelectionData);
@@ -2635,7 +2707,9 @@ export class ComposeEmailComponent
                 const slotItemIds = allDateSlots.map((slot) => slot.slotitemid);
                 const signupIds = signups.map((s) => s.signupid);
                 const messageTypeId =
-                  this.selectedValue === 'emailoptionone' ? 4 : 1;
+                  this.selectedValue === 'emailoptionone'
+                    ? this.messageTypeIds.InviteToSignUp
+                    : this.messageTypeIds.EmailParticipants;
 
                 this.composeService
                   .fetchRecipients({
