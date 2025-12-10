@@ -128,10 +128,7 @@
         <div class="chips-container">
           @for (item of selectedGroups; track item.value || $index; let i =
           $index) {
-          <!-- <div class="recipient-text">
-            <span class="recipient-label">{{ item.label }}</span>
-          </div> -->
-          <span [ngClass]="{ '': selectedGroups.length > 1 && i >= 1 }">
+          <span>
             <p-chip
               class="gap-2"
               [label]="item.label"

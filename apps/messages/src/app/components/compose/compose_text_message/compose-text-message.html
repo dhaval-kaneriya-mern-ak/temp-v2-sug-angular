@@ -164,9 +164,7 @@
             <div class="chips-container">
               @for (item of stateService.selectedGroups; track item.value ||
               $index; let i = $index) {
-              <span
-                [ngClass]="{ '': stateService.selectedGroups.length > 1 && i >= 1 }"
-              >
+              <span>
                 <p-chip
                   class="gap-2"
                   [label]="item.label"
