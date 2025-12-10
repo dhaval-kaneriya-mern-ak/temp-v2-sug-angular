@@ -82,6 +82,7 @@ export class PeopleSelectionDialogComponent
   @Input() selectedCustomUserIds: string[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
   @Input() hasWaitlistSlots = false;
+  @Input() selectedGroups: ISelectOption[] = [];
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() peopleSelected = new EventEmitter<void>();
@@ -382,7 +383,7 @@ export class PeopleSelectionDialogComponent
         if (this.peopleDialogForm) {
           this.peopleDialogForm.reset({
             selectedValue: null,
-            selectedGroups: [],
+            selectedGroups: this.selectedGroups || [],
             includeNonGroupMembers: false,
             manualEmails: '',
             manualEmailsGroup: [],
@@ -455,6 +456,50 @@ export class PeopleSelectionDialogComponent
           this.cdr.detectChanges();
         }
       }, 0);
+    }
+
+    // Update form when selectedGroups input changes (e.g., when groups are removed from email form)
+    if (this.selectedGroups && this.peopleDialogForm) {
+      // Extract values from selectedGroups objects and filter out null/undefined
+      const selectedGroupValues = (this.selectedGroups || [])
+        .filter((group) => group && group.value != null)
+        .map((group) => group.value);
+
+      const selectedGroupsControl = this.peopleDialogForm.get('selectedGroups');
+      if (selectedGroupsControl) {
+        // Force update the form control with extracted values
+        selectedGroupsControl.setValue(selectedGroupValues, {
+          emitEvent: false,
+        });
+        this.cdr.detectChanges();
+
+        // Get current radio selection to determine if we need to recalculate recipients
+        const currentRadioValue =
+          this.peopleDialogForm.get('selectedValue')?.value;
+
+        // If user has selected group-based options, recalculate recipients
+        if (
+          currentRadioValue === 'peopleingroups' ||
+          currentRadioValue === 'sendMessagePeopleRadio'
+        ) {
+          if (this.selectedGroups && this.selectedGroups.length > 0) {
+            // Extract group IDs from selected groups and recalculate recipients
+            const groupIds = this.selectedGroups.map(
+              (group: ISelectOption) => group.value
+            );
+            const includeNonGroupMembers =
+              this.peopleDialogForm.get('includeNonGroupMembers')?.value ||
+              false;
+            this.calculateRecipientCount(groupIds, includeNonGroupMembers);
+          } else {
+            // No groups selected, reset recipient count
+            this.recipientCountChange.emit(0);
+            this.recipientsChange.emit([]);
+          }
+        }
+        // Force UI refresh
+        this.cdr.detectChanges();
+      }
     }
   }
 

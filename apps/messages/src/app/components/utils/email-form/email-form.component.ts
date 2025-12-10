@@ -89,6 +89,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Output() removeSignUpIndexPageItem = new EventEmitter<void>();
   @Output() attachmentValidationError = new EventEmitter<string>();
   @Output() downloadFileEvent = new EventEmitter<IFileItem>();
+  @Output() removeGroupItem = new EventEmitter<number>();
 
   private stateService = inject(ComposeEmailStateService);
 
@@ -420,5 +421,9 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   downloadFile(file: IFileItem): void {
     this.downloadFileEvent.emit(file);
+  }
+
+  removeGroup(index: number): void {
+    this.removeGroupItem.emit(index);
   }
 }

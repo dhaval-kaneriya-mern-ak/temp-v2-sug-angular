@@ -124,13 +124,23 @@
       </sug-ui-button>
       } @if (hasPeopleSelection && selectedDateSlots.length === 0 &&
       selectedMemberGroups.length === 0) {
-      <div class="recipient-info-container">
-        @for (item of selectedGroups; track item.value || $index; let i =
-        $index) {
-        <div class="recipient-text">
-          <span class="recipient-label">{{ item.label }}</span>
+      <div class="recipient-info-container signup-chips-container">
+        <div class="chips-container">
+          @for (item of selectedGroups; track item.value || $index; let i =
+          $index) {
+          <!-- <div class="recipient-text">
+            <span class="recipient-label">{{ item.label }}</span>
+          </div> -->
+          <span [ngClass]="{ '': selectedGroups.length > 1 && i >= 1 }">
+            <p-chip
+              class="gap-2"
+              [label]="item.label"
+              [removable]="true"
+              (onRemove)="removeGroup(i)"
+            />
+          </span>
+          }
         </div>
-        }
         <div class="recipient-text">
           <button
             type="button"
