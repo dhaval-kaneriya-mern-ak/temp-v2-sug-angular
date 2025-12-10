@@ -646,6 +646,7 @@ export interface MessageByIdData {
   sentto: string;
   scheduled: boolean;
   sendastext?: boolean;
+  senddate?: number;
   sendasemail?: boolean;
 
   signups?: {
@@ -735,6 +736,15 @@ export enum SentTo {
   MANUAL = 'manual',
   SPECIFIC_DATE_SLOT = 'specificdateslot',
   PEOPLE_IN_GROUPS = 'peopleingroups',
+}
+
+export enum MessageTypeId {
+  EmailParticipants = 1,
+  InviteToSignUp = 4,
+  ReminderTemplate = 8,
+  ConfirmationTemplate = 2,
+  TextInvite = 14,
+  TextParticipants = 15,
 }
 
 /**

@@ -11,7 +11,7 @@ import {
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { ScheduleService } from './schedule.servvice';
-import { MemberProfile, Message } from '@services/interfaces';
+import { MemberProfile, Message, MessageTypeId } from '@services/interfaces';
 import { Router } from '@angular/router';
 import { format } from 'date-fns';
 import { UserStateService } from '@services/user-state.service';
@@ -86,6 +86,7 @@ export class Schedule {
     },
   ];
   tableData: Message[] = [];
+  readonly messageTypeIds = MessageTypeId;
 
   userData: MemberProfile | null = null;
   private userStateService = inject(UserStateService);
@@ -150,7 +151,35 @@ export class Schedule {
   }
 
   editMessage(rowData: Message): void {
-    this.router.navigate([`/messages/compose/email`]);
+    const messageId = rowData.messageid;
+
+    // Email Templates (Reminder/Confirmation templates)
+    if (
+      rowData.messagetypeid == this.messageTypeIds.ReminderTemplate ||
+      rowData.messagetypeid == this.messageTypeIds.ConfirmationTemplate
+    ) {
+      this.router.navigate([`/messages/compose/template`], {
+        queryParams: { id: messageId },
+      });
+    }
+    // Email Messages (Invite/General/Custom emails)
+    else if (
+      rowData.messagetypeid == this.messageTypeIds.EmailParticipants ||
+      rowData.messagetypeid == this.messageTypeIds.InviteToSignUp
+    ) {
+      this.router.navigate([`/messages/compose/email`], {
+        queryParams: { id: messageId },
+      });
+    }
+    // Text Messages
+    else if (
+      rowData.messagetypeid == this.messageTypeIds.TextInvite ||
+      rowData.messagetypeid == this.messageTypeIds.TextParticipants
+    ) {
+      this.router.navigate([`/messages/compose/text`], {
+        queryParams: { id: messageId },
+      });
+    }
   }
 
   getList(): void {

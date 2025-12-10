@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '@environments/environment';
 import {
@@ -16,20 +24,24 @@ import { format } from 'date-fns';
   templateUrl: './preview-email.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
 })
-export class PreviewEmailComponent {
+export class PreviewEmailComponent implements OnChanges {
   sanitizer = inject(DomSanitizer);
   @Input() visible = false;
   @Input() showTextPreview = false;
   @Input() saveCustomButton = false;
   @Input() showThemeSelection = true;
+  @Input() isScheduledMessage = false;
   @Input() textMessage = '';
   @Input() availableThemes: Array<number> = [];
+  @Input() prePopulatedDate: Date | null = null;
+  @Input() prePopulatedTime: Date | null = null;
   siteUrl = environment.SITE_URL;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() sendNow = new EventEmitter<void>();
   @Output() themeChange = new EventEmitter<number>();
   @Output() saveCustom = new EventEmitter<number>();
   @Output() scheduleEmail = new EventEmitter<string>();
+
   @Input() set emailHtmlPreview(value: string) {
     this._emailHtmlPreview = value;
     this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(value);
@@ -53,6 +65,15 @@ export class PreviewEmailComponent {
   scheduledDate: Date | null = null;
   scheduledTime: Date | null = null;
   minDate = new Date();
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['prePopulatedDate'] || changes['prePopulatedTime']) {
+      if (this.prePopulatedDate && this.prePopulatedTime) {
+        this.scheduledDate = this.prePopulatedDate;
+        this.scheduledTime = this.prePopulatedTime;
+      }
+    }
+  }
 
   onSendNow(): void {
     this.sendNow.emit();

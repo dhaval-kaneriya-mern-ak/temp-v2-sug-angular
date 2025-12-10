@@ -17,6 +17,7 @@ import {
   IGroupMember,
   SignUPType,
   EXCLUDED_RECIPIENT_VALUES,
+  MessageTypeId,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { CommonModule } from '@angular/common';
 import {
@@ -97,6 +98,7 @@ import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/con
 import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
 import { HostListener } from '@angular/core';
 import { DashboardService } from '../../dashboard/dashboard.service';
+import { parse } from 'date-fns';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -182,6 +184,9 @@ export class ComposeTextMessageComponent
   currentDraftMessageId: number | null = null;
   originalSendAsText: boolean | undefined;
   originalSendAsEmail: boolean | undefined;
+  messageOriginalStatus: string | null = null;
+  scheduledDateForPreview: Date | null = null;
+  scheduledTimeForPreview: Date | null = null;
   radioOptions: RadioCheckboxOption[] = [
     {
       label: 'Invite people to opt in to text messages',
@@ -220,6 +225,7 @@ export class ComposeTextMessageComponent
   emailRecipientsCount = 0;
   shortUrl = '';
   limitsData: MessageLimitsResponse | null = null;
+  readonly messageTypeIds = MessageTypeId;
   ngOnInit() {
     // Initialize unsaved changes manager
     this.unsavedChangesManager = new UnsavedChangesManager(this);
@@ -417,6 +423,12 @@ export class ComposeTextMessageComponent
     this.unsavedChangesManager.handleBackButton();
   }
 
+  private resetScheduledMessageState(): void {
+    this.messageOriginalStatus = null;
+    this.scheduledDateForPreview = null;
+    this.scheduledTimeForPreview = null;
+  }
+
   showOptionsAgain() {
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
@@ -429,6 +441,17 @@ export class ComposeTextMessageComponent
 
     this.showRadioButtons = true;
     this.selectedValue = null; // Reset the selected size
+    this.resetScheduledMessageState();
+
+    this.isEditingExistingDraft = false;
+    this.currentDraftMessageId = null;
+    this.originalSendAsText = undefined;
+    this.originalSendAsEmail = undefined;
+    this.currentSendToType = '';
+    this.selectedCustomUserIds = [];
+    this.textRecipientsCount = 0;
+    this.emailRecipientsCount = 0;
+    this.shortUrl = '';
 
     this.composeService.setOptionSelected(false);
     this.inviteTextForm.reset({
@@ -525,7 +548,11 @@ export class ComposeTextMessageComponent
   }
 
   scheduleEmail(event: string): void {
-    this.onSaveDraft(MessageStatus.SCHEDULED, undefined, event);
+    const formType =
+      this.selectedValue === 'emailoptionone'
+        ? 'inviteToSignUp'
+        : 'emailParticipants';
+    this.onSaveDraft(MessageStatus.SCHEDULED, formType, event);
   }
 
   onSaveDraft(
@@ -609,7 +636,10 @@ export class ComposeTextMessageComponent
             sendtotype = mapped.sendtotype;
           }
 
-          const messagetypeid = formType === 'inviteToSignUp' ? 14 : 15;
+          const messagetypeid =
+            formType === 'inviteToSignUp'
+              ? this.messageTypeIds.TextInvite
+              : this.messageTypeIds.TextParticipants;
 
           const payload: ISaveDraftMessagePayload = {
             subject: formValue.subject || formValue.emailSubject,
@@ -617,7 +647,7 @@ export class ComposeTextMessageComponent
             sentto: sentto,
             sendtotype: sendtotype,
             messagetypeid: messagetypeid,
-            status: 'draft',
+            status: status ? status : 'draft',
             sendastext:
               this.isEditingExistingDraft &&
               this.originalSendAsText !== undefined
@@ -686,7 +716,7 @@ export class ComposeTextMessageComponent
           }
 
           if (
-            messagetypeid === 15 &&
+            messagetypeid === this.messageTypeIds.TextParticipants &&
             sendtotypeLower === SendToType.PEOPLE_IN_GROUPS
           ) {
             if (formType === 'inviteToSignUp') {
@@ -747,6 +777,10 @@ export class ComposeTextMessageComponent
             }));
           }
 
+          if (date) {
+            payload.senddate = date + ':00';
+          }
+
           if (
             sendtotypeLower === SendToType.SPECIFIC_DATE_SLOT &&
             this.stateService.selectedDateSlots.length > 0
@@ -755,7 +789,7 @@ export class ComposeTextMessageComponent
               slot.slotitemid.toString()
             );
 
-            if (messagetypeid === 15) {
+            if (messagetypeid === this.messageTypeIds.TextParticipants) {
               payload.sendToGroups = this.stateService.selectedDateSlots.map(
                 (slot) => ({
                   id: 'slot_' + slot.slotitemid,
@@ -1009,7 +1043,10 @@ export class ComposeTextMessageComponent
             sentto: SentTo.PEOPLE_IN_GROUPS,
             sendtotype: SendToType.ALL,
             status: status,
-            messagetypeid: this.selectedValue === 'textOptionOne' ? 14 : 15,
+            messagetypeid:
+              this.selectedValue === 'textOptionOne'
+                ? this.messageTypeIds.TextInvite
+                : this.messageTypeIds.TextParticipants,
             sendasemail: form.includefallback === true,
             sendastext: true,
             themeid: form.themeid,
@@ -1220,6 +1257,14 @@ export class ComposeTextMessageComponent
 
   onPreviewAndSend(form: FormGroup): void {
     this.isLoading = true;
+    // this.scheduledDateForPreview = this.scheduledDateForPreview
+    //   ? new Date(this.scheduledDateForPreview!.getTime())
+    //   : null;
+    const _sd = this.scheduledDateForPreview;
+    this.scheduledDateForPreview = _sd ? new Date(_sd.getTime()) : null;
+    const _st = this.scheduledTimeForPreview;
+    this.scheduledTimeForPreview = _st ? new Date(_st.getTime()) : null;
+
     const payload: IMessagePreviewRequest = {
       fromname: form.value.fromName || form.value.emailFrom,
       replyto: this.filterReplyToAdmins(
@@ -1473,9 +1518,6 @@ export class ComposeTextMessageComponent
 
     type ReplyToItem = { memberid: number; email: string };
 
-    const optionOne = 14;
-    const optionTwo = 15;
-
     this.composeService
       .getMessageById(id)
       .pipe(takeUntil(this.destroy$))
@@ -1496,6 +1538,9 @@ export class ComposeTextMessageComponent
             return;
           }
 
+          // Store the original message status
+          this.messageOriginalStatus = response.data.status;
+
           initializeDraftEditMode(
             id,
             this.stateService,
@@ -1511,7 +1556,37 @@ export class ComposeTextMessageComponent
             }
           );
 
-          if (response.data.messagetypeid == optionOne) {
+          if (response.data.senddate) {
+            // Get user's date format with null safety
+            const userDateFormat =
+              this.userProfile?.selecteddateformat?.short?.toUpperCase() ||
+              'MM/DD/YYYY';
+
+            // Build dynamic format string
+            const formatString = `${userDateFormat} hh:mma`;
+
+            const formattedDate = this.userStateService.convertESTtoUserTZ(
+              Number(response.data.senddate),
+              this.userProfile?.zonename || 'UTC',
+              formatString
+            );
+
+            // Use matching parse pattern
+            const parsePattern = `${userDateFormat
+              .replace(/DD/g, 'dd')
+              .replace(/YYYY/g, 'yyyy')} hh:mma`;
+            const parsedDate = parse(formattedDate, parsePattern, new Date());
+
+            if (isNaN(parsedDate.getTime())) {
+              console.error('Failed to parse scheduled date:', formattedDate);
+              return;
+            }
+
+            this.scheduledDateForPreview = parsedDate;
+            this.scheduledTimeForPreview = parsedDate;
+          }
+
+          if (response.data.messagetypeid == this.messageTypeIds.TextInvite) {
             this.selectedValue = 'emailoptionone';
 
             this.showRadioButtons = false;
@@ -1559,7 +1634,7 @@ export class ComposeTextMessageComponent
                 .fetchRecipients({
                   sentToType: response.data.sendtotype,
                   sentTo: response.data.sentto,
-                  messageTypeId: 14,
+                  messageTypeId: this.messageTypeIds.TextInvite,
                   signupIds: signupIds,
                 })
                 .pipe(takeUntil(this.destroy$))
@@ -1599,7 +1674,9 @@ export class ComposeTextMessageComponent
             setTimeout(() => {
               this.setupFormChangeTracking();
             }, FORM_TRACKING_DELAY);
-          } else if (response.data.messagetypeid == optionTwo) {
+          } else if (
+            response.data.messagetypeid == this.messageTypeIds.TextParticipants
+          ) {
             this.selectedValue = 'emailoptiontwo';
 
             this.showRadioButtons = false;
@@ -1808,7 +1885,7 @@ export class ComposeTextMessageComponent
                       .fetchRecipients({
                         sentToType: SendToType.PEOPLE_IN_GROUPS,
                         sentTo: SentTo.ALL,
-                        messageTypeId: 1,
+                        messageTypeId: this.messageTypeIds.TextInvite,
                         signupIds: signupIds,
                         groupIds: groupIds,
                       })
@@ -1858,7 +1935,7 @@ export class ComposeTextMessageComponent
                 .fetchRecipients({
                   sentToType: response.data.sendtotype,
                   sentTo: response.data.sentto,
-                  messageTypeId: 15,
+                  messageTypeId: this.messageTypeIds.TextParticipants,
                   signupIds: signupIds,
                 })
                 .pipe(takeUntil(this.destroy$))
@@ -2069,20 +2146,25 @@ export class ComposeTextMessageComponent
     const signupIds = this.stateService.selectedSignups.map((s) => s.signupid);
     const groupIds = groups.map((g) => g.groupid);
 
-    const messageTypeId = this.selectedValue === 'emailoptionone' ? 14 : 15;
+    const messageTypeId =
+      this.selectedValue === 'emailoptionone'
+        ? this.messageTypeIds.TextInvite
+        : this.messageTypeIds.TextParticipants;
 
     const existingPeopleSelectionData =
       this.stateService.peopleSelectionData || {};
     const updatedPeopleSelectionData = {
       ...existingPeopleSelectionData,
       selectedValue:
-        messageTypeId === 14 ? 'peopleingroups' : 'sendMessagePeopleRadio',
+        messageTypeId === this.messageTypeIds.TextInvite
+          ? 'peopleingroups'
+          : 'sendMessagePeopleRadio',
       selectedGroups: groupIds.map((id) => id.toString()),
     };
     this.stateService.setPeopleSelectionData(updatedPeopleSelectionData);
 
     if (
-      messageTypeId === 14 &&
+      messageTypeId === this.messageTypeIds.TextInvite &&
       sendtotype.toLowerCase() === SendToType.PEOPLE_IN_GROUPS &&
       signupIds.length === 0
     ) {
@@ -2110,7 +2192,7 @@ export class ComposeTextMessageComponent
             this.stateService.setRecipients(recipients);
 
             // For messageTypeId 15, calculate separate email and text recipient counts
-            if (messageTypeId === 15) {
+            if (messageTypeId === this.messageTypeIds.TextParticipants) {
               this.textRecipientsCount = recipients.filter(
                 (r: any) => r.smsoptin === true
               ).length;
@@ -2287,7 +2369,9 @@ export class ComposeTextMessageComponent
                 const slotItemIds = allDateSlots.map((slot) => slot.slotitemid);
                 const signupIds = signups.map((s) => s.signupid);
                 const messageTypeId =
-                  this.selectedValue === 'textoptionone' ? 14 : 15;
+                  this.selectedValue === 'textoptionone'
+                    ? this.messageTypeIds.TextInvite
+                    : this.messageTypeIds.TextParticipants;
 
                 this.composeService
                   .fetchRecipients({
@@ -2311,7 +2395,9 @@ export class ComposeTextMessageComponent
                         );
 
                         // For messageTypeId 15, calculate separate email and text recipient counts
-                        if (messageTypeId === 15) {
+                        if (
+                          messageTypeId === this.messageTypeIds.TextParticipants
+                        ) {
                           this.textRecipientsCount = data.recipients.filter(
                             (r) => r.smsoptin === true
                           ).length;
