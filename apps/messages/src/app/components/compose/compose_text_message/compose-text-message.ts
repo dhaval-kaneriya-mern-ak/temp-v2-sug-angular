@@ -97,6 +97,7 @@ import { ConfirmationDialogComponent } from '../../utils/confirmation-dialog/con
 import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
 import { HostListener } from '@angular/core';
 import { DashboardService } from '../../dashboard/dashboard.service';
+import { ChipModule } from 'primeng/chip';
 
 @Component({
   selector: 'sug-compose-text-message',
@@ -121,6 +122,7 @@ import { DashboardService } from '../../dashboard/dashboard.service';
     SugUiLoadingSpinnerComponent,
     MyGroupSelection,
     ConfirmationDialogComponent,
+    ChipModule,
   ],
   providers: [ComposeEmailStateService],
   templateUrl: './compose-text-message.html',
@@ -2532,5 +2534,9 @@ export class ComposeTextMessageComponent
 
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  removeGroup(index: number): void {
+    this.stateService.removeGroup(index);
   }
 }

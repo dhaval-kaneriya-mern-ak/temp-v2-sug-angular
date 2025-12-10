@@ -381,9 +381,14 @@ export class PeopleSelectionDialogComponent
 
         // Always reset the form first to ensure clean state
         if (this.peopleDialogForm) {
+          // Extract values from selectedGroups for form reset
+          const selectedGroupValues = (this.selectedGroups || [])
+            .filter((group) => group && group.value != null)
+            .map((group) => group.value);
+
           this.peopleDialogForm.reset({
             selectedValue: null,
-            selectedGroups: this.selectedGroups || [],
+            selectedGroups: selectedGroupValues,
             includeNonGroupMembers: false,
             manualEmails: '',
             manualEmailsGroup: [],
@@ -394,6 +399,14 @@ export class PeopleSelectionDialogComponent
             rsvpResponsemaybe: false,
             rsvpResponsenoresponse: false,
           });
+
+          // Force change detection after form reset to ensure dropdown reflects current values
+          this.cdr.detectChanges();
+
+          // Additional sync to ensure dropdown shows current selected groups
+          setTimeout(() => {
+            this.syncSelectedGroupsToForm();
+          }, 0);
 
           // Only auto-select groups if there's NO saved state (first time opening)
           // Don't auto-select if user has already made a selection previously
@@ -458,19 +471,54 @@ export class PeopleSelectionDialogComponent
       }, 0);
     }
 
-    // Update form when selectedGroups input changes (e.g., when groups are removed from email form)
-    if (this.selectedGroups && this.peopleDialogForm) {
-      // Extract values from selectedGroups objects and filter out null/undefined
-      const selectedGroupValues = (this.selectedGroups || [])
-        .filter((group) => group && group.value != null)
-        .map((group) => group.value);
+    // Handle selectedGroups changes asynchronously to prevent UI blocking
+    if (changes['selectedGroups'] && this.peopleDialogForm) {
+      // Use requestAnimationFrame for smooth UI updates
+      requestAnimationFrame(() => {
+        this.syncSelectedGroupsToForm();
+      });
+    }
+  }
 
-      const selectedGroupsControl = this.peopleDialogForm.get('selectedGroups');
-      if (selectedGroupsControl) {
-        // Force update the form control with extracted values
+  private syncSelectedGroupsToForm(): void {
+    if (!this.peopleDialogForm) {
+      return;
+    }
+
+    // Extract values from selectedGroups objects and filter out null/undefined
+    const selectedGroupValues = (this.selectedGroups || [])
+      .filter((group) => group && group.value != null)
+      .map((group) => group.value);
+
+    const selectedGroupsControl = this.peopleDialogForm.get('selectedGroups');
+    if (!selectedGroupsControl) {
+      return;
+    }
+
+    const currentFormValues = selectedGroupsControl.value || [];
+
+    // Check if values are different (including checking for empty arrays)
+    const valuesChanged =
+      JSON.stringify(selectedGroupValues.sort()) !==
+      JSON.stringify((currentFormValues || []).sort());
+
+    if (valuesChanged) {
+      // First completely reset the control
+      selectedGroupsControl.reset(null);
+
+      // Force a change detection cycle
+      this.cdr.detectChanges();
+
+      // Then set the new values after a small delay
+      setTimeout(() => {
         selectedGroupsControl.setValue(selectedGroupValues, {
           emitEvent: false,
         });
+
+        // Update value and validity to ensure proper state
+        selectedGroupsControl.updateValueAndValidity({ emitEvent: false });
+
+        // Force another change detection
         this.cdr.detectChanges();
 
         // Get current radio selection to determine if we need to recalculate recipients
@@ -490,16 +538,23 @@ export class PeopleSelectionDialogComponent
             const includeNonGroupMembers =
               this.peopleDialogForm.get('includeNonGroupMembers')?.value ||
               false;
-            this.calculateRecipientCount(groupIds, includeNonGroupMembers);
+
+            // Defer recipient calculation to prevent blocking
+            setTimeout(() => {
+              this.calculateRecipientCount(groupIds, includeNonGroupMembers);
+            }, 10);
           } else {
             // No groups selected, reset recipient count
             this.recipientCountChange.emit(0);
             this.recipientsChange.emit([]);
           }
         }
-        // Force UI refresh
-        this.cdr.detectChanges();
-      }
+
+        // Final change detection to ensure UI is updated
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 10);
+      }, 10);
     }
   }
 

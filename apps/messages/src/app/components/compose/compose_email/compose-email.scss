@@ -85,9 +85,15 @@
   align-items: flex-end;
   gap: 8px;
   width: 70%;
+  min-width: 0; // Allow container to shrink
+
   @media (max-width: 767px) {
     width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
+
   ::ng-deep .p-chip {
     background-color: white;
     border: 1px solid #cbd5e1;
@@ -95,17 +101,75 @@
     padding: 5px 10px;
     display: flex;
     align-items: center;
+    max-width: 200px !important; // Limit chip width
+
+    // Target all possible text containers in PrimeNG chip
+    .p-chip-text,
+    .p-chip-label,
+    span:first-child,
+    &::ng-deep span:first-child {
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 150px !important; // Account for remove icon space
+      display: inline-block !important;
+
+      @media (max-width: 767px) {
+        max-width: 120px !important; // Smaller on mobile
+      }
+    }
+
     .p-chip-remove-icon {
       color: #f68b1c;
       cursor: pointer;
+      flex-shrink: 0 !important; // Prevent icon from shrinking
+      margin-left: 8px;
     }
   }
 }
+
+// Global chip text truncation - more forceful approach
+::ng-deep .signup-chips-container .p-chip,
+::ng-deep .recipient-info-container .p-chip {
+  max-width: 200px !important;
+
+  // Force truncation on any text content within the chip
+  * {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 150px !important;
+
+    @media (max-width: 767px) {
+      max-width: 120px !important;
+    }
+  }
+
+  // Ensure the remove icon stays visible
+  .p-chip-remove-icon,
+  i[class*='remove'],
+  span[class*='remove'] {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    max-width: none !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px;
+  }
+}
+
 .chips-container {
   flex: 1 1 auto;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0; // Allow container to shrink below content width
+
+  // Ensure each chip can't exceed container
+  > span {
+    min-width: 0; // Allow spans to shrink
+    max-width: 100%; // Prevent chips from overflowing container
+  }
 }
 .email-form-section {
   max-width: 800px;
