@@ -4,7 +4,7 @@
     [isFullPageLoader]="true"
   ></sug-ui-loading-spinner>
   <div class="d-flex align-items-center justify-content-between">
-    <h2>Draft Messages & Templates</h2>
+    <h2 class="pt-2">Drafts & Templates</h2>
     <div class="search-box mb-3 d-flex align-items-center">
       <i class="pi pi-search btn-search" title="Search" aria-hidden="true"></i>
       <input
@@ -84,9 +84,7 @@
   [showHeader]="true"
   [showFooter]="true"
 >
-  <div slot="header" class="flex align-items-center">
-    <span class="font-bold">Confirmation</span>
-  </div>
+  <h2 slot="header">Confirmation</h2>
   <p class="fs-4">
     Are you sure you want to delete "{{ selectedItem?.subject }}" draft from the
     list?
