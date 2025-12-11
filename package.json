@@ -59,7 +59,7 @@
     "@angular/localize": "20.1.6",
     "@angular/platform-browser": "20.1.6",
     "@angular/router": "20.1.6",
-    "@lumaverse/sug-ui": "1.5.5",
+    "@lumaverse/sug-ui": "1.8.1",
     "@ng-bootstrap/ng-bootstrap": "19.0.1",
     "@nx/angular": "21.3.11",
     "@primeng/themes": "20.0.1",
