@@ -48,23 +48,11 @@ export class VerificationService {
 
   /**
    * Send verification code to user's email
-   * POST: (endpoint to be provided later)
+   * GET: /member/sendverificationcode
    * @returns Observable with API response
    */
   sendVerificationCode(): Observable<any> {
-    // TODO: Replace with actual endpoint when provided
-    console.log('sendVerificationCode API called');
-
-    // Mock implementation - will be replaced with actual API call
-    return new Observable((observer) => {
-      setTimeout(() => {
-        observer.next({ success: true, message: 'Verification code sent' });
-        observer.complete();
-      }, 500);
-    });
-
-    // Actual implementation (uncomment when endpoint is provided):
-    // return this.sugApiService.post<any>('endpoint-here', {});
+    return this.sugApiService.get<any>('/member/sendverificationcode');
   }
 
   /**
@@ -76,7 +64,7 @@ export class VerificationService {
   validateVerificationCode(code: string): Observable<any> {
     const payload = { code };
     return this.sugApiService.post<any>(
-      'v3/member/validatememberverificationcode',
+      '/member/validatememberverificationcode',
       payload
     );
   }

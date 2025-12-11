@@ -302,10 +302,11 @@ export class App implements OnInit, OnDestroy {
     this.verificationService.checkVerificationStatus().subscribe({
       next: (verified: number) => {
         this.userStateService.setVerificationStatus(verified);
-        // console.log('[App] Verification status loaded:', {
-        //   verified,
-        //   isVerified: verified === 1,
-        // });
+        console.log('[App] Verification status loaded:', {
+          verified,
+          isVerified: verified === 1,
+        });
+        console.log(this.userStateService.isUserVerified());
       },
       error: (err) => {
         console.error('[App] Error loading verification status:', err);

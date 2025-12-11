@@ -61,6 +61,12 @@
   transition: all 0.2s !important;
   font-family: monospace !important;
   font-weight: 600 !important;
+
+  @media (max-width: 767px) {
+    font-size: 2rem !important;
+    height: 6.5rem !important;
+    width: clamp(3.5rem, 4vw, 4.3rem) !important;
+  }
 }
 
 .otp-input:focus {
@@ -127,6 +133,10 @@
       font-size: large;
       color: #374151;
       margin-bottom: 1.5rem;
+
+      @media (max-width: 767px) {
+        font-size: medium;
+      }
     }
 
     .help-text {
@@ -134,6 +144,10 @@
       color: #374151;
       margin-top: 1rem;
       margin-bottom: 0;
+
+      @media (max-width: 767px) {
+        font-size: medium;
+      }
     }
   }
 

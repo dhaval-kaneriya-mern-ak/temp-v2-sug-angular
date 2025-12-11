@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { UserStateService } from '@services/user-state.service';
 
 /**
@@ -7,9 +7,14 @@ import { UserStateService } from '@services/user-state.service';
  * Checks if user is verified before allowing access to protected routes
  * Returns true if verified, false if not verified (will show verification modal instead)
  */
-export const verificationGuard: CanActivateFn = () => {
+export const verificationGuard: CanActivateFn = (route, state) => {
   const userStateService = inject(UserStateService);
+  const router = inject(Router);
 
-  // Check if user is verified (returns true if verified = 1, false if verified = 0)
-  return userStateService.isUserVerified();
+  // Check if user is verified
+  if (!userStateService.isUserVerified()) {
+    return false;
+  }
+
+  return true;
 };

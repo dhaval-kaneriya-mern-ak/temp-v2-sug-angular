@@ -119,7 +119,7 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
       .validateVerificationCode(this.verificationCode.trim())
       .subscribe({
         next: (response) => {
-          if (response.success) {
+          if (response.data.success) {
             // Step 2: Code verified successfully - now fetch updated verification status
             this.verificationService.checkVerificationStatus().subscribe({
               next: (verified: number) => {
@@ -132,12 +132,9 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
               },
               error: (err) => {
                 console.error('Failed to fetch verification status:', err);
-                // Fallback: Still set to verified since code was accepted
-                this.userStateService.setVerificationStatus(1);
+                this.errorMessage =
+                  'Enter a valid verification code or click the activation link in the verification email.';
                 this.isLoading = false;
-                this.visible = false;
-                this.visibleChange.emit(false);
-                this.verified.emit();
               },
             });
           } else {

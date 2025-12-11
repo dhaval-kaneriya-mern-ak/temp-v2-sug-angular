@@ -32,7 +32,9 @@ export class UserStateService implements OnDestroy {
   private _isProfileLoaded = false;
 
   // Verification state (0 = not verified, 1 = verified)
-  private readonly _isVerified = signal<number>(0);
+  private readonly _isVerified = signal<number>(
+    parseInt(sessionStorage.getItem('user_verified') || '0', 10)
+  );
   readonly isVerified = this._isVerified.asReadonly();
 
   /**
@@ -111,20 +113,24 @@ export class UserStateService implements OnDestroy {
     this._isProfileLoaded = false;
     this._loadingObservable = null;
     this._isVerified.set(0);
+    sessionStorage.removeItem('user_verified');
   }
 
-  /**
-   * Set verification status (0 = not verified, 1 = verified)
-   */
   setVerificationStatus(verified: number): void {
     this._isVerified.set(verified);
+    sessionStorage.setItem('user_verified', verified.toString());
   }
 
   /**
    * Check if user is verified
    */
   isUserVerified(): boolean {
-    return this._isVerified() === 1;
+    const verificationStatus = parseInt(
+      sessionStorage.getItem('user_verified') || '0',
+      10
+    );
+    console.log(verificationStatus);
+    return verificationStatus === 1;
   }
 
   /**
@@ -238,7 +244,11 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.complete();
   }
 
-  convertESTtoUserTZ(epochSeconds: number, userTimeZone: string, userFormat = 'MM/DD/YYYY hh:mma'): string {
+  convertESTtoUserTZ(
+    epochSeconds: number,
+    userTimeZone: string,
+    userFormat = 'MM/DD/YYYY hh:mma'
+  ): string {
     // 1️⃣ EST = UTC-5 → add 5 hours to get UTC
     const utcMillis = (epochSeconds + 5 * 3600) * 1000;
 
@@ -257,7 +267,7 @@ export class UserStateService implements OnDestroy {
     });
 
     const parts: Record<string, string> = {};
-    formatter.formatToParts(utcDate).forEach(p => {
+    formatter.formatToParts(utcDate).forEach((p) => {
       if (p.type !== 'literal') parts[p.type] = p.value;
     });
 
@@ -278,7 +288,5 @@ export class UserStateService implements OnDestroy {
     result = result.replace(/a/g, dayPeriod);
 
     return result.toLowerCase();
-
   }
-
 }
