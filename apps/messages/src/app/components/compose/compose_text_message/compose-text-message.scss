@@ -101,7 +101,7 @@
     }
     .check-option-form-profile {
       display: flex;
-      gap: 20px;
+      gap: 10px;
       align-items: center;
       margin: 20px 0;
     }
@@ -350,8 +350,8 @@
 
 .check-option-forms-wrapper .optionthree-label {
   position: absolute;
-  top: 75px;
-  left: 380px;
+  top: 82px;
+  left: 400px;
   color: #f68b1c;
   cursor: pointer;
   font-size: 16px;
@@ -365,11 +365,14 @@
     left: 295px;
   }
 }
+.email-gear {
+  top: 148px !important;
+}
 .check-option-forms-wrapper {
   .optionone-label {
     position: absolute;
     top: 10px;
-    left: 195px;
+    left: 180px;
     color: #f68b1c;
     cursor: pointer;
     font-size: 16px;

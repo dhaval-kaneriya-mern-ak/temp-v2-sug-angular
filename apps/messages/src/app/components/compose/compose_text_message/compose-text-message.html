@@ -107,7 +107,7 @@
             [outlined]="false"
             class="send-btn"
             icon=""
-            label="Preview & Save"
+            label="Preview & Send"
           ></sug-ui-button>
           <sug-ui-button
             severity="secondary"
@@ -265,36 +265,16 @@
         <div class="form-wrapper">
           <label for="from-email"></label>
           <div class="check-options-wrap" style="position: relative">
-            @for (item of checkboxOptions; track item) {
             <div class="d-flex gap-2 mt-3">
               <sug-ui-radio-checkbox-button
-                [label]="item.label"
+                [label]="checkboxOptions[0].label"
                 type="checkbox"
                 [disabled]="getSelectedSignup().length === 0"
-                [formControlName]="'include' + item.value"
+                [formControlName]="'include' + checkboxOptions[0].value"
                 [binary]="true"
-                [inputId]="item.value"
+                [inputId]="checkboxOptions[0].value"
               >
               </sug-ui-radio-checkbox-button>
-            </div>
-            }
-            <div class="check-option-forms-wrapper">
-              <a
-                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
-                tabindex="-1"
-                (click)="showProfileData()"
-                (keyup)="false"
-              >
-                <i class="pi pi-cog optionone-label"> </i>
-              </a>
-              <a
-                [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
-                tabindex="-1"
-                (click)="showEmailData()"
-                (keyup)="false"
-              >
-                <i class="pi pi-cog optionthree-label"></i>
-              </a>
             </div>
             @if (showProfile) {
             <div class="check-option-form check-option-form-profile">
@@ -312,7 +292,51 @@
                 label="Update My Profile"
               ></sug-ui-button>
             </div>
-            } @if (showEmail) {
+            }
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                [label]="checkboxOptions[1].label"
+                type="checkbox"
+                [disabled]="getSelectedSignup().length === 0"
+                [formControlName]="'include' + checkboxOptions[1].value"
+                [binary]="true"
+                [inputId]="checkboxOptions[1].value"
+              >
+              </sug-ui-radio-checkbox-button>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                [label]="checkboxOptions[2].label"
+                type="checkbox"
+                [disabled]="getSelectedSignup().length === 0"
+                [formControlName]="'include' + checkboxOptions[2].value"
+                [binary]="true"
+                [inputId]="checkboxOptions[2].value"
+              >
+              </sug-ui-radio-checkbox-button>
+            </div>
+            <div class="check-option-forms-wrapper">
+              <a
+                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
+                tabindex="-1"
+                (click)="showProfileData()"
+                (keyup)="false"
+              >
+                <i class="pi pi-cog optionone-label"> </i>
+              </a>
+              <a
+                [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
+                tabindex="-1"
+                (click)="showEmailData()"
+                (keyup)="false"
+              >
+                <i
+                  [ngClass]="{'email-gear': showProfile}"
+                  class="pi pi-cog optionthree-label"
+                ></i>
+              </a>
+            </div>
+            @if (showEmail) {
             <div class="check-option-form mt-5">
               <div class="form-wrapper">
                 <label for="email-subject">Email Subject</label>
@@ -364,7 +388,7 @@
             class="send-btn"
             icon=""
             [label]="sendTextEmailForm
-      .get('includefallback')?.value === true ? 'Preview & Save' : 'Send'"
+      .get('includefallback')?.value === true ? 'Preview & Send' : 'Send'"
           ></sug-ui-button>
           <sug-ui-button
             severity="secondary"
