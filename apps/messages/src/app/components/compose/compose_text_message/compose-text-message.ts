@@ -227,6 +227,7 @@ export class ComposeTextMessageComponent
   emailRecipientsCount = 0;
   shortUrl = '';
   limitsData: MessageLimitsResponse | null = null;
+  signupIdParam: string | null = null;
   readonly messageTypeIds = MessageTypeId;
   ngOnInit() {
     // Initialize unsaved changes manager
@@ -296,6 +297,7 @@ export class ComposeTextMessageComponent
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
+        this.signupIdParam = params['signupId'];
         const messageId = Number(params['id']);
 
         if (!isNaN(messageId) && messageId > 0) {
@@ -2630,36 +2632,30 @@ export class ComposeTextMessageComponent
   private updateSignupSelectionUsingUrlParams(
     data: ISignUpItem[] | undefined
   ): void {
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        if (params['signupId'] && data && data.length > 0) {
-          const selectedSignup: ISignUpItem[] =
-            data
-              ?.filter(
-                (item: any) => item?.signupid?.toString() === params['signupId']
-              )
-              ?.map((item: any) => item) || [];
-          if (selectedSignup.length > 0) {
-            // Set the selected signups in state
-            this.stateService.setSelectedSignups(selectedSignup);
-            this.currentEmailForm
-              .get('selectedSignups')
-              ?.setValue(selectedSignup.map((s) => s.signupid.toString()));
-            this.currentEmailForm
-              .get('selectedSignups')
-              ?.updateValueAndValidity();
-            // Wait for all dependencies to load, then configure form
-            this.configureFormForSelectedSignup();
-          } else {
-            console.warn(
-              'No signup found for signupId:',
-              params['signupId'],
-              ' or invalid data structure.'
-            );
-          }
-        }
-      });
+    if (this.signupIdParam && data && data.length > 0) {
+      const selectedSignup: ISignUpItem[] =
+        data
+          ?.filter(
+            (item: any) => item?.signupid?.toString() === this.signupIdParam
+          )
+          ?.map((item: any) => item) || [];
+      if (selectedSignup.length > 0) {
+        // Set the selected signups in state
+        this.stateService.setSelectedSignups(selectedSignup);
+        this.currentEmailForm
+          .get('selectedSignups')
+          ?.setValue(selectedSignup.map((s) => s.signupid.toString()));
+        this.currentEmailForm.get('selectedSignups')?.updateValueAndValidity();
+        // Wait for all dependencies to load, then configure form
+        this.configureFormForSelectedSignup();
+      } else {
+        console.warn(
+          'No signup found for signupId:',
+          this.signupIdParam,
+          ' or invalid data structure.'
+        );
+      }
+    }
   }
 
   /**

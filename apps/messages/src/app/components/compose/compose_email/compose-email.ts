@@ -209,6 +209,7 @@ export class ComposeEmailComponent
   private isRestoringDateSlots = false;
   hasWaitlistSlots = false;
   errorMessage = '';
+  signupIdParam: string | null = null;
 
   ngOnInit(): void {
     // Initialize unsaved changes manager
@@ -222,7 +223,7 @@ export class ComposeEmailComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
         const messageId = Number(params['id']);
-
+        this.signupIdParam = params['signupId'];
         if (!isNaN(messageId) && messageId > 0) {
           this.isEditingExistingDraft = true;
           this.currentDraftMessageId = messageId;
@@ -2827,32 +2828,28 @@ export class ComposeEmailComponent
   private updateSignupSelectionUsingUrlParams(
     data: ISelectOption[] | undefined
   ): void {
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        if (params['signupId'] && data && data.length > 0) {
-          const selectedSignup: ISignUpItem[] =
-            data
-              ?.filter(
-                (item: any) =>
-                  item?.signupData?.signupid?.toString() === params['signupId']
-              )
-              ?.map((item: any) => item.signupData) || [];
+    if (this.signupIdParam && data && data.length > 0) {
+      const selectedSignup: ISignUpItem[] =
+        data
+          ?.filter(
+            (item: any) =>
+              item?.signupData?.signupid?.toString() === this.signupIdParam
+          )
+          ?.map((item: any) => item.signupData) || [];
 
-          if (selectedSignup.length > 0) {
-            // Set the selected signups in state
-            this.stateService.setSelectedSignups(selectedSignup);
-            // Wait for all dependencies to load, then configure form
-            this.configureFormForSelectedSignup();
-          } else {
-            console.warn(
-              'No signup found for signupId:',
-              params['signupId'],
-              ' or invalid data structure.'
-            );
-          }
-        }
-      });
+      if (selectedSignup.length > 0) {
+        // Set the selected signups in state
+        this.stateService.setSelectedSignups(selectedSignup);
+        // Wait for all dependencies to load, then configure form
+        this.configureFormForSelectedSignup();
+      } else {
+        console.warn(
+          'No signup found for signupId:',
+          this.signupIdParam,
+          ' or invalid data structure.'
+        );
+      }
+    }
   }
 
   /**
@@ -2865,7 +2862,7 @@ export class ComposeEmailComponent
     // Set reply-to to current user if available in sub-admins
     if (this.stateService.subAdminsData.length > 0) {
       const user = this.stateService.subAdminsData[0].value;
-      if (user.length > 0) {
+      if (user) {
         this.currentForm.get('replyTo')?.setValue([user]);
         this.currentForm.get('replyTo')?.updateValueAndValidity();
       }
