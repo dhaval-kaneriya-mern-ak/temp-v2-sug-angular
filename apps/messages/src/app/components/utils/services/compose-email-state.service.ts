@@ -374,6 +374,12 @@ export class ComposeEmailStateService {
     this.resetPeopleSelection();
   }
 
+  removeGroup(index: number): void {
+    const current = this.selectedGroupsSubject.value;
+    const updatedGroups = current.filter((_, i) => i !== index);
+    this.selectedGroupsSubject.next(updatedGroups);
+  }
+
   removeSelectedSlot(index: number): void {
     const current = this.selectedDateSlotsSubject.value;
     this.selectedDateSlotsSubject.next(current.filter((_, i) => i !== index));

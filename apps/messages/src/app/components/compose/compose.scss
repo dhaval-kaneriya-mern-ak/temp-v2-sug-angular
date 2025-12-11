@@ -1,65 +1,48 @@
-// .compose-message {
-//   padding: 2rem;
-//   max-width: 800px;
-//   margin: 0 auto;
-// }
+.badge-icon {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
 
-// .compose-message h2 {
-//   color: #2c3e50;
-//   margin-bottom: 2rem;
-// }
+.custom-tabs {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 8px;
+}
 
-// .compose-form {
-//   background: white;
-//   border: 1px solid #ddd;
-//   border-radius: 8px;
-//   padding: 2rem;
-// }
+.custom-tab {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--text-color, #333);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
 
-// .form-group {
-//   margin-bottom: 1.5rem;
-// }
+.custom-tab.active {
+  color: black;
+  font-weight: 600;
+}
 
-// .form-group label {
-//   display: block;
-//   margin-bottom: 0.5rem;
-//   font-weight: bold;
-//   color: #2c3e50;
-// }
+.custom-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 4px;
+  background: #f68b1c;
+  border-radius: 3px;
+}
 
-// .form-group input,
-// .form-group select,
-// .form-group textarea {
-//   width: 100%;
-//   padding: 0.75rem;
-//   border: 1px solid #ddd;
-//   border-radius: 4px;
-//   font-size: 1rem;
-//   box-sizing: border-box;
-// }
-
-// .form-group textarea {
-//   min-height: 150px;
-//   resize: vertical;
-// }
-
-// .form-group input:focus,
-// .form-group select:focus,
-// .form-group textarea:focus {
-//   outline: none;
-//   border-color: #3498db;
-//   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-// }
-
-// .actions {
-//   display: flex;
-//   gap: 0.5rem;
-//   margin-top: 2rem;
-// }
-
-// .actions button {
-//   transition: all 0.3s ease;
-// }
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
 .spacer {
   height: 10px;
@@ -79,7 +62,7 @@
   margin: 5px auto;
   font-size: 36px;
   line-height: 40px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   font-style: normal;
 }
 .account-overview {
@@ -90,7 +73,7 @@
     margin: 0px auto;
     font-size: 26px;
     line-height: 32px;
-    margin-bottom: 20px;
+    padding: 12px 0;
     font-weight: 400;
     display: flex;
     gap: 10px;

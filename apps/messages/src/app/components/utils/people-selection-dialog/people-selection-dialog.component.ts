@@ -10,6 +10,7 @@ import {
   Output,
   ChangeDetectorRef,
   OnDestroy,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -44,6 +45,7 @@ import { SugInformationDialogComponent } from '../information-dialog/information
 @Component({
   selector: 'sug-people-selection-dialog',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -82,6 +84,7 @@ export class PeopleSelectionDialogComponent
   @Input() selectedCustomUserIds: string[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
   @Input() hasWaitlistSlots = false;
+  @Input() selectedGroups: ISelectOption[] = [];
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() peopleSelected = new EventEmitter<void>();
@@ -380,9 +383,14 @@ export class PeopleSelectionDialogComponent
 
         // Always reset the form first to ensure clean state
         if (this.peopleDialogForm) {
+          // Extract values from selectedGroups for form reset
+          const selectedGroupValues = (this.selectedGroups || [])
+            .filter((group) => group && group.value != null)
+            .map((group) => group.value);
+
           this.peopleDialogForm.reset({
             selectedValue: null,
-            selectedGroups: [],
+            selectedGroups: selectedGroupValues,
             includeNonGroupMembers: false,
             manualEmails: '',
             manualEmailsGroup: [],
@@ -393,6 +401,14 @@ export class PeopleSelectionDialogComponent
             rsvpResponsemaybe: false,
             rsvpResponsenoresponse: false,
           });
+
+          // Force change detection after form reset to ensure dropdown reflects current values
+          this.cdr.detectChanges();
+
+          // Additional sync to ensure dropdown shows current selected groups
+          setTimeout(() => {
+            this.syncSelectedGroupsToForm();
+          }, 0);
 
           // Only auto-select groups if there's NO saved state (first time opening)
           // Don't auto-select if user has already made a selection previously
@@ -455,6 +471,116 @@ export class PeopleSelectionDialogComponent
           this.cdr.detectChanges();
         }
       }, 0);
+    }
+
+    // Handle selectedGroups changes with proper error handling
+    if (changes['selectedGroups'] && this.peopleDialogForm) {
+      // Defer to next tick to avoid change detection issues
+      Promise.resolve().then(() => {
+        this.syncSelectedGroupsToForm();
+      });
+    }
+  }
+
+  private syncSelectedGroupsToForm(): void {
+    try {
+      if (!this.peopleDialogForm || !this.selectedGroups) {
+        return;
+      }
+
+      // Extract values with proper error handling
+      const selectedGroupValues = this.selectedGroups
+        .filter((group): group is ISelectOption =>
+          Boolean(group && group.value != null)
+        )
+        .map((group) => group.value);
+
+      const selectedGroupsControl = this.peopleDialogForm.get('selectedGroups');
+      if (!selectedGroupsControl) {
+        return;
+      }
+
+      const currentFormValues = selectedGroupsControl.value || [];
+
+      // Use proper array comparison instead of JSON.stringify
+      const valuesChanged = !this.arraysEqual(
+        selectedGroupValues,
+        currentFormValues
+      );
+
+      if (valuesChanged) {
+        // Update form control without aggressive change detection
+        selectedGroupsControl.setValue(selectedGroupValues, {
+          emitEvent: false,
+        });
+
+        // Only trigger change detection once
+        this.cdr.markForCheck();
+
+        // Handle recipient recalculation if needed
+        this.handleRecipientRecalculation();
+      }
+    } catch (error) {
+      console.error('Error syncing selected groups to form:', error);
+      // Fallback: reset form to safe state
+      this.resetFormToSafeState();
+    }
+  }
+
+  private arraysEqual(a: any[], b: any[]): boolean {
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+    return sortedA.every((val, index) => val === sortedB[index]);
+  }
+
+  private handleRecipientRecalculation(): void {
+    const currentRadioValue =
+      this.peopleDialogForm?.get('selectedValue')?.value;
+
+    if (
+      currentRadioValue === 'peopleingroups' ||
+      currentRadioValue === 'sendMessagePeopleRadio'
+    ) {
+      if (this.selectedGroups?.length > 0) {
+        const groupIds = this.selectedGroups.map((group) => group.value);
+        const includeNonGroupMembers =
+          this.peopleDialogForm?.get('includeNonGroupMembers')?.value || false;
+
+        // Use debounced calculation to prevent excessive API calls
+        this.debouncedCalculateRecipients(groupIds, includeNonGroupMembers);
+      } else {
+        this.recipientCountChange.emit(0);
+        this.recipientsChange.emit([]);
+      }
+    }
+  }
+
+  private debouncedCalculateRecipients = this.debounce(
+    (groupIds: string[], includeNonGroupMembers: boolean) => {
+      this.calculateRecipientCount(groupIds, includeNonGroupMembers);
+    },
+    300
+  );
+
+  private debounce<T extends (...args: any[]) => void>(
+    func: T,
+    wait: number
+  ): T {
+    let timeout: ReturnType<typeof setTimeout>;
+    return ((...args: Parameters<T>) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    }) as T;
+  }
+
+  private resetFormToSafeState(): void {
+    if (this.peopleDialogForm) {
+      const selectedGroupsControl = this.peopleDialogForm.get('selectedGroups');
+      if (selectedGroupsControl) {
+        selectedGroupsControl.setValue([], { emitEvent: false });
+        this.cdr.markForCheck();
+      }
     }
   }
 
