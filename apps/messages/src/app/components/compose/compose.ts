@@ -85,7 +85,7 @@ export class Compose implements OnInit, OnDestroy {
   ];
 
   // Component properties
-  public badgeUrl = 'assets/images/pro.webp';
+  public badgeUrl = '/assets/images/pro.jpg';
   public activeTabRoute: string = this.navigationComposeTabs[0].route;
 
   ngOnInit() {
@@ -128,6 +128,15 @@ export class Compose implements OnInit, OnDestroy {
 
         this.isProUser = profile.ispro ?? false;
         this.isTrialUser = profile.istrial ?? false;
+
+        // Always set badge on restricted tabs
+        this.navigationComposeTabs = this.navigationComposeTabs.map((tab) => {
+          if (tab.restricted && this.userStateService.isBasicUser(profile)) {
+            return { ...tab, badge: this.badgeUrl };
+          }
+          return tab;
+        });
+
         this.checkDirectAccess();
       });
 

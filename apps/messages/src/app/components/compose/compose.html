@@ -283,12 +283,23 @@
   </div>
   @if (!isOptionSelected) {
   <div class="compose-tab">
-    <sug-ui-menu-tabs
-      [tabs]="navigationComposeTabs"
-      [activeTab]="currentActiveTab"
-      (selectionChange)="handleTabSelection($event)"
-    >
-    </sug-ui-menu-tabs>
+    <nav class="custom-tabs" role="tablist" aria-label="Compose Tabs">
+      @for (tab of navigationComposeTabs; track tab.route) {
+      <button
+        type="button"
+        role="tab"
+        class="custom-tab"
+        [attr.aria-selected]="currentActiveTab === tab.route"
+        [class.active]="currentActiveTab === tab.route"
+        (click)="handleTabSelection(tab)"
+      >
+        <span class="tab-label">{{ tab.name }}</span>
+        @if (tab.badge) {
+        <img [src]="badgeUrl" alt="badge" class="badge-icon" />
+        }
+      </button>
+      }
+    </nav>
   </div>
   }
   <div class="compose-content">
