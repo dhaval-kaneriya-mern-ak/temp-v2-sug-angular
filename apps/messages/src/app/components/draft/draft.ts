@@ -59,7 +59,6 @@ export class Draft implements OnDestroy, OnInit {
     focusOnShow: true,
     position: 'center',
     appendTo: 'body',
-    width: '30vw',
   };
   isVisible = false;
   selectedItem: selectedDraft | null = null;
