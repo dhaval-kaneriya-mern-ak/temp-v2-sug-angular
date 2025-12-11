@@ -166,8 +166,6 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
         selectedTab.route === '/messages/compose' &&
         !this.userStateService.isUserVerified()
       ) {
-        console.log(this.userStateService.isUserVerified());
-
         // Store the pending route and show verification modal
         this.pendingRoute = selectedTab.route;
         this.showVerificationModal = true;

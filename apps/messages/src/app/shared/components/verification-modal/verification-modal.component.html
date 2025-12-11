@@ -32,6 +32,8 @@
       <div class="otp-input-container">
         @for (digit of otpDigits; track $index) {
         <input
+          [attr.data-index]="$index"
+          #otpInput
           type="text"
           inputmode="numeric"
           maxlength="1"
@@ -50,10 +52,7 @@
       <p class="help-text">
         If you did not receive the verification email, please check your spam
         folder. If you continue to have trouble verifying your account, please
-        <a
-          href="https://test.signupgenius.rocks/help"
-          target="_blank"
-          rel="noopener noreferrer"
+        <a [href]="supportUrl" target="_blank" rel="noopener noreferrer"
           >contact support</a
         >.
       </p>

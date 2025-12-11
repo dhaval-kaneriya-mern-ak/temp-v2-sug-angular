@@ -26,6 +26,7 @@ import { MemberProfile } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 import { AdRouteService } from '@services/ad-route.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   imports: [
@@ -302,13 +303,8 @@ export class App implements OnInit, OnDestroy {
     this.verificationService.checkVerificationStatus().subscribe({
       next: (verified: number) => {
         this.userStateService.setVerificationStatus(verified);
-        console.log('[App] Verification status loaded:', {
-          verified,
-          isVerified: verified === 1,
-        });
-        console.log(this.userStateService.isUserVerified());
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         console.error('[App] Error loading verification status:', err);
         // Set to not verified on error
         this.userStateService.setVerificationStatus(0);

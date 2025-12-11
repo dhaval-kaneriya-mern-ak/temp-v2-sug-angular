@@ -31,11 +31,7 @@ export class UserStateService implements OnDestroy {
     null;
   private _isProfileLoaded = false;
 
-  // Verification state (0 = not verified, 1 = verified)
-  private readonly _isVerified = signal<number>(
-    parseInt(sessionStorage.getItem('user_verified') || '0', 10)
-  );
-  readonly isVerified = this._isVerified.asReadonly();
+  private readonly VERIFICATION_KEY = 'user_verified' as const;
 
   /**
    * Load user profile from API - optimized with shareReplay for single API call
@@ -112,13 +108,11 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.next(null);
     this._isProfileLoaded = false;
     this._loadingObservable = null;
-    this._isVerified.set(0);
-    sessionStorage.removeItem('user_verified');
+    sessionStorage.removeItem(this.VERIFICATION_KEY);
   }
 
   setVerificationStatus(verified: number): void {
-    this._isVerified.set(verified);
-    sessionStorage.setItem('user_verified', verified.toString());
+    sessionStorage.setItem(this.VERIFICATION_KEY, verified.toString());
   }
 
   /**
@@ -126,10 +120,9 @@ export class UserStateService implements OnDestroy {
    */
   isUserVerified(): boolean {
     const verificationStatus = parseInt(
-      sessionStorage.getItem('user_verified') || '0',
+      sessionStorage.getItem(this.VERIFICATION_KEY) || '0',
       10
     );
-    console.log(verificationStatus);
     return verificationStatus === 1;
   }
 

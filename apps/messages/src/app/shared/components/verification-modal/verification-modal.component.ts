@@ -9,6 +9,9 @@ import {
   inject,
   ViewEncapsulation,
   AfterViewInit,
+  QueryList,
+  ElementRef,
+  ViewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -18,6 +21,8 @@ import {
 } from '@lumaverse/sug-ui';
 import { VerificationService } from '@services/verification.service';
 import { UserStateService } from '@services/user-state.service';
+import { environment } from '@environments/environment';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * Verification Modal Component
@@ -43,8 +48,12 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
   @Output() closed = new EventEmitter<void>();
   @Output() visibleChange = new EventEmitter<boolean>();
 
+  @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
+
   private readonly verificationService = inject(VerificationService);
   private readonly userStateService = inject(UserStateService);
+
+  readonly supportUrl = environment.SITE_URL + '/help';
 
   verificationCode = '';
   isLoading = false;
@@ -86,10 +95,7 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
    */
   private sendCode(): void {
     this.verificationService.sendVerificationCode().subscribe({
-      next: () => {
-        console.log('Verification code sent to email');
-      },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         console.error('Failed to send verification code:', err);
         this.errorMessage =
           'Failed to send verification code. Please try again.';
@@ -130,7 +136,7 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
                 this.visibleChange.emit(false);
                 this.verified.emit();
               },
-              error: (err) => {
+              error: (err: HttpErrorResponse) => {
                 console.error('Failed to fetch verification status:', err);
                 this.errorMessage =
                   'Enter a valid verification code or click the activation link in the verification email.';
@@ -143,7 +149,7 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
             this.isLoading = false;
           }
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           console.error('Verification failed:', err);
           this.errorMessage =
             'Enter a valid verification code or click the activation link in the verification email.';
@@ -290,9 +296,9 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
    * Focus the first OTP input
    */
   private focusFirstInput(): void {
-    const firstInput = document.querySelector('.otp-input') as HTMLInputElement;
+    const firstInput = this.otpInputs?.first;
     if (firstInput) {
-      firstInput.focus();
+      firstInput.nativeElement.focus();
     }
   }
 }
