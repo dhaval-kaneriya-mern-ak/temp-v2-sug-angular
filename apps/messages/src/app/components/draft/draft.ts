@@ -221,7 +221,7 @@ export class Draft implements OnDestroy, OnInit {
           subject: item.subject,
           messageid: item.messageid,
           memberid: item.memberid,
-          messagetype: item.messagetype?.toUpperCase() || '',
+          messagetype: item.messagetype,
           messagetypeid: item.messagetypeid,
           status: item.status || '',
           body: item.body || '',
