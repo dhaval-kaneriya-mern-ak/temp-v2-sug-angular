@@ -209,6 +209,7 @@ export class ComposeEmailComponent
   private isRestoringDateSlots = false;
   hasWaitlistSlots = false;
   errorMessage = '';
+  signupIdParam: string | null = null;
 
   ngOnInit(): void {
     // Initialize unsaved changes manager
@@ -222,7 +223,7 @@ export class ComposeEmailComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
         const messageId = Number(params['id']);
-
+        this.signupIdParam = params['signupId'];
         if (!isNaN(messageId) && messageId > 0) {
           this.isEditingExistingDraft = true;
           this.currentDraftMessageId = messageId;
@@ -423,6 +424,9 @@ export class ComposeEmailComponent
   private loadInitialData(): void {
     this.isLoading = true;
 
+    // Load sub-admins first to ensure they're available for signup configuration
+    this.loadSubAdmins();
+
     // Load signups
     this.composeService.getSignUpList().subscribe({
       next: (response) => {
@@ -476,9 +480,6 @@ export class ComposeEmailComponent
         }
       },
     });
-
-    // Load sub-admins
-    this.loadSubAdmins();
 
     // Load tab groups (for pro users)
     this.loadTabGroups();
@@ -666,6 +667,9 @@ export class ComposeEmailComponent
     setTimeout(() => {
       this.setupFormChangeTracking();
     }, FORM_TRACKING_DELAY);
+    this.updateSignupSelectionUsingUrlParams(
+      this.stateService.signUpOptions[0].items
+    );
   }
 
   /**
@@ -2819,5 +2823,62 @@ export class ComposeEmailComponent
       destroy$: this.destroy$,
       httpClient: this.httpClient,
     });
+  }
+
+  private updateSignupSelectionUsingUrlParams(
+    data: ISelectOption[] | undefined
+  ): void {
+    if (this.signupIdParam && data && data.length > 0) {
+      const selectedSignup: ISignUpItem[] =
+        data
+          ?.filter(
+            (item: any) =>
+              item?.signupData?.signupid?.toString() === this.signupIdParam
+          )
+          ?.map((item: any) => item.signupData) || [];
+
+      if (selectedSignup.length > 0) {
+        // Set the selected signups in state
+        this.stateService.setSelectedSignups(selectedSignup);
+        // Wait for all dependencies to load, then configure form
+        this.configureFormForSelectedSignup();
+      } else {
+        console.warn(
+          'No signup found for signupId:',
+          this.signupIdParam,
+          ' or invalid data structure.'
+        );
+      }
+    }
+  }
+
+  /**
+   * Configure form when signup is selected via URL parameter
+   */
+  private configureFormForSelectedSignup(): void {
+    // Enable form controls
+    this.toggleFormControls();
+
+    // Set reply-to to current user if available in sub-admins
+    if (this.stateService.subAdminsData.length > 0) {
+      const user = this.stateService.subAdminsData[0].value;
+      if (user) {
+        this.currentForm.get('replyTo')?.setValue([user]);
+        this.currentForm.get('replyTo')?.updateValueAndValidity();
+      }
+    }
+
+    // Update subject and message based on selected signup
+    this.updateSubjectAndMessage();
+    const data = {
+      selectedSignups: this.stateService.selectedSignups,
+      replyTo: this.currentForm.get('replyTo')?.value,
+      subject: this.currentForm.get('subject')?.value,
+      message: this.currentForm.get('message')?.value,
+    };
+
+    this.emailFormOne.patchValue(data);
+    this.emailFormTwo.patchValue(data);
+    this.cdr.detectChanges();
   }
 }

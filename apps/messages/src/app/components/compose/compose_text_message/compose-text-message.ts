@@ -227,6 +227,7 @@ export class ComposeTextMessageComponent
   emailRecipientsCount = 0;
   shortUrl = '';
   limitsData: MessageLimitsResponse | null = null;
+  signupIdParam: string | null = null;
   readonly messageTypeIds = MessageTypeId;
   ngOnInit() {
     // Initialize unsaved changes manager
@@ -296,6 +297,7 @@ export class ComposeTextMessageComponent
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
+        this.signupIdParam = params['signupId'];
         const messageId = Number(params['id']);
 
         if (!isNaN(messageId) && messageId > 0) {
@@ -415,6 +417,7 @@ export class ComposeTextMessageComponent
     setTimeout(() => {
       this.setupFormChangeTracking();
     }, FORM_TRACKING_DELAY);
+    this.updateSignupSelectionUsingUrlParams(this.signupOptionsData);
   }
 
   /**
@@ -2624,5 +2627,69 @@ export class ComposeTextMessageComponent
 
   removeGroup(index: number): void {
     this.stateService.removeGroup(index);
+  }
+
+  private updateSignupSelectionUsingUrlParams(
+    data: ISignUpItem[] | undefined
+  ): void {
+    if (this.signupIdParam && data && data.length > 0) {
+      const selectedSignup: ISignUpItem[] =
+        data
+          ?.filter(
+            (item: any) => item?.signupid?.toString() === this.signupIdParam
+          )
+          ?.map((item: any) => item) || [];
+      if (selectedSignup.length > 0) {
+        // Set the selected signups in state
+        this.stateService.setSelectedSignups(selectedSignup);
+        this.currentEmailForm
+          .get('selectedSignups')
+          ?.setValue(selectedSignup.map((s) => s.signupid.toString()));
+        this.currentEmailForm.get('selectedSignups')?.updateValueAndValidity();
+        // Wait for all dependencies to load, then configure form
+        this.configureFormForSelectedSignup();
+      } else {
+        console.warn(
+          'No signup found for signupId:',
+          this.signupIdParam,
+          ' or invalid data structure.'
+        );
+      }
+    }
+  }
+
+  /**
+   * Configure form when signup is selected via URL parameter
+   */
+  private configureFormForSelectedSignup(): void {
+    // Set reply-to to current user if available in sub-admins
+    const fullName = `${this.userProfile?.firstname || ''} ${
+      this.userProfile?.lastname || ''
+    }`.trim();
+    if (this.inviteTextForm) {
+      this.inviteTextForm.patchValue({
+        fromName: fullName,
+        message:
+          fullName +
+          ' invites you to opt in to the SignUpGenius text messaging service. Your privacy is our top priority, and this is a voluntary opt-in process designed to provide updates related to your sign up participation. You may unsubscribe at any time.',
+      });
+    }
+    this.sendTextEmailForm.patchValue({
+      emailFrom: fullName,
+      message: 'From ' + fullName,
+      userMobile: this.userProfile?.mobile,
+      includefallback: true,
+    });
+
+    if (this.subAdminsApiData.length > 0) {
+      const user = this.subAdminsApiData[0].id.toString();
+      if (user.length > 0) {
+        this.currentEmailForm.get('replyTo')?.setValue([user]);
+        this.currentEmailForm.get('emailReplyTo')?.setValue([user]);
+        this.currentEmailForm.get('replyTo')?.updateValueAndValidity();
+        this.currentEmailForm.get('emailReplyTo')?.updateValueAndValidity();
+      }
+    }
+    this.cdr.detectChanges();
   }
 }
