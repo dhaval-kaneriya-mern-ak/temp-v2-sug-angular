@@ -37,8 +37,6 @@ export class UserStateService implements OnDestroy {
     null;
   private _isProfileLoaded = false;
 
-  // private readonly VERIFICATION_KEY = 'user_verified' as const;
-
   /**
    * Load user profile from API - optimized with shareReplay for single API call
    */
