@@ -11,10 +11,12 @@
       color: #666;
       span {
         color: #777;
-        text-transform: uppercase;
         font-size: 13px;
         margin-left: 6px;
       }
+    }
+    .color-info span {
+      color: #f68b1c;
     }
     .download-container {
       display: flex;
