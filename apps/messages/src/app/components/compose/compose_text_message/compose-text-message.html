@@ -282,6 +282,14 @@
                 [inputId]="checkboxOptions[0].value"
               >
               </sug-ui-radio-checkbox-button>
+              <a
+                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
+                tabindex="-1"
+                (click)="showProfileData()"
+                (keyup)="false"
+              >
+                <i class="pi pi-cog optionone-label"> </i>
+              </a>
             </div>
             @if (showProfile) {
             <div class="check-option-form check-option-form-profile">
@@ -321,26 +329,13 @@
                 [inputId]="checkboxOptions[2].value"
               >
               </sug-ui-radio-checkbox-button>
-            </div>
-            <div class="check-option-forms-wrapper">
-              <a
-                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
-                tabindex="-1"
-                (click)="showProfileData()"
-                (keyup)="false"
-              >
-                <i class="pi pi-cog optionone-label"> </i>
-              </a>
               <a
                 [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
                 tabindex="-1"
                 (click)="showEmailData()"
                 (keyup)="false"
               >
-                <i
-                  [ngClass]="{'email-gear': showProfile}"
-                  class="pi pi-cog optionthree-label"
-                ></i>
+                <i class="pi pi-cog optionthree-label"></i>
               </a>
             </div>
             @if (showEmail) {
