@@ -203,7 +203,7 @@ export class Schedule {
               (item: Message) => {
                 const formattedDate = this.userStateService.convertESTtoUserTZ(
                   Number(item.senddate),
-                  this.userData?.zonename || 'UTC',
+                  this.userData?.zonename || 'EST',
                   this.userData?.selecteddateformat?.short.toUpperCase() +
                     ' hh:mma'
                 );

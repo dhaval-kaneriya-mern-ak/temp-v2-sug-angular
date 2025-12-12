@@ -984,7 +984,8 @@ export class ComposeEmailComponent
    */
   private saveDraftToApi(
     messageId: number,
-    payload: ISaveDraftMessagePayload
+    payload: ISaveDraftMessagePayload,
+    status: MessageStatus
   ): void {
     saveDraftMessage({
       messageId,
@@ -995,6 +996,16 @@ export class ComposeEmailComponent
       onSuccess: (returnedMessageId) => {
         this.currentDraftMessageId = returnedMessageId;
         this.unsavedChangesManager.resetFormDirtyState();
+        const successType =
+          status === MessageStatus.DRAFT
+            ? 'draft'
+            : status === MessageStatus.SCHEDULED
+            ? 'scheduled'
+            : 'send';
+        this.composeService.triggerSuccessPage(
+          successType,
+          this.stateService.selectedSignups
+        );
       },
       onLoadingChange: (isLoading) => {
         this.isLoading = isLoading;
@@ -1200,7 +1211,7 @@ export class ComposeEmailComponent
         }));
       }
 
-      this.saveDraftToApi(this.currentDraftMessageId, payload);
+      this.saveDraftToApi(this.currentDraftMessageId, payload, status);
     } else {
       this.isLoading = true;
       const groups = this.stateService.selectedGroups;

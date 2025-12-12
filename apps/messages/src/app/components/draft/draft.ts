@@ -215,7 +215,7 @@ export class Draft implements OnDestroy, OnInit {
         this.tableData = messages.map((item) => ({
           datecreated: this.userStateService.convertESTtoUserTZ(
             Number(item.datecreated),
-            this.userData?.zonename || 'UTC',
+            this.userData?.zonename || 'EST',
             this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
           ),
           subject: item.subject,
