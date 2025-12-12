@@ -2,7 +2,7 @@
 @import '../../shared/styles/_chip-components';
 
 .compose-container {
-  padding: 30px 0;
+  padding: 15px 0;
   position: relative;
   h2 {
     font-size: 30px;
@@ -350,40 +350,6 @@
       outline-offset: 2px;
     }
   }
-}
-
-.check-option-forms-wrapper .optionthree-label {
-  position: absolute;
-  top: 82px;
-  left: 400px;
-  color: #f68b1c;
-  cursor: pointer;
-  font-size: 16px;
-  @media (max-width: 1200px) {
-    left: 350px;
-  }
-  @media (max-width: 991px) {
-    left: 320px;
-  }
-  @media (max-width: 767px) {
-    left: 295px;
-  }
-}
-.email-gear {
-  top: 148px !important;
-}
-.check-option-forms-wrapper {
-  .optionone-label {
-    position: absolute;
-    top: 10px;
-    left: 180px;
-    color: #f68b1c;
-    cursor: pointer;
-    font-size: 16px;
-  }
-}
-.check-option-forms-wrapper .optionone-label:hover {
-  color: #f68b1c;
 }
 .disabled {
   pointer-events: none;
