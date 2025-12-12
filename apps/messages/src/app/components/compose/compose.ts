@@ -131,7 +131,7 @@ export class Compose implements OnInit, OnDestroy {
 
         // Always set badge on restricted tabs
         this.navigationComposeTabs = this.navigationComposeTabs.map((tab) => {
-          if (tab.restricted && this.userStateService.isBasicUser(profile)) {
+          if (tab.restricted) {
             return { ...tab, badge: this.badgeUrl };
           }
           return tab;

@@ -113,7 +113,7 @@ export class Sent {
                 messageid: item.messageid,
                 senddate: this.userStateService.convertESTtoUserTZ(
                   Number(item?.sentdate || 0),
-                  this.userData?.zonename || 'UTC',
+                  this.userData?.zonename || 'EST',
                   this.userData?.selecteddateformat?.short.toUpperCase() +
                     ' hh:mma'
                 ),
