@@ -20,13 +20,13 @@
           ></sug-ui-radio-checkbox-button>
           @if (option.value === 'LinkMainAccount') {
           <div class="signup-tooltip-content">
-            <a
+            <button
+              type="button"
               class="link-button"
               (click)="openMemberIndexPage()"
-              (keyup.enter)="openMemberIndexPage()"
-              tabindex="0"
-              >Sign Up Index Page
-            </a>
+            >
+              Sign Up Index Page
+            </button>
             <sug-ui-tooltip
               [text]="
                 'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'
