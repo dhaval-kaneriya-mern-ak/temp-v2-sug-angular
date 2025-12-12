@@ -126,10 +126,6 @@ export class UserStateService implements OnDestroy {
       ...current,
       isVerified: verified === 1,
     });
-    console.log(
-      this._verificationState$.value.isVerified,
-      'setverificationstatus'
-    );
   }
 
   setVerifyApiFailed(failed: boolean): void {
@@ -138,17 +134,12 @@ export class UserStateService implements OnDestroy {
       ...current,
       isApiFailed: failed,
     });
-    console.log(
-      this._verificationState$.value.isApiFailed,
-      'setverifyapifailed'
-    );
   }
 
   /**
    * Check if user is verified
    */
   isUserVerified(): boolean {
-    console.log('isUserverified', this._verificationState$.value.isVerified);
     return this._verificationState$.value.isVerified;
   }
 

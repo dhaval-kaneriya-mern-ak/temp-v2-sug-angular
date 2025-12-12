@@ -116,63 +116,6 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
   /**
    * Handle continue button click - verify the code
    */
-  // onContinue(): void {
-  //   // Build verification code from digits
-  //   this.verificationCode = this.otpDigits.join('');
-
-  //   // Validate code format
-  //   if (!this.verificationCode || this.verificationCode.trim().length !== 6) {
-  //     this.errorMessage =
-  //       'Enter a valid verification code or click the activation link in the verification email.';
-  //     return;
-  //   }
-
-  //   this.isLoading = true;
-  //   this.errorMessage = '';
-
-  //   // Step 1: Validate the verification code
-  //   this.verificationService
-  //     .validateVerificationCode(this.verificationCode.trim())
-  //     .subscribe({
-  //       next: (response: IValidateVerificationCodeResponse) => {
-  //         if (response.data.success) {
-  //           // Step 2: Code verified successfully - now fetch updated verification status
-  //           this.verificationService.checkVerificationStatus().subscribe({
-  //             next: (verified: number) => {
-  //               // Update verification status from server response
-  //               this.userStateService.setVerificationStatus(verified);
-  //               this.isLoading = false;
-  //               if (!this.userStateService.isVerifyApiFailed()) {
-  //                 this.visible = false;
-  //                 this.visibleChange.emit(false);
-  //                 this.verified.emit();
-  //               } else {
-  //                 this.errorMessage =
-  //                   'Failed to fetch verification status. Please try again later.';
-  //                 this.isLoading = false;
-  //               }
-  //             },
-  //             error: (err: HttpErrorResponse) => {
-  //               console.error('Failed to fetch verification status:', err);
-  //               this.errorMessage =
-  //                 'Enter a valid verification code or click the activation link in the verification email.';
-  //               this.isLoading = false;
-  //             },
-  //           });
-  //         } else {
-  //           this.errorMessage =
-  //             'Enter a valid verification code or click the activation link in the verification email.';
-  //           this.isLoading = false;
-  //         }
-  //       },
-  //       error: (err: HttpErrorResponse) => {
-  //         console.error('Verification failed:', err);
-  //         this.errorMessage =
-  //           'Enter a valid verification code or click the activation link in the verification email.';
-  //         this.isLoading = false;
-  //       },
-  //     });
-  // }
 
   onContinue(): void {
     // Build verification code from digits
