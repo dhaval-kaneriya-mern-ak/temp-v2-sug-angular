@@ -169,6 +169,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
         // Store the pending route and show verification modal
         this.pendingRoute = selectedTab.route;
         this.showVerificationModal = true;
+        console.log(this.userStateService.isUserVerified());
+
         // Don't navigate yet
         return;
       }

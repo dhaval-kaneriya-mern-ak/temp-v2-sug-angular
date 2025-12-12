@@ -9,12 +9,6 @@ import { UserStateService } from '@services/user-state.service';
  */
 export const verificationGuard: CanActivateFn = (route, state) => {
   const userStateService = inject(UserStateService);
-  const router = inject(Router);
 
-  // Check if user is verified
-  if (!userStateService.isUserVerified()) {
-    return false;
-  }
-
-  return true;
+  return userStateService.isUserVerified();
 };

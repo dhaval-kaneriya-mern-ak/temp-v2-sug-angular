@@ -12,7 +12,25 @@
 
     <!-- Content -->
     <div class="dialog-content">
-      <!-- Error message banner (at top) -->
+      @if(userStateService.isVerifyApiFailed()) {
+      <!-- API Failed - Show error only -->
+      <div class="error-banner">
+        <i class="pi pi-info-circle"></i>
+        <div class="error-banner-content">
+          <strong>Verification Service Unavailable</strong>
+          <ul>
+            <li>{{ errorMessage }}</li>
+          </ul>
+        </div>
+      </div>
+      <p class="help-text">
+        Please try again later or
+        <a [href]="supportUrl" target="_blank" rel="noopener noreferrer"
+          >contact support</a
+        >.
+      </p>
+      } @else {
+      <!-- Normal OTP Flow -->
       <div *ngIf="errorMessage" class="error-banner">
         <i class="pi pi-info-circle"></i>
         <div class="error-banner-content">
@@ -56,10 +74,12 @@
           >contact support</a
         >.
       </p>
+      }
     </div>
 
     <!-- Footer -->
     <div slot="footer" class="dialog-footer">
+      @if(!userStateService.isVerifyApiFailed()) {
       <sug-ui-button
         [label]="isLoading ? 'Verifying...' : 'Continue'"
         icon=""
@@ -71,6 +91,7 @@
         [disabled]="isLoading || !isOtpComplete()"
         (click)="onContinue()"
       ></sug-ui-button>
+      }
     </div>
   </sug-ui-dialog>
 </div>

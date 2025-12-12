@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SugApiService } from './sug-api.service';
+import { UserStateService } from './user-state.service';
 
 /**
  * Interface for verification details API response
@@ -18,6 +19,22 @@ export interface IVerificationDetailsResponse {
   };
 }
 
+export interface ISendVerificationCodeResponse {
+  success: boolean;
+  message: string[];
+  data: {
+    success: boolean;
+  };
+}
+
+export interface IValidateVerificationCodeResponse {
+  success: boolean;
+  message: string[];
+  data: {
+    success: boolean;
+  };
+}
+
 /**
  * Service to handle user verification operations
  * Manages verification status checks and code verification flow
@@ -27,7 +44,7 @@ export interface IVerificationDetailsResponse {
 })
 export class VerificationService {
   private readonly sugApiService = inject(SugApiService);
-
+  private readonly userStateService = inject(UserStateService);
   /**
    * Check user verification status
    * GET: v3/member/verificationdetails
@@ -39,9 +56,13 @@ export class VerificationService {
       .pipe(
         map((response: IVerificationDetailsResponse) => {
           if (response.success && response.data) {
+            this.userStateService.setVerifyApiFailed(false);
             return response.data.verified;
+          } else if (!response.success) {
+            this.userStateService.setVerifyApiFailed(true);
+            return 0;
           }
-          return 0; // Default to not verified on error
+          return 0;
         })
       );
   }
@@ -51,8 +72,10 @@ export class VerificationService {
    * GET: /member/sendverificationcode
    * @returns Observable with API response
    */
-  sendVerificationCode(): Observable<any> {
-    return this.sugApiService.get<any>('/member/sendverificationcode');
+  sendVerificationCode(): Observable<ISendVerificationCodeResponse> {
+    return this.sugApiService.get<ISendVerificationCodeResponse>(
+      '/member/sendverificationcode'
+    );
   }
 
   /**
@@ -61,9 +84,11 @@ export class VerificationService {
    * @param code - 6-digit verification code
    * @returns Observable with validation result
    */
-  validateVerificationCode(code: string): Observable<any> {
+  validateVerificationCode(
+    code: string
+  ): Observable<IValidateVerificationCodeResponse> {
     const payload = { code };
-    return this.sugApiService.post<any>(
+    return this.sugApiService.post<IValidateVerificationCodeResponse>(
       '/member/validatememberverificationcode',
       payload
     );

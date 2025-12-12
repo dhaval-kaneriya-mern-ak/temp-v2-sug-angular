@@ -9,6 +9,10 @@ import {
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
+import {
+  VERIFICATION_STATE_SUBJECT,
+  VerificationState,
+} from './verification-state-token';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +22,8 @@ export class UserStateService implements OnDestroy {
 
   // Inject the shared BehaviorSubject (works across module federation)
   private readonly _userProfile$ = inject(USER_PROFILE_SUBJECT);
+
+  private readonly _verificationState$ = inject(VERIFICATION_STATE_SUBJECT);
 
   // Signal for reactive state
   private readonly _userProfile = signal<MemberProfile | null>(null);
@@ -31,7 +37,7 @@ export class UserStateService implements OnDestroy {
     null;
   private _isProfileLoaded = false;
 
-  private readonly VERIFICATION_KEY = 'user_verified' as const;
+  // private readonly VERIFICATION_KEY = 'user_verified' as const;
 
   /**
    * Load user profile from API - optimized with shareReplay for single API call
@@ -108,22 +114,46 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.next(null);
     this._isProfileLoaded = false;
     this._loadingObservable = null;
-    sessionStorage.removeItem(this.VERIFICATION_KEY);
+    this._verificationState$.next({
+      isVerified: false,
+      isApiFailed: false,
+    });
   }
 
   setVerificationStatus(verified: number): void {
-    sessionStorage.setItem(this.VERIFICATION_KEY, verified.toString());
+    const current = this._verificationState$.value;
+    this._verificationState$.next({
+      ...current,
+      isVerified: verified === 1,
+    });
+    console.log(
+      this._verificationState$.value.isVerified,
+      'setverificationstatus'
+    );
+  }
+
+  setVerifyApiFailed(failed: boolean): void {
+    const current = this._verificationState$.value;
+    this._verificationState$.next({
+      ...current,
+      isApiFailed: failed,
+    });
+    console.log(
+      this._verificationState$.value.isApiFailed,
+      'setverifyapifailed'
+    );
   }
 
   /**
    * Check if user is verified
    */
   isUserVerified(): boolean {
-    const verificationStatus = parseInt(
-      sessionStorage.getItem(this.VERIFICATION_KEY) || '0',
-      10
-    );
-    return verificationStatus === 1;
+    console.log('isUserverified', this._verificationState$.value.isVerified);
+    return this._verificationState$.value.isVerified;
+  }
+
+  isVerifyApiFailed(): boolean {
+    return this._verificationState$.value.isApiFailed;
   }
 
   /**
