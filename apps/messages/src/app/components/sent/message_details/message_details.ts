@@ -4,6 +4,7 @@ import { MessageDetailsService } from './message-details.service';
 import { ActivatedRoute } from '@angular/router';
 import { MessageDetailsData } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'sug-message-details',
@@ -14,8 +15,11 @@ import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 export class MessageDetailsComponent implements OnInit {
   messageDetailService = inject(MessageDetailsService);
   activatedRoute = inject(ActivatedRoute);
+  sanitizer = inject(DomSanitizer);
   detailsMessage: MessageDetailsData | undefined;
   isLoading = false;
+  sanitizedHtmlPreview: SafeHtml = '';
+
   ngOnInit() {
     // Get ID from parent route params
     const messageId = this.activatedRoute.parent?.snapshot.params['id'];
@@ -29,6 +33,9 @@ export class MessageDetailsComponent implements OnInit {
     this.messageDetailService.getMessageDetails(messageId).subscribe({
       next: (response) => {
         this.detailsMessage = response.data;
+        this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
+          this.detailsMessage.preview
+        );
         this.isLoading = false;
       },
       error: (error) => {
