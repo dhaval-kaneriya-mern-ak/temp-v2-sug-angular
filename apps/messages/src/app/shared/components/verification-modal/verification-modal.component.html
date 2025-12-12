@@ -1,0 +1,97 @@
+<div class="verification-dialog-wrapper">
+  <sug-ui-dialog
+    class="verification-dialog"
+    [config]="dialogConfig"
+    [(visible)]="visible"
+    (hide)="onClose()"
+    [showFooter]="true"
+    [showHeader]="true"
+  >
+    <!-- Header -->
+    <h2 slot="header" class="dialog-title">Account verification required</h2>
+
+    <!-- Content -->
+    <div class="dialog-content">
+      @if(userStateService.isVerifyApiFailed()) {
+      <!-- API Failed - Show error only -->
+      <div class="error-banner">
+        <i class="pi pi-info-circle"></i>
+        <div class="error-banner-content">
+          <strong>Verification Service Unavailable</strong>
+          <ul>
+            <li>{{ errorMessage }}</li>
+          </ul>
+        </div>
+      </div>
+      <p class="help-text">
+        Verification service is currently down. Please try again later or
+        <a [href]="supportUrl" target="_blank" rel="noopener noreferrer"
+          >contact support</a
+        >.
+      </p>
+      } @else {
+      <!-- Normal OTP Flow -->
+      <div *ngIf="errorMessage" class="error-banner">
+        <i class="pi pi-info-circle"></i>
+        <div class="error-banner-content">
+          <strong>Please correct the issues indicated below</strong>
+          <ul>
+            <li>{{ errorMessage }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="description-text">
+        To continue, please enter the 6-digit verification code sent to your
+        email address.
+      </p>
+
+      <!-- OTP Input - 6 separate boxes -->
+      <div class="otp-input-container">
+        @for (digit of otpDigits; track $index) {
+        <input
+          [attr.data-index]="$index"
+          #otpInput
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          [value]="digit"
+          (input)="onOtpInput($event, $index)"
+          (keydown)="onOtpKeyDown($event, $index)"
+          (paste)="onOtpPaste($event)"
+          class="otp-input"
+          [disabled]="isLoading"
+          autocomplete="off"
+        />
+        }
+      </div>
+
+      <!-- Help text -->
+      <p class="help-text">
+        If you did not receive the verification email, please check your spam
+        folder. If you continue to have trouble verifying your account, please
+        <a [href]="supportUrl" target="_blank" rel="noopener noreferrer"
+          >contact support</a
+        >.
+      </p>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div slot="footer" class="dialog-footer">
+      @if(!userStateService.isVerifyApiFailed()) {
+      <sug-ui-button
+        [label]="isLoading ? 'Verifying...' : 'Continue'"
+        icon=""
+        [rounded]="false"
+        [size]="'large'"
+        [severity]="'primary'"
+        styleClass="continue-btn"
+        [outlined]="false"
+        [disabled]="isLoading || !isOtpComplete()"
+        (click)="onContinue()"
+      ></sug-ui-button>
+      }
+    </div>
+  </sug-ui-dialog>
+</div>

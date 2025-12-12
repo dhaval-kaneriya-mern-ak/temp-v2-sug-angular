@@ -16,26 +16,34 @@ import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { Subject, filter, take, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
 import { UserStateService } from '@services/user-state.service';
+import { VerificationModalComponent } from '../../shared/components/verification-modal/verification-modal.component';
 
 @Component({
   selector: 'sug-tablayout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SugUiMenuTabsComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    SugUiMenuTabsComponent,
+    VerificationModalComponent,
+  ],
   templateUrl: './tablayout.html',
   styleUrl: './tablayout.scss',
 })
 export class TabLayoutComponent implements OnInit, OnDestroy {
   private readonly allTabs: Tabs[] = [
-    { name: 'Dashboard', route: 'messages/dashboard' },
-    { name: 'Compose', route: 'messages/compose' },
-    { name: 'Drafts & Templates', route: 'messages/draft' },
-    { name: 'Scheduled', route: 'messages/schedule' },
-    { name: 'Sent', route: 'messages/sent' },
+    { name: 'Dashboard', route: '/messages/dashboard' },
+    { name: 'Compose', route: '/messages/compose' },
+    { name: 'Drafts & Templates', route: '/messages/draft' },
+    { name: 'Scheduled', route: '/messages/schedule' },
+    { name: 'Sent', route: '/messages/sent' },
   ];
 
   navigationTabs: Tabs[] = [];
   currentActiveTab = '';
   showAnnouncementBar = false;
+  showVerificationModal = false;
+  pendingRoute: string | null = null;
 
   private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
@@ -111,7 +119,7 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     // Simple tab filtering
     this.navigationTabs = this.allTabs.filter(
       (tab) =>
-        tab.route !== 'messages/schedule' ||
+        tab.route !== '/messages/schedule' ||
         this.userStateService.shouldShowScheduleTab(profile)
     );
   }
@@ -123,7 +131,7 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     const matchingTab = this.navigationTabs.find((tab) => {
       // Special handling for sent details pages (e.g., /messages/sent/123)
       if (
-        tab.route === 'messages/sent' &&
+        tab.route === '/messages/sent' &&
         currentUrl.startsWith('/messages/sent/')
       ) {
         return true;
@@ -138,7 +146,7 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     });
     this.currentActiveTab = matchingTab
       ? matchingTab.route
-      : 'messages/dashboard';
+      : '/messages/dashboard';
   }
 
   setActiveTab(tabRoute: string) {
@@ -153,8 +161,50 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     }
 
     if (selectedTab && selectedTab.route) {
+      // Check if navigating to compose and user is not verified
+      if (
+        selectedTab.route === '/messages/compose' &&
+        !this.userStateService.isUserVerified()
+      ) {
+        // Store the pending route and show verification modal
+        this.pendingRoute = selectedTab.route;
+        this.showVerificationModal = true;
+        // Don't navigate yet
+        return;
+      }
+
+      // Navigate normally for other routes or verified users
       this.router.navigate([selectedTab.route]);
     }
+  }
+
+  /**
+   * Handle successful verification
+   */
+  onVerificationSuccess(): void {
+    this.showVerificationModal = false;
+
+    // Navigate to the pending route
+    if (this.pendingRoute) {
+      this.router.navigate([this.pendingRoute]);
+      this.pendingRoute = null;
+    }
+  }
+
+  /**
+   * Handle verification modal close
+   */
+  onVerificationModalClosed(): void {
+    this.showVerificationModal = false;
+    this.pendingRoute = null;
+
+    // Reset the active tab back to the current route
+    // Force UI to update by temporarily clearing and restoring the value
+    const currentTab = this.currentActiveTab;
+    this.currentActiveTab = '';
+    this.cdr.detectChanges();
+    this.currentActiveTab = currentTab;
+    this.cdr.detectChanges();
   }
 
   /**
