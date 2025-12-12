@@ -99,14 +99,22 @@ export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   }
 
   get dialogRadioOptions() {
-    const baseOptions = [
+    const baseOptions: Array<{
+      label: string;
+      value: string;
+      hasCustomContent?: boolean;
+    }> = [
       { label: 'Link to specific sign up(s)', value: 'LinkSpecificSignup' },
-      {
+    ];
+
+    //only show main account option if user has tab groups or signups
+    if (this.userStateService.isBasicUser(this.userProfile) === false) {
+      baseOptions.push({
         label: 'Link to my main account',
         value: 'LinkMainAccount',
         hasCustomContent: true,
-      },
-    ];
+      });
+    }
 
     // Only add tab groups option if we have tab groups data
     if (this.tabGroupsData && this.tabGroupsData.length > 0) {
