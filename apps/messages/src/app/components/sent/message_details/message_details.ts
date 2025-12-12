@@ -6,6 +6,7 @@ import { MemberProfile, MessageDetailsData } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 import { UserStateService } from '@services/user-state.service';
 import { filter, take } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'sug-message-details',
@@ -16,10 +17,13 @@ import { filter, take } from 'rxjs';
 export class MessageDetailsComponent implements OnInit {
   messageDetailService = inject(MessageDetailsService);
   activatedRoute = inject(ActivatedRoute);
+  sanitizer = inject(DomSanitizer);
   detailsMessage: MessageDetailsData | undefined;
   isLoading = false;
   private userStateService = inject(UserStateService);
   userData: MemberProfile | null = null;
+  sanitizedHtmlPreview: SafeHtml = '';
+
   ngOnInit() {
     // Get ID from parent route params
     const messageId = this.activatedRoute.parent?.snapshot.params['id'];
@@ -46,6 +50,9 @@ export class MessageDetailsComponent implements OnInit {
           Number(response?.data?.sentdate || 0),
           this.userData?.zonename || 'EST',
           this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
+        );
+        this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
+          this.detailsMessage.preview
         );
         this.isLoading = false;
       },
