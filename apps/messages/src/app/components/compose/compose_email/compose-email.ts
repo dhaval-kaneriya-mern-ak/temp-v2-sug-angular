@@ -41,6 +41,7 @@ import {
   catchError,
   tap,
   Observable,
+  forkJoin,
 } from 'rxjs';
 import {
   MemberProfile,
@@ -63,6 +64,8 @@ import {
   EXCLUDED_RECIPIENT_VALUES,
   MessageTypeId,
   ITabGroupItem,
+  IDateSlotsResponse,
+  IDateSlotItem,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -510,24 +513,53 @@ export class ComposeEmailComponent
 
   /**
    * Updates the waitlist slots status based on selected signups
-   * Checks for waitlist slots when exactly one signup is selected for email option two
+   * Checks for waitlist slots across all selected signups for email option two
+   * Sets hasWaitlistSlots to true if ANY selected signup has waitlist slots
    */
   private updateWaitlistSlotsStatus(selectedSignups: ISignUpItem[]): void {
     const shouldCheckWaitlist =
-      selectedSignups.length === 1 && this.selectedValue === 'emailoptiontwo';
+      selectedSignups.length > 0 && this.selectedValue === 'emailoptiontwo';
 
     if (shouldCheckWaitlist) {
-      checkForWaitlistSlots({
-        signupId: selectedSignups[0].signupid,
-        composeService: this.composeService,
-        destroy$: this.destroy$,
-        onResult: (hasWaitlistSlots) => {
-          this.hasWaitlistSlots = hasWaitlistSlots;
-        },
-      });
+      const payload = {
+        includeSignedUpMembers: true,
+      };
+
+      // Create an array of observables for all signup checks
+      const checks$ = selectedSignups.map((signup) =>
+        this.composeService
+          .getDateSlots(signup.signupid, payload)
+          .pipe(
+            catchError(() =>
+              of<IDateSlotsResponse>({ success: false, message: [], data: [] })
+            )
+          )
+      );
+
+      // Wait for all checks to complete using forkJoin
+      forkJoin(checks$)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (responses: IDateSlotsResponse[]) => {
+            // Check if any signup has waitlist slots
+            this.hasWaitlistSlots = this.hasAnyWaitlistSlots(responses);
+          },
+          error: (err) => {
+            console.error('Error checking waitlist slots:', err);
+            this.hasWaitlistSlots = false;
+          },
+        });
     } else {
       this.hasWaitlistSlots = false;
     }
+  }
+
+  private hasAnyWaitlistSlots(responses: IDateSlotsResponse[]): boolean {
+    return responses.some(
+      (response) =>
+        response?.success &&
+        response?.data?.some((item: IDateSlotItem) => item.waitlist === true)
+    );
   }
 
   /**
@@ -670,6 +702,9 @@ export class ComposeEmailComponent
     this.updateSignupSelectionUsingUrlParams(
       this.stateService.signUpOptions[0].items
     );
+
+    // Update waitlist status when email option changes with already selected signups
+    this.updateWaitlistSlotsStatus(this.stateService.selectedSignups);
   }
 
   /**
