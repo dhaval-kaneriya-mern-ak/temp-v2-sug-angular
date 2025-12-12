@@ -46,27 +46,15 @@
         </div>
       </div> -->
   </div>
-  <div class="template-wrapper-main">
+  <div class="template-wrapper-main pt-5">
     <div class="template-wrapper">
-      <div class="template-header">
-        <img src="/logo-signupgenius.svg" alt="logo" />
-        <h3>{{ detailsMessage.subject }}</h3>
-      </div>
       <div class="template-body">
         <!-- Email preview content -->
         <div class="email-preview">
-          <div class="link-blocking-cover"></div>
-          <div class="email-content" [innerHTML]="detailsMessage.preview"></div>
+          <div class="email-content" [innerHTML]="sanitizedHtmlPreview"></div>
         </div>
       </div>
     </div>
-    <!-- <div class="template-footer">
-      <span class="appleLinksGray">1213 W. Morehead Street, Suite 500, Charlotte, NC 28208<br />© 2025
-        SignUpGenius. All Rights Reserved.
-      </span>
-      | <a href="#" style="color: inherit !important">Contact Support</a> |
-      <a href="#" style="color: inherit !important">Unsubscribe</a>
-    </div> -->
   </div>
   } @else {
   <div class="justify-content-center d-flex">

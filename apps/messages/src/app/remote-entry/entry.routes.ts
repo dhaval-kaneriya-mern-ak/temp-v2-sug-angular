@@ -14,6 +14,7 @@ import { ComposeTextMessageComponent } from '../components/compose/compose_text_
 import { SentDetails } from '../components/sent/details/sent-details';
 import { scheduleGuard } from '../guards/schedule.guard';
 import { unsavedChangesGuard } from '../guards/unsaved-changes.guard';
+import { verificationGuard } from '../guards/verification.guard';
 
 export const remoteRoutes: Route[] = [
   {
@@ -24,6 +25,7 @@ export const remoteRoutes: Route[] = [
       { path: 'dashboard', component: Dashboard },
       {
         path: 'compose',
+        canActivate: [verificationGuard],
         component: Compose, // ComposeComponent is now a layout for its own tabs
         children: [
           // Define the nested routes for the inner tabs
