@@ -9,6 +9,10 @@ import {
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
+import {
+  VERIFICATION_STATE_SUBJECT,
+  VerificationState,
+} from './verification-state-token';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +22,8 @@ export class UserStateService implements OnDestroy {
 
   // Inject the shared BehaviorSubject (works across module federation)
   private readonly _userProfile$ = inject(USER_PROFILE_SUBJECT);
+
+  private readonly _verificationState$ = inject(VERIFICATION_STATE_SUBJECT);
 
   // Signal for reactive state
   private readonly _userProfile = signal<MemberProfile | null>(null);
@@ -106,6 +112,37 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.next(null);
     this._isProfileLoaded = false;
     this._loadingObservable = null;
+    this._verificationState$.next({
+      isVerified: false,
+      isApiFailed: false,
+    });
+  }
+
+  setVerificationStatus(verified: number): void {
+    const current = this._verificationState$.value;
+    this._verificationState$.next({
+      ...current,
+      isVerified: verified === 1,
+    });
+  }
+
+  setVerifyApiFailed(failed: boolean): void {
+    const current = this._verificationState$.value;
+    this._verificationState$.next({
+      ...current,
+      isApiFailed: failed,
+    });
+  }
+
+  /**
+   * Check if user is verified
+   */
+  isUserVerified(): boolean {
+    return this._verificationState$.value.isVerified;
+  }
+
+  isVerifyApiFailed(): boolean {
+    return this._verificationState$.value.isApiFailed;
   }
 
   /**
@@ -219,7 +256,11 @@ export class UserStateService implements OnDestroy {
     this._userProfile$.complete();
   }
 
-  convertESTtoUserTZ(epochSeconds: number, userTimeZone: string, userFormat = 'MM/DD/YYYY hh:mma'): string {
+  convertESTtoUserTZ(
+    epochSeconds: number,
+    userTimeZone: string,
+    userFormat = 'MM/DD/YYYY hh:mma'
+  ): string {
     // 1️⃣ EST = UTC-5 → add 5 hours to get UTC
     const utcMillis = (epochSeconds + 5 * 3600) * 1000;
 
@@ -238,7 +279,7 @@ export class UserStateService implements OnDestroy {
     });
 
     const parts: Record<string, string> = {};
-    formatter.formatToParts(utcDate).forEach(p => {
+    formatter.formatToParts(utcDate).forEach((p) => {
       if (p.type !== 'literal') parts[p.type] = p.value;
     });
 
@@ -259,7 +300,5 @@ export class UserStateService implements OnDestroy {
     result = result.replace(/a/g, dayPeriod);
 
     return result.toLowerCase();
-
   }
-
 }
