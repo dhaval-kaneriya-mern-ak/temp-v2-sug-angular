@@ -16,7 +16,7 @@ export const unsavedChangesGuard: CanDeactivateFn<ComponentCanDeactivate> = (
   component: ComponentCanDeactivate
 ) => {
   // If component implements canDeactivate, call it
-  if (component.canDeactivate) {
+  if (component && typeof component.canDeactivate === 'function') {
     return component.canDeactivate();
   }
   // Otherwise, allow deactivation
