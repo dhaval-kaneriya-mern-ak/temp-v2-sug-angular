@@ -173,7 +173,7 @@ export class Dashboard implements OnInit, OnDestroy {
             messageid: item.messageid,
             sentdate: this.userStateService.convertESTtoUserTZ(
               Number(item?.sentdate || 0),
-              this.userData?.zonename || 'UTC',
+              this.userData?.zonename || 'EST',
               this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
             ),
             subject: item.subject,

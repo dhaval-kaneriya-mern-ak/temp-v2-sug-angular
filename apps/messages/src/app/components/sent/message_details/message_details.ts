@@ -44,7 +44,7 @@ export class MessageDetailsComponent implements OnInit {
         this.detailsMessage = response.data;
         this.detailsMessage.sentdate = this.userStateService.convertESTtoUserTZ(
           Number(response?.data?.sentdate || 0),
-          this.userData?.zonename || 'UTC',
+          this.userData?.zonename || 'EST',
           this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
         );
         this.isLoading = false;
