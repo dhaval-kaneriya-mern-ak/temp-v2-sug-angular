@@ -1784,6 +1784,56 @@ export class ComposeEmailComponent
                       this.stateService.setRecipientCount(
                         matchedMembers.length
                       );
+
+                      // For CUSTOM sendtotype, we need to update peopleSelectionData here
+                      // because restorePeopleSelection() is called BEFORE this async
+                      // callback completes, so it doesn't have the member details yet.
+                      // We use 'sendMessagePeopleIselect' (correct for custom sendtotype)
+                      // not 'ManuallyEnterEmail' (which is for manual text entry).
+                      if (
+                        response.data.sendtotype?.toLowerCase() ===
+                        SendToType.CUSTOM
+                      ) {
+                        this.stateService.setPeopleSelectionData({
+                          selectedValue: 'sendMessagePeopleIselect',
+                          selectedGroups: [],
+                          manualEmails: '',
+                          groupEmailAlias: '',
+                          useGroupAlias: false,
+                          includeNonGroupMembers: false,
+                          manualEmailsGroup: [],
+                          rsvpResponseyes: false,
+                          rsvpResponseno: false,
+                          rsvpResponsemaybe: false,
+                          rsvpResponsenoresponse: false,
+                        });
+
+                        this.selectedRadioOption = {
+                          selectedValue: 'sendMessagePeopleIselect',
+                          includeNonGroupMembers: false,
+                          recipients: [],
+                        };
+
+                        this.stateService.setSelectedGroups([
+                          {
+                            label: 'Custom Selection',
+                            value: 'sendMessagePeopleIselect',
+                          },
+                        ]);
+
+                        // Set recipients for the recipient details popup
+                        // Transform matchedMembers to IRecipient format
+                        const recipients = matchedMembers.map((member) => ({
+                          memberid: member.id,
+                          email: member.email,
+                          mobile: '', // Not available from getAllGroupsWithMembers
+                          displayname:
+                            `${member.firstname} ${member.lastname}`.trim() ||
+                            member.email,
+                          smsoptin: false, // Default to false
+                        }));
+                        this.stateService.setRecipients(recipients);
+                      }
                     }
                   },
                   error: (error) => {
