@@ -1898,20 +1898,43 @@ export class ComposeTextMessageComponent
                         tap((recipientsResponse) => {
                           const data =
                             recipientsResponse.data as IRecipientsResponseData;
+
+                          // FIX: For EDIT mode with "people I will select" + "from my group",
+                          // use the actual selected members for both count and recipient details.
+                          // The fetchRecipients API returns ALL members from the groups,
+                          // but we only want to show the specifically selected members.
+                          const selectedMembers =
+                            this.stateService.selectedMemberGroups;
+                          const actualSelectedCount = selectedMembers.length;
+                          this.stateService.setRecipientCount(
+                            actualSelectedCount
+                          );
+
+                          // For text messages, we need to get the full recipient data from API
+                          // to determine SMS opt-in status, but only for selected members
                           if (Array.isArray(data.recipients)) {
-                            this.stateService.setRecipientCount(
-                              data.recipients.length
+                            // Filter API recipients to only include selected members
+                            const selectedMemberIds = selectedMembers.map(
+                              (m) => m.id
                             );
+                            const selectedRecipientsFromApi =
+                              data.recipients.filter((r) =>
+                                selectedMemberIds.includes(r.memberid)
+                              );
+
                             this.stateService.setRecipients(
-                              data.recipients as IRecipient[]
+                              selectedRecipientsFromApi as IRecipient[]
                             );
-                          } else if (
-                            recipientsResponse.success &&
-                            recipientsResponse.pagination
-                          ) {
-                            this.stateService.setRecipientCount(
-                              recipientsResponse.pagination.totalRecords || 0
-                            );
+
+                            // Calculate separate text and email counts for selected members only
+                            this.textRecipientsCount =
+                              selectedRecipientsFromApi.filter(
+                                (r) => r.smsoptin === true
+                              ).length;
+                            this.emailRecipientsCount =
+                              selectedRecipientsFromApi.filter(
+                                (r) => r.email && r.email.trim().length > 0
+                              ).length;
                           }
                         }),
                         catchError((error) => {

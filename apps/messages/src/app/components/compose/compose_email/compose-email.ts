@@ -2119,21 +2119,34 @@ export class ComposeEmailComponent
                         tap((recipientsResponse) => {
                           const data =
                             recipientsResponse.data as IRecipientsResponseData;
-                          if (Array.isArray(data.recipients)) {
-                            this.stateService.setRecipientCount(
-                              data.recipients.length
-                            );
-                            this.stateService.setRecipients(
-                              data.recipients as IRecipient[]
-                            );
-                          } else if (
-                            recipientsResponse.success &&
-                            recipientsResponse.pagination
-                          ) {
-                            this.stateService.setRecipientCount(
-                              recipientsResponse.pagination.totalRecords || 0
-                            );
-                          }
+
+                          // FIX: For EDIT mode with "people I will select" + "from my group",
+                          // use the actual selected members for both count and recipient details.
+                          // The fetchRecipients API returns ALL members from the groups,
+                          // but we only want to show the specifically selected members.
+                          const selectedMembers =
+                            this.stateService.selectedMemberGroups;
+                          const actualSelectedCount = selectedMembers.length;
+                          this.stateService.setRecipientCount(
+                            actualSelectedCount
+                          );
+
+                          // Transform selected members to IRecipient format for popup
+                          const selectedRecipients = selectedMembers.map(
+                            (member) => ({
+                              memberid: member.id,
+                              email: member.email || '',
+                              mobile: '',
+                              displayname:
+                                `${member.firstname || ''} ${
+                                  member.lastname || ''
+                                }`.trim() ||
+                                member.email ||
+                                '',
+                              smsoptin: false,
+                            })
+                          );
+                          this.stateService.setRecipients(selectedRecipients);
                         }),
                         catchError((error) => {
                           console.error(
@@ -2458,21 +2471,34 @@ export class ComposeEmailComponent
                         tap((recipientsResponse) => {
                           const data =
                             recipientsResponse.data as IRecipientsResponseData;
-                          if (Array.isArray(data.recipients)) {
-                            this.stateService.setRecipientCount(
-                              data.recipients.length
-                            );
-                            this.stateService.setRecipients(
-                              data.recipients as IRecipient[]
-                            );
-                          } else if (
-                            recipientsResponse.success &&
-                            recipientsResponse.pagination
-                          ) {
-                            this.stateService.setRecipientCount(
-                              recipientsResponse.pagination.totalRecords || 0
-                            );
-                          }
+
+                          // FIX: For EDIT mode with "people I will select" + "from my group",
+                          // use the actual selected members for both count and recipient details.
+                          // The fetchRecipients API returns ALL members from the groups,
+                          // but we only want to show the specifically selected members.
+                          const selectedMembers =
+                            this.stateService.selectedMemberGroups;
+                          const actualSelectedCount = selectedMembers.length;
+                          this.stateService.setRecipientCount(
+                            actualSelectedCount
+                          );
+
+                          // Transform selected members to IRecipient format for popup
+                          const selectedRecipients = selectedMembers.map(
+                            (member) => ({
+                              memberid: member.id,
+                              email: member.email || '',
+                              mobile: '',
+                              displayname:
+                                `${member.firstname || ''} ${
+                                  member.lastname || ''
+                                }`.trim() ||
+                                member.email ||
+                                '',
+                              smsoptin: false,
+                            })
+                          );
+                          this.stateService.setRecipients(selectedRecipients);
                         }),
                         catchError((error) => {
                           console.error(
