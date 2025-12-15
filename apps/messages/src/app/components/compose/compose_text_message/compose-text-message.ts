@@ -673,21 +673,23 @@ export class ComposeTextMessageComponent
               : [];
             payload.replytoids =
               replyToArray.length > 0
-                ? replyToArray.map((r: any) => parseInt(r, 10))
+                ? replyToArray.map((r: string | number) =>
+                    parseInt(r.toString(), 10)
+                  )
                 : [];
           } else if (formValue.replyTo) {
             const replyToArray = Array.isArray(formValue.replyTo)
               ? formValue.replyTo
               : [formValue.replyTo];
             if (replyToArray.length > 0) {
-              payload.replytoids = replyToArray.map((r: any) =>
-                parseInt(r, 10)
+              payload.replytoids = replyToArray.map((r: string | number) =>
+                parseInt(r.toString(), 10)
               );
             }
           }
 
-          // Always set contactname to ensure it updates even when cleared
-          payload.contactname = formValue.fromName;
+          // Set contactname if provided, or explicitly set to empty string to clear it
+          payload.contactname = formValue.fromName ?? '';
 
           if (formValue.themeid) {
             payload.themeid = formValue.themeid;
