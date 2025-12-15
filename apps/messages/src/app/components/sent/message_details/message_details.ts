@@ -1,11 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessageDetailsService } from './message-details.service';
-import { ActivatedRoute } from '@angular/router';
 import { MemberProfile, MessageDetailsData } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 import { UserStateService } from '@services/user-state.service';
-import { filter, take } from 'rxjs';
+import { filter, takeUntil, Subject, combineLatest } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -14,53 +13,58 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './message_details.html',
   styleUrl: './message_details.scss',
 })
-export class MessageDetailsComponent implements OnInit {
+export class MessageDetailsComponent implements OnInit, OnDestroy {
   messageDetailService = inject(MessageDetailsService);
-  activatedRoute = inject(ActivatedRoute);
   sanitizer = inject(DomSanitizer);
   detailsMessage: MessageDetailsData | undefined;
   isLoading = false;
   private userStateService = inject(UserStateService);
   userData: MemberProfile | null = null;
   sanitizedHtmlPreview: SafeHtml = '';
+  private destroy$ = new Subject<void>();
 
   ngOnInit() {
-    // Get ID from parent route params
-    const messageId = this.activatedRoute.parent?.snapshot.params['id'];
+    this.isLoading = true;
+    // Combine user profile and message details to avoid race conditions
+    combineLatest([
+      this.userStateService.userProfile$.pipe(filter((profile) => !!profile)),
+      this.messageDetailService.messageDetails$,
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([profile, messageDetails]) => {
+          this.userData = profile;
 
-    this.userStateService.userProfile$
-      .pipe(
-        filter((profile) => !!profile),
-        take(1)
-      )
-      .subscribe((profile) => {
-        this.userData = profile;
-        if (messageId) {
-          this.getMessageDetails(+messageId); // Convert string to number
-        }
+          if (messageDetails) {
+            // Create immutable copy to avoid mutating service data
+            this.detailsMessage = {
+              ...messageDetails,
+              sentdate: this.userStateService.convertESTtoUserTZ(
+                Number(messageDetails?.sentdate || 0),
+                profile?.zonename || 'EST',
+                profile?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
+              ),
+            };
+
+            // Sanitize HTML preview
+            this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
+              this.detailsMessage.preview || ''
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading message details:', error);
+          this.isLoading = false;
+          this.detailsMessage = undefined;
+          this.sanitizedHtmlPreview = '';
+        },
       });
   }
 
-  getMessageDetails(messageId: number) {
-    this.isLoading = true;
-    this.messageDetailService.getMessageDetails(messageId).subscribe({
-      next: (response) => {
-        this.detailsMessage = response.data;
-        this.detailsMessage.sentdate = this.userStateService.convertESTtoUserTZ(
-          Number(response?.data?.sentdate || 0),
-          this.userData?.zonename || 'EST',
-          this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
-        );
-        this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
-          this.detailsMessage.preview
-        );
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading message details:', error);
-        this.isLoading = false;
-      },
-    });
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // Helper method to format date if timestamp is available
