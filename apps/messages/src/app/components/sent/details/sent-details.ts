@@ -1,16 +1,23 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
+import { MessageDetailsService } from '../message_details/message-details.service';
+import { MemberProfile, MessageDetailsData } from '@services/interfaces';
+import { UserStateService } from '@services/user-state.service';
+import { filter, take, takeUntil, Subject } from 'rxjs';
 @Component({
   selector: 'sug-sent-details',
   imports: [CommonModule, RouterOutlet, SugUiMenuTabsComponent],
   templateUrl: './sent-details.html',
   styleUrl: './sent-details.scss',
 })
-export class SentDetails implements OnInit {
+export class SentDetails implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private messageDetailService = inject(MessageDetailsService);
+  private userStateService = inject(UserStateService);
+  private destroy$ = new Subject<void>();
 
   navigationComposeTabs: Tabs[] = [
     { name: 'Back', route: '/messages/sent' },
@@ -19,12 +26,44 @@ export class SentDetails implements OnInit {
   ];
   messageId = '';
   currentActiveTab = 'details'; // Don't hardcode this!
+  detailsMessage: MessageDetailsData | undefined;
   ngOnInit() {
     // Initialize active tab based on current route
     this.initializeActiveTab();
-    this.route.params.subscribe((params) => {
+
+    // Then get message ID from route and load message details
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.messageId = params['id'] || '';
+      if (this.messageId) {
+        this.getMessageDetails(+this.messageId);
+      }
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  getMessageDetails(messageId: number) {
+    // Clear previous message details to prevent showing old data
+    this.messageDetailService.clearMessageDetails();
+    this.detailsMessage = undefined;
+
+    this.messageDetailService
+      .getMessageDetails(messageId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.detailsMessage = response.data;
+        },
+        error: (error) => {
+          console.error('Error loading message details:', error);
+          // Clear details on error to prevent showing stale data
+          this.messageDetailService.clearMessageDetails();
+          this.detailsMessage = undefined;
+        },
+      });
   }
   initializeActiveTab() {
     const currentUrl = this.router.url;
