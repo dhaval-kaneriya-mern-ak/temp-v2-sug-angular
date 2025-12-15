@@ -261,44 +261,62 @@ export class UserStateService implements OnDestroy {
     userTimeZone: string,
     userFormat = 'MM/DD/YYYY hh:mma'
   ): string {
+    // Validate input parameters
+    if (!epochSeconds || isNaN(epochSeconds) || epochSeconds <= 0) {
+      return 'Invalid date';
+    }
+
+    if (!userTimeZone || typeof userTimeZone !== 'string') {
+      userTimeZone = 'America/New_York'; // Default fallback
+    }
+
     // 1️⃣ EST = UTC-5 → add 5 hours to get UTC
     const utcMillis = (epochSeconds + 5 * 3600) * 1000;
 
-    // 2️⃣ Create UTC date
+    // 2️⃣ Create UTC date and validate
     const utcDate = new Date(utcMillis);
+    
+    // Check if the date is valid
+    if (isNaN(utcDate.getTime())) {
+      return 'Invalid date';
+    }
 
-    // 3️⃣ Format in user-selected timezone
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: userTimeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
+    // 3️⃣ Format in user-selected timezone with error handling
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: userTimeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
 
-    const parts: Record<string, string> = {};
-    formatter.formatToParts(utcDate).forEach((p) => {
-      if (p.type !== 'literal') parts[p.type] = p.value;
-    });
+      const parts: Record<string, string> = {};
+      formatter.formatToParts(utcDate).forEach((p) => {
+        if (p.type !== 'literal') parts[p.type] = p.value;
+      });
+      const month = parts['month'];
+      const day = parts['day'];
+      const year = parts['year'];
+      const hour = parts['hour'];
+      const minute = parts['minute'];
+      const dayPeriod = parts['dayPeriod'];
 
-    const month = parts['month'];
-    const day = parts['day'];
-    const year = parts['year'];
-    const hour = parts['hour'];
-    const minute = parts['minute'];
-    const dayPeriod = parts['dayPeriod'];
+      let result = userFormat;
 
-    let result = userFormat;
+      result = result.replace(/MM/g, month);
+      result = result.replace(/YYYY/g, year);
+      result = result.replace(/DD/g, day);
+      result = result.replace(/hh/g, hour);
+      result = result.replace(/mm/g, minute);
+      result = result.replace(/a/g, dayPeriod);
 
-    result = result.replace(/MM/g, month);
-    result = result.replace(/YYYY/g, year);
-    result = result.replace(/DD/g, day);
-    result = result.replace(/hh/g, hour);
-    result = result.replace(/mm/g, minute);
-    result = result.replace(/a/g, dayPeriod);
-
-    return result.toLowerCase();
+      return result.toLowerCase();
+    } catch (error) {
+      console.error('Error formatting date:', error, { epochSeconds, userTimeZone });
+      return 'Date formatting error';
+    }
   }
 }
