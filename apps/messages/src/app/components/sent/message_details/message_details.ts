@@ -24,34 +24,41 @@ export class MessageDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
+    this.isLoading = true;
     // Combine user profile and message details to avoid race conditions
     combineLatest([
       this.userStateService.userProfile$.pipe(filter((profile) => !!profile)),
       this.messageDetailService.messageDetails$,
     ])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([profile, messageDetails]) => {
-        this.userData = profile;
+      .subscribe({
+        next: ([profile, messageDetails]) => {
+          this.userData = profile;
 
-        if (messageDetails) {
-          // Create immutable copy to avoid mutating service data
-          this.detailsMessage = {
-            ...messageDetails,
-            sentdate: this.userStateService.convertESTtoUserTZ(
-              Number(messageDetails?.sentdate || 0),
-              profile?.zonename || 'EST',
-              profile?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
-            ),
-          };
+          if (messageDetails) {
+            // Create immutable copy to avoid mutating service data
+            this.detailsMessage = {
+              ...messageDetails,
+              sentdate: this.userStateService.convertESTtoUserTZ(
+                Number(messageDetails?.sentdate || 0),
+                profile?.zonename || 'EST',
+                profile?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
+              ),
+            };
 
-          // Sanitize HTML preview
-          this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
-            this.detailsMessage.preview || ''
-          );
+            // Sanitize HTML preview
+            this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
+              this.detailsMessage.preview || ''
+            );
+          }
           this.isLoading = false;
-        } else {
-          this.isLoading = true;
-        }
+        },
+        error: (error) => {
+          console.error('Error loading message details:', error);
+          this.isLoading = false;
+          this.detailsMessage = undefined;
+          this.sanitizedHtmlPreview = '';
+        },
       });
   }
 

@@ -27,21 +27,9 @@ export class SentDetails implements OnInit, OnDestroy {
   messageId = '';
   currentActiveTab = 'details'; // Don't hardcode this!
   detailsMessage: MessageDetailsData | undefined;
-  userData: MemberProfile | null = null;
   ngOnInit() {
     // Initialize active tab based on current route
     this.initializeActiveTab();
-
-    // Get user profile first
-    this.userStateService.userProfile$
-      .pipe(
-        filter((profile) => !!profile),
-        take(1),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((profile) => {
-        this.userData = profile;
-      });
 
     // Then get message ID from route and load message details
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
@@ -58,14 +46,24 @@ export class SentDetails implements OnInit, OnDestroy {
   }
 
   getMessageDetails(messageId: number) {
-    this.messageDetailService.getMessageDetails(messageId).subscribe({
-      next: (response) => {
-        this.detailsMessage = response.data;
-      },
-      error: (error) => {
-        console.error('Error loading message details:', error);
-      },
-    });
+    // Clear previous message details to prevent showing old data
+    this.messageDetailService.clearMessageDetails();
+    this.detailsMessage = undefined;
+
+    this.messageDetailService
+      .getMessageDetails(messageId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.detailsMessage = response.data;
+        },
+        error: (error) => {
+          console.error('Error loading message details:', error);
+          // Clear details on error to prevent showing stale data
+          this.messageDetailService.clearMessageDetails();
+          this.detailsMessage = undefined;
+        },
+      });
   }
   initializeActiveTab() {
     const currentUrl = this.router.url;

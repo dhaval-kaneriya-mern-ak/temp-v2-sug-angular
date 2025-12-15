@@ -22,12 +22,21 @@ export class MessageDetailsService {
    * Get message details from API and store in service
    */
   getMessageDetails(messageId: number): Observable<MessageDetailsResponse> {
+    // Clear previous data immediately when starting new API call
+    this.currentMessageDetails.next(null);
+
     return this.sugApiClient
       .get<MessageDetailsResponse>(`messages/sent/${messageId}`)
       .pipe(
-        tap((response: MessageDetailsResponse) => {
-          // Store the data in the service for other components to use
-          this.currentMessageDetails.next(response.data);
+        tap({
+          next: (response: MessageDetailsResponse) => {
+            // Store the data in the service for other components to use
+            this.currentMessageDetails.next(response.data);
+          },
+          error: () => {
+            // Keep data cleared on error
+            this.currentMessageDetails.next(null);
+          },
         })
       );
   }
