@@ -45,7 +45,6 @@ export class Schedule {
     focusOnShow: true,
     position: 'center',
     appendTo: 'body',
-    width: '30vw',
   };
   isVisible = false;
   selectedItem: Message | null = null;
