@@ -41,6 +41,7 @@ import {
 } from '@services/interfaces';
 import { IMemberInfoDto } from '@services/interfaces';
 import { SugInformationDialogComponent } from '../information-dialog/information-dialog.component';
+import { CloudSpongeService } from '@services/cloudsponge.service';
 
 @Component({
   selector: 'sug-people-selection-dialog',
@@ -115,6 +116,7 @@ export class PeopleSelectionDialogComponent
   private fb = inject(FormBuilder);
   private composeService = inject(ComposeService);
   private userStateService = inject(UserStateService);
+  cloudSpongeService = inject(CloudSpongeService);
 
   infoDialog = false;
   infoMessage = '';
@@ -346,6 +348,9 @@ export class PeopleSelectionDialogComponent
       });
     this.initializeForm();
     this.setupSingleSelectionEnforcement();
+
+    // Initialize CloudSponge
+    this.cloudSpongeService.initCloudSponge(['gmail']);
   }
 
   ngOnDestroy(): void {
@@ -953,22 +958,46 @@ export class PeopleSelectionDialogComponent
           this.calculateRecipientCountForSlots();
         }
       } else if (selectedValue === 'ImportEmailFromProvider') {
-        // Import from provider
+        // Import from provider using CloudSponge
+        const cloudSpongeEmails = this.cloudSpongeService.contactEmailsArray();
+
+        if (cloudSpongeEmails.length === 0) {
+          this.openInfoDialog(
+            'Please import contacts by clicking one of the provider buttons above.'
+          );
+          return;
+        }
+
         this.selectedGroupsChange.emit([
           {
-            label: 'Import from provider',
+            label: 'Imported from provider',
             value: 'ImportEmailFromProvider',
           },
         ]);
-        this.recipientCountChange.emit(0);
+
+        // Set recipient count and emails
+        this.recipientCountChange.emit(cloudSpongeEmails.length);
+
+        // Store the emails as recipients for the recipient details dialog
+        const recipients = cloudSpongeEmails.map((email: string) => ({
+          email,
+        }));
+        this.recipientsChange.emit(recipients);
+
         // Clear date slots when switching to import from provider
         this.selectedDateSlotsChange.emit([]);
         this.selectedMemberGroupsChange.emit([]);
+
+        // Pass the imported emails as recipients
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
-          recipients: [],
+          recipients: cloudSpongeEmails,
         });
+
+        // Clear CloudSponge contacts after successful import
+        // This prepares for next use
+        this.cloudSpongeService.clearSelectedContacts();
       }
 
       // Save the current form state for restoration on next open
@@ -1019,6 +1048,12 @@ export class PeopleSelectionDialogComponent
     // This ensures previous selections (including table selections) don't persist
     this.selectedDateSlotsChange.emit([]);
     this.selectedMemberGroupsChange.emit([]);
+
+    // Clear CloudSponge contacts when switching away from ImportEmailFromProvider
+    const currentValue = this.peopleDialogForm.get('selectedValue')?.value;
+    if (currentValue !== 'ImportEmailFromProvider') {
+      this.cloudSpongeService.clearSelectedContacts();
+    }
   }
 
   onAliasCheckboxChange(): void {
@@ -1442,5 +1477,28 @@ export class PeopleSelectionDialogComponent
   closeInfoDialog(): void {
     this.infoMessage = '';
     this.infoDialog = false;
+  }
+
+  /**
+   * Launch CloudSponge widget for a specific service
+   * @param service - The contact provider service (e.g., 'gmail', 'yahoo', 'windowslive')
+   */
+  launchCloudSponge(service: string): void {
+    // Launch the CloudSponge widget for the specified service
+    this.cloudSpongeService.launch(service);
+  }
+
+  /**
+   * Get selected contacts from CloudSponge and populate the manual emails field
+   */
+  getCloudSpongeEmails(): string {
+    return this.cloudSpongeService.contactEmailsString();
+  }
+
+  /**
+   * Check if CloudSponge has selected contacts
+   */
+  hasCloudSpongeContacts(): boolean {
+    return this.cloudSpongeService.hasSelectedContacts();
   }
 }

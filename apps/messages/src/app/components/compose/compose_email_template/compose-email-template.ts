@@ -743,6 +743,7 @@ export class ComposeEmailTemplateComponent
             this.reminderEmailForm.patchValue({
               subject: response.data.subject,
               message: stripHtml(response.data.body),
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
@@ -784,6 +785,7 @@ export class ComposeEmailTemplateComponent
             this.confirmationEmailForm.patchValue({
               subject: response.data.subject,
               message: stripHtml(response.data.body),
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {

@@ -673,22 +673,23 @@ export class ComposeTextMessageComponent
               : [];
             payload.replytoids =
               replyToArray.length > 0
-                ? replyToArray.map((r: any) => parseInt(r, 10))
+                ? replyToArray.map((r: string | number) =>
+                    parseInt(r.toString(), 10)
+                  )
                 : [];
           } else if (formValue.replyTo) {
             const replyToArray = Array.isArray(formValue.replyTo)
               ? formValue.replyTo
               : [formValue.replyTo];
             if (replyToArray.length > 0) {
-              payload.replytoids = replyToArray.map((r: any) =>
-                parseInt(r, 10)
+              payload.replytoids = replyToArray.map((r: string | number) =>
+                parseInt(r.toString(), 10)
               );
             }
           }
 
-          if (formValue.fromName) {
-            payload.contactname = formValue.fromName;
-          }
+          // Set contactname if provided, or explicitly set to empty string to clear it
+          payload.contactname = formValue.fromName ?? '';
 
           if (formValue.themeid) {
             payload.themeid = formValue.themeid;
@@ -1607,6 +1608,7 @@ export class ComposeTextMessageComponent
             this.inviteTextForm.patchValue({
               subject: response.data.subject,
               message: stripHtml(response.data.body),
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
@@ -1750,6 +1752,7 @@ export class ComposeTextMessageComponent
               emailSubject: response.data.subject,
               selectedSignups: mappedSignups.map((s) => s.signupid.toString()),
               message: stripHtml(response.data.body),
+              emailFrom: response.data.contactname,
             });
 
             setTimeout(() => {

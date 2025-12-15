@@ -939,6 +939,7 @@ export interface ISaveDraftMessagePayload {
   tabgroupids?: number[];
   signUpType?: string;
   addEmails?: string;
+  alias?: string[];
   to?: Array<{
     memberid?: number;
     firstname?: string;
