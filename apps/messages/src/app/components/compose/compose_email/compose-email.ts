@@ -3057,9 +3057,13 @@ export class ComposeEmailComponent
       email: member.email || '',
       mobile: '',
       displayname:
-        `${member.firstname || ''} ${member.lastname || ''}`.trim() ||
+        member.displayname ||
+        [member.firstname, member.lastname]
+          .map((name) => name?.trim())
+          .filter(Boolean)
+          .join(' ') ||
         member.email ||
-        '',
+        'Unknown',
       smsoptin: false,
     };
   }
