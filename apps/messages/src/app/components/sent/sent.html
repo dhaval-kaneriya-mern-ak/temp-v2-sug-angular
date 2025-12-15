@@ -8,14 +8,13 @@
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
-    [totalRecords]="totalRecords"
-    [paginator]="true"
+    [totalRecords]="paginationOptions().totalRecords"
+    [paginator]="false"
     [lazy]="true"
-    [rows]="rows"
-    [first]="first"
+    [rows]="paginationOptions().rows"
+    [first]="paginationOptions().first"
     [loading]="isLoading"
     [config]="tableConfig"
-    (page)="onPage($event)"
     (sort)="onSort($event)"
   >
     <ng-template
@@ -36,6 +35,11 @@
       </div>
     </ng-template>
   </sug-ui-table>
+  <sug-ui-pagination
+    [paginationOptions]="paginationOptions()"
+    [paginationKey]="paginationKey"
+    (selectedPaginationOption)="onPaginationChange($event)"
+  ></sug-ui-pagination>
   } @else {
   <div class="justify-content-center d-flex">
     <p>No sent messages.</p>
