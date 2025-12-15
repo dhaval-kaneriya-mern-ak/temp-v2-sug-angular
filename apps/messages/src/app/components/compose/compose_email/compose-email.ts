@@ -1056,17 +1056,32 @@ export class ComposeEmailComponent
       const hasSelectedMemberGroups =
         this.stateService.selectedMemberGroups.length > 0;
 
+      console.log(hasSelectedMemberGroups, 'selected group members');
+
+      // Determine messagetypeid early to use in conditions
+      const messagetypeid =
+        formType === 'inviteToSignUp'
+          ? this.messageTypeIds.InviteToSignUp
+          : this.messageTypeIds.EmailParticipants;
+
+      // For messagetypeid = 4 with ManuallyEnterEmail, use standard mapping
+      const isManualEmailForInvite =
+        messagetypeid === this.messageTypeIds.InviteToSignUp &&
+        peopleSelectionData.selectedValue === 'ManuallyEnterEmail';
+
       if (
         this.isEditingExistingDraft &&
         this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
-        hasSelectedMemberGroups
+        hasSelectedMemberGroups &&
+        !isManualEmailForInvite
       ) {
         sendtotype = SendToType.CUSTOM;
         sentto = SentTo.MEMBERS;
       } else if (
         this.isEditingExistingDraft &&
         this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
-        this.selectedCustomUserIds.length > 0
+        this.selectedCustomUserIds.length > 0 &&
+        !isManualEmailForInvite
       ) {
         sendtotype = SendToType.CUSTOM;
         sentto = this.selectedCustomUserIds.join(',');
@@ -1079,11 +1094,6 @@ export class ComposeEmailComponent
         sentto = mapped.sentto;
         sendtotype = mapped.sendtotype;
       }
-
-      const messagetypeid =
-        formType === 'inviteToSignUp'
-          ? this.messageTypeIds.InviteToSignUp
-          : this.messageTypeIds.EmailParticipants;
 
       const payload: ISaveDraftMessagePayload = {
         subject: formValue.subject || '',
@@ -1132,9 +1142,8 @@ export class ComposeEmailComponent
         payload.replytoids = formValue.replyTo.map((r: any) => parseInt(r, 10));
       }
 
-      if (formValue.fromName) {
-        payload.contactname = formValue.fromName;
-      }
+      // Always set contactname to ensure it updates even when cleared
+      payload.contactname = formValue.fromName;
 
       const sendtotypeLower = sendtotype.toLowerCase();
 
@@ -1209,6 +1218,32 @@ export class ComposeEmailComponent
           lastname: member.lastname || '',
           email: member.email || '',
         }));
+      }
+
+      // Handle ManuallyEnterEmail for messagetypeid = 4 (InviteToSignUp)
+      if (
+        isManualEmailForInvite &&
+        sendtotypeLower === SendToType.CUSTOM &&
+        sentto.toLowerCase() === SentTo.MANUAL
+      ) {
+        // Convert manualEmails string to array of email objects
+        if (peopleSelectionData.manualEmails) {
+          payload.to = peopleSelectionData.manualEmails
+            .split(',')
+            .map((email: string) => email.trim())
+            .filter((email: string) => email)
+            .map((email: string) => ({
+              email: email,
+            }));
+        }
+
+        // Handle group email aliases if present
+        if (peopleSelectionData.groupEmailAlias) {
+          payload.alias = peopleSelectionData.groupEmailAlias
+            .split(',')
+            .map((email: string) => email.trim())
+            .filter((email: string) => email);
+        }
       }
 
       this.saveDraftToApi(this.currentDraftMessageId, payload, status);
@@ -1939,6 +1974,7 @@ export class ComposeEmailComponent
               selectedSignups: mappedSignups,
               message: stripHtml(response.data.body),
               messageType: response.data.messagetype,
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
@@ -2248,6 +2284,7 @@ export class ComposeEmailComponent
               selectedSignups: mappedSignups,
               message: stripHtml(response.data.body),
               messageType: response.data.messagetype,
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {

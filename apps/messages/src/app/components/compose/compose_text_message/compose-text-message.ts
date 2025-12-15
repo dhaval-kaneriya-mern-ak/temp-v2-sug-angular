@@ -686,9 +686,8 @@ export class ComposeTextMessageComponent
             }
           }
 
-          if (formValue.fromName) {
-            payload.contactname = formValue.fromName;
-          }
+          // Always set contactname to ensure it updates even when cleared
+          payload.contactname = formValue.fromName;
 
           if (formValue.themeid) {
             payload.themeid = formValue.themeid;
@@ -1607,6 +1606,7 @@ export class ComposeTextMessageComponent
             this.inviteTextForm.patchValue({
               subject: response.data.subject,
               message: stripHtml(response.data.body),
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
@@ -1750,6 +1750,7 @@ export class ComposeTextMessageComponent
               emailSubject: response.data.subject,
               selectedSignups: mappedSignups.map((s) => s.signupid.toString()),
               message: stripHtml(response.data.body),
+              emailFrom: response.data.contactname,
             });
 
             setTimeout(() => {
