@@ -1287,6 +1287,9 @@ export class ComposeEmailComponent
         sendtotypeLower === SendToType.CUSTOM &&
         sentto.toLowerCase() === SentTo.MANUAL
       ) {
+        // Basic email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         // Convert manualEmails string to array of email objects
         if (
           peopleSelectionData.manualEmails &&
@@ -1295,7 +1298,9 @@ export class ComposeEmailComponent
           const emails = peopleSelectionData.manualEmails
             .split(',')
             .map((email: string) => email.trim())
-            .filter((email: string) => email.length > 0);
+            .filter(
+              (email: string) => email.length > 0 && emailRegex.test(email)
+            );
 
           if (emails.length > 0) {
             payload.to = emails.map((email: string) => ({
@@ -1311,8 +1316,10 @@ export class ComposeEmailComponent
         ) {
           const aliases = peopleSelectionData.groupEmailAlias
             .split(',')
-            .map((email: string) => email.trim())
-            .filter((email: string) => email.length > 0);
+            .map((alias: string) => alias.trim())
+            .filter(
+              (alias: string) => alias.length > 0 && emailRegex.test(alias)
+            );
 
           if (aliases.length > 0) {
             payload.alias = aliases;
