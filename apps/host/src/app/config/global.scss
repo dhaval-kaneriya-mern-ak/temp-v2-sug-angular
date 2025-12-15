@@ -244,3 +244,11 @@ textarea {
 .badge.yellow {
   color: black !important;
 }
+
+sug-ui-pagination {
+  .custom-paginator-container {
+    .p-paginator {
+      padding: 0;
+    }
+  }
+}

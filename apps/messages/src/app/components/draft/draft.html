@@ -52,11 +52,13 @@
       </div>
     </ng-template>
   </sug-ui-table>
-  <sug-ui-pagination
-    [paginationOptions]="paginationOptions()"
-    [paginationKey]="paginationKey"
-    (selectedPaginationOption)="onPaginationChange($event)"
-  ></sug-ui-pagination>
+  <div class="my-3">
+    <sug-ui-pagination
+      [paginationOptions]="paginationOptions()"
+      [paginationKey]="paginationKey"
+      (selectedPaginationOption)="onPaginationChange($event)"
+    ></sug-ui-pagination>
+  </div>
   } @else {
   <div class="">
     <div class="d-flex justify-content-center mb-3">
