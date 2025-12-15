@@ -63,6 +63,7 @@ export class Sent {
       header: 'Sent To',
       sortable: true,
       filterable: false,
+      width: '100px',
     },
     {
       field: 'status',
