@@ -1091,17 +1091,50 @@ export class ComposeEmailComponent
       const hasSelectedMemberGroups =
         this.stateService.selectedMemberGroups.length > 0;
 
+      /**
+       * Determine the message type ID early to use in subsequent conditions.
+       * InviteToSignUp (ID: 4) is used for inviting users to sign up.
+       * EmailParticipants is used for standard participant emails.
+       */
+      const messagetypeid =
+        formType === 'inviteToSignUp'
+          ? this.messageTypeIds.InviteToSignUp
+          : this.messageTypeIds.EmailParticipants;
+
+      /**
+       * Special handling flag for InviteToSignUp messages with ManuallyEnterEmail.
+       * When this is true, we need to use standard mapping instead of draft-specific logic
+       * to properly handle manually entered email addresses.
+       */
+      const isManualEmailForInvite =
+        messagetypeid === this.messageTypeIds.InviteToSignUp &&
+        peopleSelectionData.selectedValue === 'ManuallyEnterEmail';
+
+      /**
+       * Determine sendtotype and sentto based on draft state and message type:
+       *
+       * 1. If editing existing draft with custom send-to-type and selected member groups,
+       *    preserve the CUSTOM type with MEMBERS as sentto (unless it's a manual email invite).
+       *
+       * 2. If editing existing draft with custom send-to-type and custom user IDs,
+       *    preserve the CUSTOM type with comma-separated user IDs (unless it's a manual email invite).
+       *
+       * 3. Otherwise, use standard mapping from peopleSelectionData to determine
+       *    the appropriate sendtotype and sentto values.
+       */
       if (
         this.isEditingExistingDraft &&
         this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
-        hasSelectedMemberGroups
+        hasSelectedMemberGroups &&
+        !isManualEmailForInvite
       ) {
         sendtotype = SendToType.CUSTOM;
         sentto = SentTo.MEMBERS;
       } else if (
         this.isEditingExistingDraft &&
         this.currentSendToType.toLowerCase() === SendToType.CUSTOM &&
-        this.selectedCustomUserIds.length > 0
+        this.selectedCustomUserIds.length > 0 &&
+        !isManualEmailForInvite
       ) {
         sendtotype = SendToType.CUSTOM;
         sentto = this.selectedCustomUserIds.join(',');
@@ -1114,11 +1147,6 @@ export class ComposeEmailComponent
         sentto = mapped.sentto;
         sendtotype = mapped.sendtotype;
       }
-
-      const messagetypeid =
-        formType === 'inviteToSignUp'
-          ? this.messageTypeIds.InviteToSignUp
-          : this.messageTypeIds.EmailParticipants;
 
       const payload: ISaveDraftMessagePayload = {
         subject: formValue.subject || '',
@@ -1161,15 +1189,18 @@ export class ComposeEmailComponent
           : [];
         payload.replytoids =
           replyToArray.length > 0
-            ? replyToArray.map((r: any) => parseInt(r, 10))
+            ? replyToArray.map((r: string | number) =>
+                parseInt(r.toString(), 10)
+              )
             : [];
       } else if (formValue.replyTo && formValue.replyTo.length > 0) {
-        payload.replytoids = formValue.replyTo.map((r: any) => parseInt(r, 10));
+        payload.replytoids = formValue.replyTo.map((r: string | number) =>
+          parseInt(r.toString(), 10)
+        );
       }
 
-      if (formValue.fromName) {
-        payload.contactname = formValue.fromName;
-      }
+      // Set contactname if provided, or explicitly set to empty string to clear it
+      payload.contactname = formValue.fromName ?? '';
 
       const sendtotypeLower = sendtotype.toLowerCase();
 
@@ -1244,6 +1275,56 @@ export class ComposeEmailComponent
           lastname: member.lastname || '',
           email: member.email || '',
         }));
+      }
+
+      /**
+       * Handle ManuallyEnterEmail for InviteToSignUp message type.
+       * This converts the comma-separated email string into an array of email objects
+       * and processes any group email aliases.
+       */
+      if (
+        isManualEmailForInvite &&
+        sendtotypeLower === SendToType.CUSTOM &&
+        sentto.toLowerCase() === SentTo.MANUAL
+      ) {
+        // Basic email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // Convert manualEmails string to array of email objects
+        if (
+          peopleSelectionData.manualEmails &&
+          typeof peopleSelectionData.manualEmails === 'string'
+        ) {
+          const emails = peopleSelectionData.manualEmails
+            .split(',')
+            .map((email: string) => email.trim())
+            .filter(
+              (email: string) => email.length > 0 && emailRegex.test(email)
+            );
+
+          if (emails.length > 0) {
+            payload.to = emails.map((email: string) => ({
+              email: email,
+            }));
+          }
+        }
+
+        // Handle group email aliases if present
+        if (
+          peopleSelectionData.groupEmailAlias &&
+          typeof peopleSelectionData.groupEmailAlias === 'string'
+        ) {
+          const aliases = peopleSelectionData.groupEmailAlias
+            .split(',')
+            .map((alias: string) => alias.trim())
+            .filter(
+              (alias: string) => alias.length > 0 && emailRegex.test(alias)
+            );
+
+          if (aliases.length > 0) {
+            payload.alias = aliases;
+          }
+        }
       }
 
       this.saveDraftToApi(this.currentDraftMessageId, payload, status);
@@ -1974,6 +2055,7 @@ export class ComposeEmailComponent
               selectedSignups: mappedSignups,
               message: stripHtml(response.data.body),
               messageType: response.data.messagetype,
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
@@ -2283,6 +2365,7 @@ export class ComposeEmailComponent
               selectedSignups: mappedSignups,
               message: stripHtml(response.data.body),
               messageType: response.data.messagetype,
+              fromName: response.data.contactname,
             });
 
             setTimeout(() => {
