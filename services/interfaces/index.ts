@@ -7,6 +7,7 @@ export * from './messages-interface/sent.interface';
 export * from './messages-interface/draft.interface';
 export * from './messages-interface/compose.interface';
 export * from './messages-interface/schedule.interface';
+export * from './cloudsponge.interface';
 
 // Re-export SugApiClient interfaces for convenience
 export type {
