@@ -25,9 +25,7 @@ export class MessageDetailsComponent implements OnInit {
   sanitizedHtmlPreview: SafeHtml = '';
 
   ngOnInit() {
-    // Get ID from parent route params
-    const messageId = this.activatedRoute.parent?.snapshot.params['id'];
-
+    // Get user profile for date formatting
     this.userStateService.userProfile$
       .pipe(
         filter((profile) => !!profile),
@@ -35,31 +33,31 @@ export class MessageDetailsComponent implements OnInit {
       )
       .subscribe((profile) => {
         this.userData = profile;
-        if (messageId) {
-          this.getMessageDetails(+messageId); // Convert string to number
-        }
       });
-  }
 
-  getMessageDetails(messageId: number) {
-    this.isLoading = true;
-    this.messageDetailService.getMessageDetails(messageId).subscribe({
-      next: (response) => {
-        this.detailsMessage = response.data;
-        this.detailsMessage.sentdate = this.userStateService.convertESTtoUserTZ(
-          Number(response?.data?.sentdate || 0),
-          this.userData?.zonename || 'EST',
-          this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
-        );
+    // Get message details from service (already loaded by parent component)
+    this.messageDetailService.messageDetails$.subscribe((messageDetails) => {
+      if (messageDetails) {
+        this.detailsMessage = messageDetails;
+
+        // Format date if we have user data
+        if (this.userData && this.detailsMessage) {
+          this.detailsMessage.sentdate =
+            this.userStateService.convertESTtoUserTZ(
+              Number(this.detailsMessage?.sentdate || 0),
+              this.userData?.zonename || 'EST',
+              this.userData?.selecteddateformat?.short.toUpperCase() + ' hh:mma'
+            );
+        }
+
+        // Sanitize HTML preview
         this.sanitizedHtmlPreview = this.sanitizer.bypassSecurityTrustHtml(
-          this.detailsMessage.preview
+          this.detailsMessage.preview || ''
         );
         this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading message details:', error);
-        this.isLoading = false;
-      },
+      } else {
+        this.isLoading = true;
+      }
     });
   }
 

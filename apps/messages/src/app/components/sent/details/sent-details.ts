@@ -2,6 +2,10 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
 import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
+import { MessageDetailsService } from '../message_details/message-details.service';
+import { MemberProfile, MessageDetailsData } from '@services/interfaces';
+import { UserStateService } from '@services/user-state.service';
+import { filter, take } from 'rxjs';
 @Component({
   selector: 'sug-sent-details',
   imports: [CommonModule, RouterOutlet, SugUiMenuTabsComponent],
@@ -11,6 +15,8 @@ import { RouterOutlet, Router, ActivatedRoute } from '@angular/router';
 export class SentDetails implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private messageDetailService = inject(MessageDetailsService);
+  private userStateService = inject(UserStateService);
 
   navigationComposeTabs: Tabs[] = [
     { name: 'Back', route: '/messages/sent' },
@@ -19,11 +25,39 @@ export class SentDetails implements OnInit {
   ];
   messageId = '';
   currentActiveTab = 'details'; // Don't hardcode this!
+  detailsMessage: MessageDetailsData | undefined;
+  userData: MemberProfile | null = null;
   ngOnInit() {
     // Initialize active tab based on current route
     this.initializeActiveTab();
+
+    // Get user profile first
+    this.userStateService.userProfile$
+      .pipe(
+        filter((profile) => !!profile),
+        take(1)
+      )
+      .subscribe((profile) => {
+        this.userData = profile;
+      });
+
+    // Then get message ID from route and load message details
     this.route.params.subscribe((params) => {
       this.messageId = params['id'] || '';
+      if (this.messageId) {
+        this.getMessageDetails(+this.messageId);
+      }
+    });
+  }
+
+  getMessageDetails(messageId: number) {
+    this.messageDetailService.getMessageDetails(messageId).subscribe({
+      next: (response) => {
+        this.detailsMessage = response.data;
+      },
+      error: (error) => {
+        console.error('Error loading message details:', error);
+      },
     });
   }
   initializeActiveTab() {
