@@ -172,7 +172,6 @@ export class PeopleSelectionDialogComponent
   // Form Two radio options
   get formTwoRadioOptions() {
     const selectedSignups = this.selectedSignups;
-    const hasSingleSignup = selectedSignups.length === 1;
 
     const hasRsvpSignup = selectedSignups.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,12 +179,10 @@ export class PeopleSelectionDialogComponent
     );
 
     // Show waitlist options only when:
-    // - Single signup with waitlist slots for emailParticipants
+    // - Any selected signup(s) has waitlist slots for emailParticipants
     // - OR text message (isFromTextMessage already indicates waitlist is available)
     if (
-      (hasSingleSignup &&
-        this.hasWaitlistSlots &&
-        this.formType === 'emailParticipants') ||
+      (this.hasWaitlistSlots && this.formType === 'emailParticipants') ||
       this.isFromTextMessage
     ) {
       return [
