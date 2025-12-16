@@ -8,15 +8,14 @@
   <sug-ui-table
     [data]="tableData"
     [columns]="tableColumns"
-    [totalRecords]="totalRecords"
+    [totalRecords]="paginationOptions().totalRecords"
     [config]="tableConfig"
     [loading]="isLoading"
-    [paginator]="true"
+    [paginator]="false"
     [lazy]="true"
-    [rows]="rows"
+    [rows]="paginationOptions().rows"
     (sort)="onSort($event)"
-    [first]="first"
-    (page)="onPage($event)"
+    [first]="paginationOptions().first"
   >
     <ng-template
       #actionTemplate
@@ -42,6 +41,13 @@
       </div>
     </ng-template>
   </sug-ui-table>
+  <div class="my-3">
+    <sug-ui-pagination
+      [paginationOptions]="paginationOptions()"
+      [paginationKey]="paginationKey"
+      (selectedPaginationOption)="onPaginationChange($event)"
+    ></sug-ui-pagination>
+  </div>
   } @else {
   <div class="justify-content-center d-flex">
     <p>No scheduled messages.</p>

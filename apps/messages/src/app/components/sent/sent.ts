@@ -5,13 +5,14 @@ import {
   ISugTableConfig,
   ISugTableColumn,
   SugUiLoadingSpinnerComponent,
+  SugUiPaginationComponent,
+  IPagination,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent } from '@lumaverse/sug-ui';
 import { RouterOutlet, Router } from '@angular/router';
 import { SentService } from './sent.service';
 import { SentMessage } from '@services/interfaces/messages-interface/sent.interface';
-import { format } from 'date-fns';
 import { UserStateService } from '@services/user-state.service';
 import { MemberProfile } from '@services/interfaces';
 import { filter, take } from 'rxjs';
@@ -25,6 +26,7 @@ import { filter, take } from 'rxjs';
     ButtonModule,
     BadgeModule,
     SugUiLoadingSpinnerComponent,
+    SugUiPaginationComponent,
   ],
   templateUrl: './sent.html',
   styleUrl: './sent.scss',
@@ -35,10 +37,16 @@ export class Sent {
   private userStateService = inject(UserStateService);
   userProfile = signal<MemberProfile | null>(null);
   isLoading = false;
-  totalRecords = 0;
-  page = 1;
-  rows = 10;
-  first = 0; // Important for proper pagination tracking
+
+  // Pagination configuration using signal
+  paginationKey = 'sent-pagination';
+  paginationOptions = signal<IPagination>({
+    totalRecords: 0,
+    rows: 10,
+    first: 0,
+    pageSizes: [10, 25, 50, 100],
+  });
+
   sortField = 'senddate';
   sortOrder: 'asc' | 'desc' = 'desc';
   tableConfig: ISugTableConfig = {
@@ -96,18 +104,24 @@ export class Sent {
   getMessageSummary() {
     this.isLoading = true;
     this.tableData = [];
-    this.totalRecords = 0;
+    const currentPage =
+      Math.floor(
+        this.paginationOptions().first / this.paginationOptions().rows
+      ) + 1;
     this.sentService
       .getMessageSentWithPagination(
-        this.page,
-        this.rows,
+        currentPage,
+        this.paginationOptions().rows,
         this.sortField,
         this.sortOrder
       )
       .subscribe({
         next: (apiResponse) => {
           if (apiResponse.data && apiResponse.data.messages) {
-            this.totalRecords = apiResponse.data.totalcount;
+            this.paginationOptions.update((p) => ({
+              ...p,
+              totalRecords: apiResponse.data.totalcount,
+            }));
             const mappedData = apiResponse.data.messages.map(
               (item: SentMessage) => ({
                 messageid: item.messageid,
@@ -153,17 +167,16 @@ export class Sent {
       sortField: this.sortField,
       sortOrder: event.order,
     };
-    this.page = 1; // Reset to first page when sorting
-    this.first = 0; // Reset first index
+    // Reset to first page when sorting
+    this.paginationOptions.update((p) => ({
+      ...p,
+      first: 0,
+    }));
     this.getMessageSummary();
   }
 
-  onPage(event: { first: number; rows: number }) {
-    // Update pagination state BEFORE making API call
-    this.first = event.first;
-    this.page = Math.floor(event.first / event.rows) + 1; // Convert 0-based to 1-based
-    this.rows = event.rows;
-    // Fetch new data for the selected page
+  onPaginationChange(event: IPagination) {
+    this.paginationOptions.set(event);
     this.getMessageSummary();
   }
 

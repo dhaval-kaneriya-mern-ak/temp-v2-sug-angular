@@ -36,3 +36,15 @@
     }
   }
 }
+
+::ng-deep {
+  .html-content {
+    .sign-up-genius {
+      img {
+        max-width: fit-content;
+        width: auto;
+        height: revert-layer;
+      }
+    }
+  }
+}

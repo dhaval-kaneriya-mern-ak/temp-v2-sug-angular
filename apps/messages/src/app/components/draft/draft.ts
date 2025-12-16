@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import {
@@ -7,6 +7,8 @@ import {
   DialogConfig,
   SugUiLoadingSpinnerComponent,
   ISugTableConfig,
+  SugUiPaginationComponent,
+  IPagination,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
 import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
@@ -18,7 +20,6 @@ import {
   selectedDraft,
 } from '@services/interfaces';
 import { Router } from '@angular/router';
-import { format } from 'date-fns';
 import { UserStateService } from '@services/user-state.service';
 import { of, Subject } from 'rxjs';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -44,6 +45,7 @@ import { ToastrService } from 'ngx-toastr';
     ButtonModule,
     BadgeModule,
     SugUiLoadingSpinnerComponent,
+    SugUiPaginationComponent,
   ],
   templateUrl: './draft.html',
   styleUrl: './draft.scss',
@@ -66,8 +68,16 @@ export class Draft implements OnDestroy, OnInit {
   isLoading = false;
   draftService = inject(DraftService);
   private router = inject(Router);
-  page = 1;
-  rows = 25;
+
+  // Pagination configuration using signal
+  paginationKey = 'draft-pagination';
+  paginationOptions = signal<IPagination>({
+    totalRecords: 0,
+    rows: 10,
+    first: 0,
+    pageSizes: [10, 25, 50, 100],
+  });
+
   sortField = 'datecreated';
   sortOrder: 'asc' | 'desc' = 'desc';
   tableConfig: ISugTableConfig = {
@@ -100,8 +110,6 @@ export class Draft implements OnDestroy, OnInit {
       filterable: false,
     },
   ];
-  totalRecords = 0;
-  first = 0; // Important for proper pagination tracking
   tableData: DraftMessage[] = [];
   searchTerm = '';
   searchControl = new FormControl('');
@@ -131,8 +139,10 @@ export class Draft implements OnDestroy, OnInit {
       )
       .subscribe((val: string | null) => {
         this.searchTerm = val || '';
-        this.page = 1;
-        this.first = 0;
+        this.paginationOptions.update((p) => ({
+          ...p,
+          first: 0,
+        }));
         this.getDraftMessages();
       });
   }
@@ -182,12 +192,15 @@ export class Draft implements OnDestroy, OnInit {
 
   getDraftMessages() {
     this.isLoading = true;
-    this.totalRecords = 0;
     this.tableData = [];
+    const currentPage =
+      Math.floor(
+        this.paginationOptions().first / this.paginationOptions().rows
+      ) + 1;
     this.draftService
       .getMessageTemplates(
-        this.page,
-        this.rows,
+        currentPage,
+        this.paginationOptions().rows,
         this.sortField,
         this.sortOrder,
         this.searchTerm
@@ -205,12 +218,18 @@ export class Draft implements OnDestroy, OnInit {
         if (!response || !response.data) {
           console.error('Invalid API response structure:', response);
           this.tableData = [];
-          this.totalRecords = 0;
+          this.paginationOptions.update((p) => ({
+            ...p,
+            totalRecords: 0,
+          }));
           this.isLoading = false;
           return;
         }
         const messages = response.data.messages || [];
-        this.totalRecords = response.data.totalcount || 0;
+        this.paginationOptions.update((p) => ({
+          ...p,
+          totalRecords: response.data.totalcount || 0,
+        }));
 
         this.tableData = messages.map((item) => ({
           datecreated: this.userStateService.convertESTtoUserTZ(
@@ -245,8 +264,11 @@ export class Draft implements OnDestroy, OnInit {
       sortOrder: event.order,
     };
 
-    this.page = 1; // Reset to first page when sorting
-    this.first = 0; // Reset first index
+    // Reset to first page when sorting
+    this.paginationOptions.update((p) => ({
+      ...p,
+      first: 0,
+    }));
     this.getDraftMessages();
   }
 
@@ -296,10 +318,8 @@ export class Draft implements OnDestroy, OnInit {
     this.openDeleteDialog(draftItem);
   }
 
-  onPage(event: { first: number; rows: number }) {
-    this.first = event.first;
-    this.page = Math.floor(event.first / event.rows) + 1;
-    this.rows = event.rows;
+  onPaginationChange(event: IPagination) {
+    this.paginationOptions.set(event);
     this.getDraftMessages();
   }
 
