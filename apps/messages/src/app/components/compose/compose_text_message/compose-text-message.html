@@ -139,11 +139,11 @@
         <div class="form-wrapper">
           <label for="reply-to">Sign Up</label>
           <sug-ui-multi-select-dropdown
-            [selectionLimit]="1"
             formControlName="selectedSignups"
             [options]="signupOptions"
             appendTo="parent"
             panelStyleClass="custom-dropdown"
+            (valueChanged)="onSignUpSelectionChange($event)"
           ></sug-ui-multi-select-dropdown>
         </div>
         <div class="form-wrapper">

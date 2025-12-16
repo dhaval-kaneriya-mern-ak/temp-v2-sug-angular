@@ -229,6 +229,17 @@ export class ComposeTextMessageComponent
   limitsData: MessageLimitsResponse | null = null;
   signupIdParam: string | null = null;
   readonly messageTypeIds = MessageTypeId;
+  controlsToToggle = [
+    'message',
+    'attachments',
+    'includeOption',
+    'emailSubject',
+    'userMobile',
+    'emailFrom',
+    'emailReplyTo',
+    'includefallback',
+    'includereply',
+  ];
   ngOnInit() {
     // Initialize unsaved changes manager
     this.unsavedChangesManager = new UnsavedChangesManager(this);
@@ -236,17 +247,7 @@ export class ComposeTextMessageComponent
     this.getLimits();
     this.initializeForms();
     // Listen for changes on selectedSignups
-    const controlsToToggle = [
-      'message',
-      'attachments',
-      'includeOption',
-      'emailSubject',
-      'userMobile',
-      'emailFrom',
-      'emailReplyTo',
-      'includefallback',
-      'includereply',
-    ];
+
     this.sendTextEmailForm
       .get('includefallback')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
@@ -267,30 +268,13 @@ export class ComposeTextMessageComponent
       .subscribe((shouldInclude) => {
         this.handleShortUrlToggle(shouldInclude);
       });
-    this.sendTextEmailForm
-      .get('selectedSignups')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (!value || value.length === 0) {
-          controlsToToggle.forEach(
-            (ctrl) => this.sendTextEmailForm.get(ctrl)?.disable(),
-            this.stateService.clearAllSelections()
-          );
-        } else {
-          this.getSlotsForSignup(Number(value[0]));
-          controlsToToggle.forEach((ctrl) =>
-            this.sendTextEmailForm.get(ctrl)?.enable()
-          );
-        }
-      });
-
     this.stateService.selectedGroups$
       .pipe(takeUntil(this.destroy$))
       .subscribe((selectedGroups) => {
         this.sendTextEmailForm.patchValue({ to: selectedGroups });
       });
 
-    controlsToToggle.forEach((ctrl) =>
+    this.controlsToToggle.forEach((ctrl: string) =>
       this.sendTextEmailForm.get(ctrl)?.disable()
     );
 
@@ -359,6 +343,23 @@ export class ComposeTextMessageComponent
       }
       return option;
     });
+  }
+
+  onSignUpSelectionChange(event: { value: string[] }): void {
+    let value = event.value || [];
+    if (!value || value.length === 0) {
+      this.controlsToToggle.forEach(
+        (ctrl: string) => this.sendTextEmailForm.get(ctrl)?.disable(),
+        this.stateService.clearAllSelections()
+      );
+    } else {
+      value = [value[value.length - 1]];
+      this.getSlotsForSignup(Number(value[0]));
+      this.controlsToToggle.forEach((ctrl: string) =>
+        this.sendTextEmailForm.get(ctrl)?.enable()
+      );
+    }
+    this.currentEmailForm.patchValue({ selectedSignups: value });
   }
 
   // Methods for "Select People" dialog
