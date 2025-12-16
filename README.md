@@ -672,8 +672,15 @@ To create a new remote application that exposes modules to host applications:
 
 ```bash
 # Generate a new Angular remote application
-# Note: We specify --directory=apps/my-new-remote to ensure correct folder structure and use available port. 4203 is for example.
-npx nx g @nx/angular:remote my-new-remote --directory=apps/my-new-remote --style=scss --host=host --port=4203 --e2eTestRunner=none --unitTestRunner=vitest
+npx nx g @nx/angular:remote my-new-remote --routing=true --style=scss --host=host
+
+# Alternative: Generate with specific configurations
+npx nx g @nx/angular:remote my-new-remote \
+  --routing=true \
+  --style=scss \
+  --prefix=myapp \
+  --port=4203 \
+  --host=host
 ```
 
 #### Step 2: Configure Module Federation
@@ -736,7 +743,7 @@ Update `package.json`:
 
 #### Step 5: Configure HTTPS for Remote
 
-Add HTTPS configuration to `apps/my-new-remote/project.json`. Ensure you use the correct SSL paths and host settings:
+Add HTTPS configuration to `apps/my-new-remote/project.json`:
 
 ```json
 {
@@ -748,12 +755,8 @@ Add HTTPS configuration to `apps/my-new-remote/project.json`. Ensure you use the
         "host": "my-new-remote.signupgenius.rocks",
         "publicHost": "https://my-new-remote.signupgenius.rocks:4203",
         "ssl": true,
-        "sslCert": "ssl-certs/sug-rocks.crt",
-        "sslKey": "ssl-certs/sug-rocks.key",
-        "disableHostCheck": true,
-        "liveReload": true,
-        "hmr": true,
-        "allowedHosts": ["my-new-remote.signupgenius.rocks", "localhost"],
+        "sslCert": "../../ssl-certs/sug-rocks.crt",
+        "sslKey": "../../ssl-certs/sug-rocks.key",
         "headers": {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -766,9 +769,7 @@ Add HTTPS configuration to `apps/my-new-remote/project.json`. Ensure you use the
 }
 ```
 
-#### Step 6: Update Hosts File
-
-**Crucial Step**: You must add the new domain to your system's hosts file, otherwise the local server will fail to bind to the domain.
+Add the new domain to your hosts file:
 
 ```bash
 echo "127.0.0.1 my-new-remote.signupgenius.rocks" | sudo tee -a /etc/hosts
