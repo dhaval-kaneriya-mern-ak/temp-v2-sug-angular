@@ -88,7 +88,6 @@ export class App implements OnInit, OnDestroy {
       //   '[App] Profile already loaded, applying ads policy immediately'
       // );
       this.applyAdsPolicy(currentProfile);
-      this.profileLoaded = true;
 
       // Call verification API for already loaded profile
       this.loadVerificationStatus();
@@ -104,7 +103,6 @@ export class App implements OnInit, OnDestroy {
           //   responseSuccess: resp?.success,
           // });
           this.applyAdsPolicy(profile);
-          this.profileLoaded = true;
 
           // Call verification API after profile is loaded
           this.loadVerificationStatus();
@@ -135,7 +133,6 @@ export class App implements OnInit, OnDestroy {
                   //   }
                   // );
                   this.applyAdsPolicy(profile);
-                  this.profileLoaded = true;
 
                   // Call verification API after profile is loaded
                   this.loadVerificationStatus();
@@ -303,12 +300,14 @@ export class App implements OnInit, OnDestroy {
     this.verificationService.checkVerificationStatus().subscribe({
       next: (verified: number) => {
         this.userStateService.setVerificationStatus(verified);
+        this.profileLoaded = true;
       },
       error: (err: HttpErrorResponse) => {
         console.error('[App] Error loading verification status:', err);
         // Set to not verified on error
         this.userStateService.setVerificationStatus(0);
         this.userStateService.setVerifyApiFailed(true);
+        this.profileLoaded = true;
       },
     });
   }

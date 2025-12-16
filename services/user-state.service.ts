@@ -115,6 +115,7 @@ export class UserStateService implements OnDestroy {
     this._verificationState$.next({
       isVerified: false,
       isApiFailed: false,
+      isLoaded: false,
     });
   }
 
@@ -123,6 +124,7 @@ export class UserStateService implements OnDestroy {
     this._verificationState$.next({
       ...current,
       isVerified: verified === 1,
+      isLoaded: true,
     });
   }
 
@@ -143,6 +145,14 @@ export class UserStateService implements OnDestroy {
 
   isVerifyApiFailed(): boolean {
     return this._verificationState$.value.isApiFailed;
+  }
+
+  isVerificationLoaded(): boolean {
+    return this._verificationState$.value.isLoaded;
+  }
+
+  getVerificationState() {
+    return this._verificationState$.asObservable();
   }
 
   /**
@@ -275,7 +285,7 @@ export class UserStateService implements OnDestroy {
 
     // 2️⃣ Create UTC date and validate
     const utcDate = new Date(utcMillis);
-    
+
     // Check if the date is valid
     if (isNaN(utcDate.getTime())) {
       return 'Invalid date';
@@ -315,7 +325,10 @@ export class UserStateService implements OnDestroy {
 
       return result.toLowerCase();
     } catch (error) {
-      console.error('Error formatting date:', error, { epochSeconds, userTimeZone });
+      console.error('Error formatting date:', error, {
+        epochSeconds,
+        userTimeZone,
+      });
       return 'Date formatting error';
     }
   }

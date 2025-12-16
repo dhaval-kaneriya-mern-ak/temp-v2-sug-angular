@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 export interface VerificationState {
   isVerified: boolean;
   isApiFailed: boolean;
+  isLoaded: boolean;
 }
 
 export const VERIFICATION_STATE_SUBJECT = new InjectionToken<
@@ -17,6 +18,7 @@ export const VERIFICATION_STATE_SUBJECT = new InjectionToken<
           new BehaviorSubject<VerificationState>({
             isVerified: false,
             isApiFailed: false,
+            isLoaded: false,
           });
       }
       return window.__SUG_VERIFICATION_STATE_SUBJECT__;
@@ -25,6 +27,7 @@ export const VERIFICATION_STATE_SUBJECT = new InjectionToken<
     return new BehaviorSubject<VerificationState>({
       isVerified: false,
       isApiFailed: false,
+      isLoaded: false,
     });
   },
 });
