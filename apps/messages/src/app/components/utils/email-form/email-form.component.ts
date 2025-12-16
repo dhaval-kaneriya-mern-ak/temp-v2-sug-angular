@@ -404,19 +404,19 @@ export class EmailFormComponent implements OnInit, OnChanges {
   getFileTypeIcon(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
     const iconMap: { [key: string]: string } = {
-      pdf: 'pi-file-pdf',
-      doc: 'pi-file-word',
-      docx: 'pi-file-word',
-      xls: 'pi-file-excel',
-      xlsx: 'pi-file-excel',
-      txt: 'pi-file',
-      csv: 'pi-file',
-      jpg: 'pi-image',
-      jpeg: 'pi-image',
-      png: 'pi-image',
-      gif: 'pi-image',
+      pdf: 'fa-file-pdf',
+      doc: 'fa-file-word',
+      docx: 'fa-file-word',
+      xls: 'fa-file-excel',
+      xlsx: 'fa-file-excel',
+      txt: 'fa-file',
+      csv: 'fa-file',
+      jpg: 'fa-image',
+      jpeg: 'fa-image',
+      png: 'fa-image',
+      gif: 'fa-image',
     };
-    return iconMap[ext] || 'pi-file';
+    return iconMap[ext] || 'fa-file';
   }
 
   downloadFile(file: IFileItem): void {

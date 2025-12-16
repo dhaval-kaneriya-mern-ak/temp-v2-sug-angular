@@ -12,7 +12,7 @@
       }"
     >
       <p-button variant="text" size="small" (click)="onOpenHelpDialog()"
-        ><i class="pi pi-question-circle info-icon fs-6 ms-2"></i>
+        ><i class="fa-solid fa-circle-question info-icon fs-6 ms-2"></i>
       </p-button>
     </sug-ui-tooltip>
   </h3>
@@ -80,7 +80,7 @@
           (click)="onOpenSignUpsDialog()"
           aria-label="Edit selected sign ups"
         >
-          <i class="pi pi-pencil"></i>
+          <i class="fa-solid fa-pencil"></i>
         </button>
       </div>
       }
@@ -145,7 +145,7 @@
             (click)="onOpenPeopleDialog()"
             aria-label="Edit recipient selection"
           >
-            <i class="pi pi-pencil"></i>
+            <i class="fa-solid fa-pencil"></i>
           </button>
         </div>
         <button
@@ -168,7 +168,7 @@
             (click)="onEditSelectedSlots()"
             aria-label="Edit selected slots"
           >
-            <i class="pi pi-pencil"></i>
+            <i class="fa-solid fa-pencil"></i>
           </button>
         </div>
         <button
@@ -191,7 +191,7 @@
             (click)="onEditSelectedMemberGroups()"
             aria-label="Edit selected member groups"
           >
-            <i class="pi pi-pencil"></i>
+            <i class="fa-solid fa-pencil"></i>
           </button>
         </div>
         <button
@@ -242,7 +242,7 @@
       <sug-ui-button
         type="button"
         class="add-link-btn"
-        icon="pi pi-paperclip"
+        icon="fa-solid fa-paperclip"
         label="Add Attachments"
         [disabled]="!canAddMoreAttachments()"
         (buttonClick)="onOpenSelectFileDialog()"
@@ -270,7 +270,8 @@
               <div class="file-icon-wrapper">
                 <i
                   [class]="
-                    'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                    'fa-solid ' +
+                    getFileTypeIcon(file.title || file.filename || '')
                   "
                 ></i>
               </div>
@@ -296,7 +297,7 @@
               aria-label="Download attachment"
               title="Download attachment"
             >
-              <i class="pi pi-download"></i>
+              <i class="fa-solid fa-download"></i>
             </button>
 
             <!-- Remove Button -->
@@ -307,7 +308,7 @@
               aria-label="Remove attachment"
               title="Remove attachment"
             >
-              <i class="pi pi-times"></i>
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
           }

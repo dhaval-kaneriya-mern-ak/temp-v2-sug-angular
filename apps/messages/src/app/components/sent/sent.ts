@@ -142,7 +142,7 @@ export class Sent {
                       </div>`,
                 totalsent: item.totalsent || 0,
                 status: item.status,
-                action: `<i class="pi pi-chart-bar chart-icon" 
+                action: `<i class="fa-solid fa-chart-pie chart-icon" 
               data-message-id="${item.messageid}" title="View message details"></i>`,
                 originalData: item,
               })

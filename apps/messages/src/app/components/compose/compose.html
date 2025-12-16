@@ -12,7 +12,7 @@
           [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
         >
           <p-button variant="text" size="small" (onClick)="isVisible = true"
-            ><i class="pi pi-question-circle info-icon"></i>
+            ><i class="fa-solid fa-circle-question info-icon"></i>
           </p-button>
         </sug-ui-tooltip>
         @if (dialogType === 'template') {
@@ -25,9 +25,9 @@
           <div slot="header">
             <h2 class="d-inline gap-2 align-items-center">
               Custom Email Template
-              <span
-                ><img [src]="badgeUrl" alt="badge" class="badge-icon"
-              /></span>
+              <span>
+                <i class="fa-solid fa-award-simple badge-icon fa-xl"></i>
+              </span>
             </h2>
             <p class="compose-subtext mb-0">
               This feature is available with premium plans.
@@ -94,8 +94,8 @@
             <h2 class="d-inline gap-2 align-items-center">
               Send Text Messages
               <span
-                ><img [src]="badgeUrl" alt="badge" class="badge-icon"
-              /></span>
+                ><i class="fa-solid fa-award-simple badge-icon fa-xl"></i
+              ></span>
             </h2>
             <p class="compose-subtext mb-0">
               This feature is available with premium plans.
@@ -192,7 +192,7 @@
 
             <h4>
               Create a Custom Reminder Email Template
-              <img [src]="badgeUrl" class="w-auto" alt="pro" />
+              <i class="fa-solid fa-award badge-icon fa-xl"></i>
             </h4>
             <p>
               With our premium plans, you can compose a custom reminder message
@@ -208,7 +208,7 @@
 
             <h4>
               Create a Custom Confirmation Email Template
-              <img [src]="badgeUrl" class="w-auto" alt="pro" />
+              <i class="fa-solid fa-award badge-icon fa-xl"></i>
             </h4>
             <p>
               A confirmation email is sent to participants immediately after
@@ -225,7 +225,7 @@
             </p>
             <h4>
               Invite People to Opt in to Text Messages
-              <img [src]="badgeUrl" class="w-auto" alt="pro" />
+              <i class="fa-solid fa-award badge-icon fa-xl"></i>
             </h4>
             <p>
               Select this option to compose an email that will send members a
@@ -241,7 +241,7 @@
             </p>
             <h4>
               Send a Text Message to People Participating in a Sign Up
-              <img [src]="badgeUrl" class="w-auto" alt="pro" />
+              <i class="fa-solid fa-award badge-icon fa-xl"></i>
             </h4>
             <p>
               Select this option to compose a text message. You can send the
@@ -295,7 +295,7 @@
       >
         <span class="tab-label">{{ tab.name }}</span>
         @if (tab.badge) {
-        <img [src]="badgeUrl" alt="badge" class="badge-icon" />
+        <i class="fa-solid fa-award badge-icon fa-xl"></i>
         }
       </button>
       }

@@ -6,7 +6,11 @@
   <div class="d-flex align-items-center justify-content-between">
     <h2 class="pt-2">Drafts & Templates</h2>
     <div class="search-box mb-3 d-flex align-items-center">
-      <i class="pi pi-search btn-search" title="Search" aria-hidden="true"></i>
+      <i
+        class="fa-solid fa-magnifying-glass btn-search"
+        title="Search"
+        aria-hidden="true"
+      ></i>
       <input
         type="text"
         [formControl]="searchControl"
@@ -37,14 +41,14 @@
       <div class="table-action-wrapper">
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <i
-          class="pi pi-pencil btn-action"
+          class="fa-solid fa-pencil btn-action"
           (click)="editDraft(rowData)"
           title="Edit message"
           style="cursor: pointer"
         ></i>
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <i
-          class="pi pi-times btn-action"
+          class="fa-solid fa-trash-can btn-action"
           (click)="openDeleteDialog(rowData)"
           title="Delete message"
           style="cursor: pointer"
