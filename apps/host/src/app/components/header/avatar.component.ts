@@ -74,7 +74,7 @@ export class AvatarComponent {
       return this.userName.substring(0, 2).toUpperCase();
     }
 
-    return 'U';
+    return '';
   }
 
   handleImageError(): void {
