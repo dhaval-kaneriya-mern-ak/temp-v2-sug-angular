@@ -66,6 +66,7 @@ import {
   ITabGroupItem,
   IDateSlotsResponse,
   IDateSlotItem,
+  IMemberInfoDto,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -1865,6 +1866,60 @@ export class ComposeEmailComponent
                       this.stateService.setRecipientCount(
                         matchedMembers.length
                       );
+
+                      // For CUSTOM sendtotype, we need to update peopleSelectionData here
+                      // because restorePeopleSelection() is called BEFORE this async
+                      // callback completes, so it doesn't have the member details yet.
+                      // We use 'sendMessagePeopleIselect' (correct for custom sendtotype)
+                      // not 'ManuallyEnterEmail' (which is for manual text entry).
+                      if (
+                        response.data.sendtotype?.toLowerCase() ===
+                        SendToType.CUSTOM
+                      ) {
+                        this.stateService.setPeopleSelectionData({
+                          selectedValue: 'sendMessagePeopleIselect',
+                          selectedGroups: [],
+                          manualEmails: '',
+                          groupEmailAlias: '',
+                          useGroupAlias: false,
+                          includeNonGroupMembers: false,
+                          manualEmailsGroup: [],
+                          rsvpResponseyes: false,
+                          rsvpResponseno: false,
+                          rsvpResponsemaybe: false,
+                          rsvpResponsenoresponse: false,
+                        });
+
+                        this.selectedRadioOption = {
+                          selectedValue: 'sendMessagePeopleIselect',
+                          includeNonGroupMembers: false,
+                          recipients: [],
+                        };
+
+                        this.stateService.setSelectedGroups([
+                          {
+                            label: 'Custom Selection',
+                            value: 'sendMessagePeopleIselect',
+                          },
+                        ]);
+
+                        // Set recipients for the recipient details popup
+                        // Transform matchedMembers to IRecipient format
+                        const recipients = matchedMembers.map((member) => ({
+                          memberid: member.id,
+                          email: member.email,
+                          mobile: '',
+                          displayname:
+                            [member.firstname, member.lastname]
+                              .filter(Boolean)
+                              .join(' ')
+                              .trim() ||
+                            member.email ||
+                            'Unknown',
+                          smsoptin: false, // Default to false
+                        }));
+                        this.stateService.setRecipients(recipients);
+                      }
                     }
                   },
                   error: (error) => {
@@ -2151,21 +2206,8 @@ export class ComposeEmailComponent
                         tap((recipientsResponse) => {
                           const data =
                             recipientsResponse.data as IRecipientsResponseData;
-                          if (Array.isArray(data.recipients)) {
-                            this.stateService.setRecipientCount(
-                              data.recipients.length
-                            );
-                            this.stateService.setRecipients(
-                              data.recipients as IRecipient[]
-                            );
-                          } else if (
-                            recipientsResponse.success &&
-                            recipientsResponse.pagination
-                          ) {
-                            this.stateService.setRecipientCount(
-                              recipientsResponse.pagination.totalRecords || 0
-                            );
-                          }
+
+                          this.updateRecipientsFromSelectedMembers();
                         }),
                         catchError((error) => {
                           console.error(
@@ -2491,21 +2533,8 @@ export class ComposeEmailComponent
                         tap((recipientsResponse) => {
                           const data =
                             recipientsResponse.data as IRecipientsResponseData;
-                          if (Array.isArray(data.recipients)) {
-                            this.stateService.setRecipientCount(
-                              data.recipients.length
-                            );
-                            this.stateService.setRecipients(
-                              data.recipients as IRecipient[]
-                            );
-                          } else if (
-                            recipientsResponse.success &&
-                            recipientsResponse.pagination
-                          ) {
-                            this.stateService.setRecipientCount(
-                              recipientsResponse.pagination.totalRecords || 0
-                            );
-                          }
+
+                          this.updateRecipientsFromSelectedMembers();
                         }),
                         catchError((error) => {
                           console.error(
@@ -3009,5 +3038,33 @@ export class ComposeEmailComponent
     this.emailFormOne.patchValue(data);
     this.emailFormTwo.patchValue(data);
     this.cdr.detectChanges();
+  }
+
+  private updateRecipientsFromSelectedMembers(): void {
+    const selectedMembers = this.stateService.selectedMemberGroups;
+    const actualSelectedCount = selectedMembers.length;
+    this.stateService.setRecipientCount(actualSelectedCount);
+
+    const selectedRecipients = selectedMembers.map((member) =>
+      this.mapMemberToRecipient(member)
+    );
+    this.stateService.setRecipients(selectedRecipients);
+  }
+
+  private mapMemberToRecipient(member: IMemberInfoDto): IRecipient {
+    return {
+      memberid: member.id,
+      email: member.email || '',
+      mobile: '',
+      displayname:
+        member.displayname ||
+        [member.firstname, member.lastname]
+          .map((name) => name?.trim())
+          .filter(Boolean)
+          .join(' ') ||
+        member.email ||
+        'Unknown',
+      smsoptin: false,
+    };
   }
 }
