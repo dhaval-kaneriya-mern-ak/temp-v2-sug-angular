@@ -18,6 +18,7 @@
       "@apps/*": ["apps/*"],
       "@environments/*": ["environments/*"],
       "@services/*": ["services/*"],
+      "groups/Routes": ["apps/groups/src/app/remote-entry/entry.routes.ts"],
       "messages/Routes": ["apps/messages/src/app/remote-entry/entry.routes.ts"],
       "reports/Routes": ["apps/reports/src/app/remote-entry/entry.routes.ts"]
     }
