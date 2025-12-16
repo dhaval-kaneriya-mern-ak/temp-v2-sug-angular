@@ -69,9 +69,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isLoading.set(false);
+          this.loadUserRole();
         },
         error: () => {
           this.handleLogout();
+          this.isLoading.set(false);
+        },
+      });
+  }
+
+  private loadUserRole() {
+    this.isLoading.set(true);
+    this.userStateService
+      .getUserRole()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.userRoles.set(response.data ? response.data : []);
+          this.isLoading.set(false);
+        },
+        error: () => {
           this.isLoading.set(false);
         },
       });

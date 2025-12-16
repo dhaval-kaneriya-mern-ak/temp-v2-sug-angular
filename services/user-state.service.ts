@@ -5,6 +5,7 @@ import {
   IUpdateUserApiResponse,
   IUpdateUserPayload,
   MemberProfile,
+  UserRole,
 } from './interfaces';
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
@@ -275,7 +276,7 @@ export class UserStateService implements OnDestroy {
 
     // 2️⃣ Create UTC date and validate
     const utcDate = new Date(utcMillis);
-    
+
     // Check if the date is valid
     if (isNaN(utcDate.getTime())) {
       return 'Invalid date';
@@ -315,8 +316,18 @@ export class UserStateService implements OnDestroy {
 
       return result.toLowerCase();
     } catch (error) {
-      console.error('Error formatting date:', error, { epochSeconds, userTimeZone });
+      console.error('Error formatting date:', error, {
+        epochSeconds,
+        userTimeZone,
+      });
       return 'Date formatting error';
     }
+  }
+
+  /**
+   * Get user role
+   */
+  getUserRole(): Observable<ApiResponse<UserRole[]>> {
+    return this.sugApiService.get('/auth/roles');
   }
 }
