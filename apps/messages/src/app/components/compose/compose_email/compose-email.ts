@@ -462,15 +462,13 @@ export class ComposeEmailComponent
       });
     }
 
-    this.composeService
-      .getMemberIndexPage(this.userProfile?.id?.toString() || '')
-      .subscribe({
-        next: (response) => {
-          if (response?.data && response?.data?.url) {
-            this.stateService.setMemberIndexPageUrl(response.data.url);
-          }
-        },
-      });
+    this.composeService.getMemberIndexPage().subscribe({
+      next: (response) => {
+        if (response?.data && response?.data?.url) {
+          this.stateService.setMemberIndexPageUrl(response.data.url);
+        }
+      },
+    });
 
     // Load groups
     this.composeService.getGroupforMembers().subscribe({

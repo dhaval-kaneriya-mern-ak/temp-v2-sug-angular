@@ -300,8 +300,8 @@ export class ComposeService {
     return this.sugApiClient.get(`/portals?includeTheme=true`);
   }
 
-  getMemberIndexPage(id: string): Observable<IMemberIndexPageResponse> {
-    return this.sugApiClient.get(`/member/indexpage/${id}`);
+  getMemberIndexPage(): Observable<IMemberIndexPageResponse> {
+    return this.sugApiClient.get(`/member/indexpage`);
   }
 
   getAllGroupsWithMembers(): Observable<IAllGroupsWithMembersResponse> {

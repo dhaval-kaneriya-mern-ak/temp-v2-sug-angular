@@ -1,5 +1,6 @@
 // Import shared chip component styles
 @import '../../shared/styles/_chip-components';
+@import '../../shared/styles/_compose_common';
 
 .compose-container {
   padding: 15px 0;
@@ -180,37 +181,7 @@
       }
 
       // Styling for buttons in second radio option
-      .link-button {
-        background: none;
-        border: none;
-        color: #f68b1c;
-        text-decoration: underline;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 2px 4px;
-        border-radius: 3px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        &:hover {
-          color: #e67e22;
-          text-decoration: none;
-        }
-      }
-      .info-button {
-        background: none;
-        border: none;
-        color: #6b7280;
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        .pi-icon {
-          font-size: 12px;
-        }
-      }
+      // .link-button and .info-button styles are imported from shared styles
     }
     .send-msg-dialog-content {
       display: flex;
