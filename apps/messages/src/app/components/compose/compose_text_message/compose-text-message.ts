@@ -232,7 +232,6 @@ export class ComposeTextMessageComponent
   controlsToToggle = [
     'message',
     'attachments',
-    'includeOption',
     'emailSubject',
     'userMobile',
     'emailFrom',
@@ -347,11 +346,11 @@ export class ComposeTextMessageComponent
 
   onSignUpSelectionChange(event: { value: string[] }): void {
     let value = event.value || [];
-    if (!value || value.length === 0) {
-      this.controlsToToggle.forEach(
-        (ctrl: string) => this.sendTextEmailForm.get(ctrl)?.disable(),
-        this.stateService.clearAllSelections()
+    if (value.length === 0) {
+      this.controlsToToggle.forEach((ctrl: string) =>
+        this.sendTextEmailForm.get(ctrl)?.disable()
       );
+      this.stateService.clearAllSelections();
     } else {
       value = [value[value.length - 1]];
       this.getSlotsForSignup(Number(value[0]));
@@ -359,7 +358,7 @@ export class ComposeTextMessageComponent
         this.sendTextEmailForm.get(ctrl)?.enable()
       );
     }
-    this.currentEmailForm.patchValue({ selectedSignups: value });
+    this.sendTextEmailForm.patchValue({ selectedSignups: value });
   }
 
   // Methods for "Select People" dialog
