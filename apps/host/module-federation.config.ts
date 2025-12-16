@@ -15,7 +15,7 @@ const config: ModuleFederationConfig = {
    *
    */
   // remotes: ['reports', 'messages'],
-  remotes: ['messages'],
+  remotes: ['messages', 'groups'],
 };
 
 /**

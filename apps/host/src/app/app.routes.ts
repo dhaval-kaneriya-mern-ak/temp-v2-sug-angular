@@ -4,6 +4,10 @@ import { AdUnitsConfig } from '@services/freestar.service';
 
 export const appRoutes: Route[] = [
   {
+    path: 'groups',
+    loadChildren: () => import('groups/Routes').then((m) => m!.remoteRoutes),
+  },
+  {
     path: 'messages',
     loadChildren: () => import('messages/Routes').then((m) => m.remoteRoutes),
     data: {
