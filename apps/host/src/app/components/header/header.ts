@@ -86,11 +86,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.userRoles.set(response.data ? response.data : []);
+          this.userRoles.set(response.data ?? []);
           this.isLoading.set(false);
         },
         error: () => {
           this.isLoading.set(false);
+          this.userRoles.set([]);
         },
       });
   }
