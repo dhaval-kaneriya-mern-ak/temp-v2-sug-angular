@@ -34,7 +34,7 @@
           [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
         >
           <p-button variant="text" size="small" (click)="openHelpDialog()">
-            <i class="pi pi-question-circle info-icon"></i>
+            <i class="fa-solid fa-circle-question info-icon"></i>
           </p-button>
         </sug-ui-tooltip>
       </h3>
@@ -74,7 +74,7 @@
           <sug-ui-button
             type="button"
             class="add-link-btn"
-            icon="pi pi-paperclip"
+            icon="fa-solid fa-paperclip"
             label="Add Attachments"
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
@@ -97,7 +97,7 @@
                   <div class="file-icon-wrapper">
                     <i
                       [class]="
-                        'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                        'fa-solid ' + getFileTypeIcon(file.title || file.filename || '')
                       "
                     ></i>
                   </div>
@@ -124,7 +124,7 @@
                   aria-label="Download attachment"
                   title="Download attachment"
                 >
-                  <i class="pi pi-download"></i>
+                  <i class="fa-solid fa-download"></i>
                 </button>
 
                 <!-- Remove Button -->
@@ -135,7 +135,7 @@
                   aria-label="Remove attachment"
                   title="Remove attachment"
                 >
-                  <i class="pi pi-times"></i>
+                  <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
               }
@@ -199,7 +199,7 @@
           [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
         >
           <p-button variant="text" size="small" (click)="openHelpDialog()">
-            <i class="pi pi-question-circle info-icon"></i>
+            <i class="fa-solid fa-circle-question info-icon"></i>
           </p-button>
         </sug-ui-tooltip>
       </h3>
@@ -239,7 +239,7 @@
           <sug-ui-button
             type="button"
             class="add-link-btn"
-            icon="pi pi-paperclip"
+            icon="fa-solid fa-paperclip"
             label="Add Attachments"
             (buttonClick)="openSelectFileDialog()"
           ></sug-ui-button>
@@ -262,7 +262,7 @@
                   <div class="file-icon-wrapper">
                     <i
                       [class]="
-                        'pi ' + getFileTypeIcon(file.title || file.filename || '')
+                        'fa-solid ' + getFileTypeIcon(file.title || file.filename || '')
                       "
                     ></i>
                   </div>
@@ -289,7 +289,7 @@
                   aria-label="Download attachment"
                   title="Download attachment"
                 >
-                  <i class="pi pi-download"></i>
+                  <i class="fa-solid fa-download"></i>
                 </button>
 
                 <!-- Remove Button -->
@@ -300,7 +300,7 @@
                   aria-label="Remove attachment"
                   title="Remove attachment"
                 >
-                  <i class="pi pi-times"></i>
+                  <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
               }
@@ -355,7 +355,7 @@
     </div>
     } }
     <button (click)="handleBackButton()" class="back-btn">
-      <i class="pi pi-arrow-left"></i> Back
+      <i class="fa-solid fa-arrow-left"></i> Back
     </button>
   </div>
   }

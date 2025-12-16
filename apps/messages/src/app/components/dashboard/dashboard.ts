@@ -178,7 +178,7 @@ export class Dashboard implements OnInit, OnDestroy {
             ),
             subject: item.subject,
             sentTo: item.sentTo || `${item.totalsent || 0}`,
-            action: `<i class="pi pi-chart-bar chart-icon" 
+            action: `<i class="fa-solid fa-chart-pie chart-icon" 
           style="cursor: pointer;" 
           data-message-id="${item.messageid}"
           title="View message details"></i>`,

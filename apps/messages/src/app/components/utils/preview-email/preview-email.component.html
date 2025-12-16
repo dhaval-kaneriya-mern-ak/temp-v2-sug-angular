@@ -91,7 +91,7 @@
         (valueChange)="isScheduledDateValid()"
         [minDate]="minDate"
         [showIcon]="true"
-        [icon]="'pi pi-chevron-down'"
+        [icon]="'fa-solid fa-chevron-down'"
         [placeholder]="'Schedule Send'"
         [showButtonBar]="true"
         [dateFormat]="'mm/dd/yy'"
@@ -103,6 +103,8 @@
       @if (scheduledDate) {
       <!-- Time Only Picker -->
       <sug-ui-date-picker
+        [icon]="'fa-solid fa-calendar-days'"
+        [showIcon]="true"
         [(value)]="scheduledTime"
         (valueChange)="isScheduledDateValid()"
         [timeOnly]="true"

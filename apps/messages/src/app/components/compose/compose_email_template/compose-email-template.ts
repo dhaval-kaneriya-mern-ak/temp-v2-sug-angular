@@ -902,32 +902,32 @@ export class ComposeEmailTemplateComponent
    * Gets the appropriate icon class based on file type
    */
   getFileTypeIcon(filename: string): string {
-    if (!filename) return 'pi-file';
+    if (!filename) return 'fa-file';
 
     const extension = filename.split('.').pop()?.toLowerCase();
 
     switch (extension) {
       case 'pdf':
-        return 'pi-file-pdf';
+        return 'fa-file-pdf';
       case 'doc':
       case 'docx':
-        return 'pi-file-word';
+        return 'fa-file-word';
       case 'xls':
       case 'xlsx':
-        return 'pi-file-excel';
+        return 'fa-file-excel';
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'bmp':
       case 'svg':
-        return 'pi-image';
+        return 'fa-image';
       case 'zip':
       case 'rar':
       case '7z':
-        return 'pi-file-archive';
+        return 'fa-file-zipper';
       default:
-        return 'pi-file';
+        return 'fa-file';
     }
   }
 
