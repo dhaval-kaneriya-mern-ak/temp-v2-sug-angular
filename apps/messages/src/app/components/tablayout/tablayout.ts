@@ -44,7 +44,8 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
   showAnnouncementBar = false;
   showVerificationModal = false;
   pendingRoute: string | null = null;
-
+  dateFormatString = 'mm/dd/yyyy';
+  timezone = '';
   private readonly userStateService = inject(UserStateService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -100,6 +101,9 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
         next: (profile) => {
           this.isProUser = profile?.ispro ?? false;
           this.isTrialUser = profile?.istrial ?? false;
+          this.dateFormatString =
+            profile?.selecteddateformat.short || 'mm/dd/yyyy';
+          this.timezone = profile?.zonename || '';
           this.updateNavigationTabs(profile);
           this.initializeActiveTab();
         },
