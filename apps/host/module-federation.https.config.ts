@@ -9,6 +9,7 @@ const config: ModuleFederationConfig = {
   remotes: [
     // ['reports', 'https://reports.signupgenius.rocks:4201'],
     ['messages', 'https://messages.signupgenius.rocks:4202'],
+    ['groups', 'https://groups.signupgenius.rocks:4203'],
   ],
 };
 
