@@ -50,3 +50,4 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 # SSL certificates for local development
 ssl-certs/
+!apps/groups
