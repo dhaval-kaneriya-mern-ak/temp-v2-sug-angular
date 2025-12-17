@@ -50,6 +50,7 @@ export interface MessageDetailsData {
   title: string;
   body: string;
   preview: string;
+  senttoname: string;
   timezone: Timezone;
   createdby: CreatedBy;
   totalsent: number;
@@ -60,6 +61,7 @@ export interface MessageDetailsData {
 export interface MessageSignup {
   id: number;
   title: string;
+  urlid: string;
 }
 
 export interface MessageTheme {
