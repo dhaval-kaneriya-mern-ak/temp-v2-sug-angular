@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiResponse } from '@lumaverse/sug-ui';
 import {
+  IMessageDeliveryStats,
   MessageLimitsResponse,
   MessagesListResponse,
 } from '@services/interfaces';
@@ -24,5 +25,11 @@ export class DashboardService {
    */
   getMessageSummary(): Observable<ApiResponse<MessagesListResponse[]>> {
     return this.sugApiClient.get('messages/summary');
+  }
+  /**
+   * Get message delivery stats
+   */
+  getMessageDeliveryStats(): Observable<ApiResponse<IMessageDeliveryStats[]>> {
+    return this.sugApiClient.get('messages/dashboarddeliverystats');
   }
 }
