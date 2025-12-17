@@ -355,9 +355,12 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
                 memberid: detail.memberid,
               };
 
-              // Add all memberevents fields dynamically
+              // Add all memberevents fields dynamically, but skip 'issues' and 'signedup' to avoid overwriting
               Object.keys(parsedEvents).forEach((key) => {
-                rowData[key.toLowerCase()] = parsedEvents[key];
+                const lowercaseKey = key.toLowerCase();
+                if (lowercaseKey !== 'issues' && lowercaseKey !== 'signedup') {
+                  rowData[lowercaseKey] = parsedEvents[key];
+                }
               });
 
               return rowData;
