@@ -31,3 +31,9 @@
     border-radius: 3px;
   }
 }
+
+::ng-deep {
+  .delivery-stats-list li.delivery-stat-item {
+    padding: 0 !important;
+  }
+}
