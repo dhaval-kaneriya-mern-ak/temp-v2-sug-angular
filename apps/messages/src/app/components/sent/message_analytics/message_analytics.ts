@@ -123,6 +123,7 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
           header: 'Status',
           sortable: true,
           filterable: false,
+          width: '100px',
         });
       }
 
@@ -132,6 +133,7 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
         header: 'Issues',
         sortable: true,
         filterable: false,
+        width: '100px',
       });
 
       // Add Signed Up column at the end
@@ -140,6 +142,7 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
         header: 'Signed Up',
         sortable: true,
         filterable: false,
+        width: '120px',
       });
 
       // Add remaining columns from memberevents (except Status)
@@ -343,8 +346,12 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
               const parsedEvents = JSON.parse(detail.memberevents);
               const rowData: any = {
                 email: detail.email,
-                issues: detail.issues || '',
-                signedup: detail.signedup,
+                issues: detail.issues
+                  ? '<span><i class="pi pi-check"></i></span>'
+                  : '',
+                signedup: detail.signedup
+                  ? '<span><i class="pi pi-check"></i></span>'
+                  : '',
                 memberid: detail.memberid,
               };
 
