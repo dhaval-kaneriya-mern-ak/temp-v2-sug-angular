@@ -5,18 +5,24 @@ import {
   OnDestroy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import {
   Router,
   RouterOutlet,
   NavigationEnd,
   NavigationCancel,
 } from '@angular/router';
-import { SugUiMenuTabsComponent, Tabs } from '@lumaverse/sug-ui';
+import {
+  SugUiLoadingSpinnerComponent,
+  SugUiMenuTabsComponent,
+  Tabs,
+} from '@lumaverse/sug-ui';
 import { Subject, filter, take, takeUntil } from 'rxjs';
 import { MemberProfile } from '@services/interfaces';
 import { UserStateService } from '@services/user-state.service';
 import { VerificationModalComponent } from '../../shared/components/verification-modal/verification-modal.component';
+import { VerificationService } from '@services/verification.service';
+import { NavigationState } from 'primeng/datepicker';
 
 @Component({
   selector: 'sug-tablayout',
@@ -26,6 +32,7 @@ import { VerificationModalComponent } from '../../shared/components/verification
     RouterOutlet,
     SugUiMenuTabsComponent,
     VerificationModalComponent,
+    SugUiLoadingSpinnerComponent,
   ],
   templateUrl: './tablayout.html',
   styleUrl: './tablayout.scss',
@@ -47,17 +54,31 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
   dateFormatString = 'mm/dd/yyyy';
   timezone = '';
   private readonly userStateService = inject(UserStateService);
+  private readonly verificationService = inject(VerificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private location = inject(Location);
   private destroy$ = new Subject<void>();
   public isProUser = false;
   public isTrialUser = false;
+
+  public readonly isVerificationLoading = this.verificationService.loading;
 
   constructor() {
     this.checkAnnouncementBarVisibility();
   }
 
   ngOnInit() {
+    const state = this.location.getState() as {
+      showVerificationModal?: boolean;
+    };
+    if (state?.showVerificationModal) {
+      this.showVerificationModal = true;
+
+      // Clear the state so it doesn't persist on reload
+      this.location.replaceState(this.location.path(), '');
+    }
+
     this.initializeActiveTab();
     this.loadUserProfileAndUpdateTabs();
 
@@ -78,9 +99,10 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
         filter((event) => event instanceof NavigationCancel),
         takeUntil(this.destroy$)
       )
-      .subscribe(() => {
+      .subscribe((event: NavigationCancel) => {
         // Force the menu tabs component to re-render with the current active tab
         // by temporarily clearing and then restoring the value
+
         const currentTab = this.currentActiveTab;
         this.currentActiveTab = '';
         this.cdr.detectChanges();
@@ -166,14 +188,18 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
 
     if (selectedTab && selectedTab.route) {
       // Check if navigating to compose and user is not verified
-      if (
-        selectedTab.route === '/messages/compose' &&
-        !this.userStateService.isUserVerified()
-      ) {
-        // Store the pending route and show verification modal
-        this.pendingRoute = selectedTab.route;
-        this.showVerificationModal = true;
-        // Don't navigate yet
+      if (selectedTab.route === '/messages/compose') {
+        this.verificationService
+          .ensureVerificationStatus()
+          .pipe(take(1))
+          .subscribe((isVerified) => {
+            if (!isVerified) {
+              this.pendingRoute = selectedTab.route;
+              this.showVerificationModal = true;
+            } else {
+              this.router.navigate([selectedTab.route]);
+            }
+          });
         return;
       }
 

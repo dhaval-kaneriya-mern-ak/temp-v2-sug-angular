@@ -9,10 +9,7 @@ import {
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
-import {
-  VERIFICATION_STATE_SUBJECT,
-  VerificationState,
-} from './verification-state-token';
+import { VERIFICATION_STATE_SUBJECT } from './verification-state-token';
 
 @Injectable({
   providedIn: 'root',

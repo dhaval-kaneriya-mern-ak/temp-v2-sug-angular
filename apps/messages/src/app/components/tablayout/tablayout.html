@@ -37,7 +37,13 @@
     ></sug-ui-menu-tabs>
   </div>
   <div class="col-md-12 tab-content">
+    @if (isVerificationLoading()) {
+    <div class="verification-loading-container">
+      <sug-ui-loading-spinner [isLoading]="true"></sug-ui-loading-spinner>
+    </div>
+    } @else {
     <router-outlet></router-outlet>
+    }
   </div>
   <div class="col-md-12">
     <p class="link-text">
