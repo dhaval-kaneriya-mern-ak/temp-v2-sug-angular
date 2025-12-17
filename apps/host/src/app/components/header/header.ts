@@ -14,11 +14,12 @@ import { MobileMenuComponent } from './mobile-menu';
 import { environment } from '@environments/environment';
 import { MemberProfile, UserRole } from '@services/interfaces';
 import { UserStateService } from '@services/user-state.service';
+import { AvatarComponent } from './avatar.component';
 
 @Component({
   selector: 'sug-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, MobileMenuComponent],
+  imports: [CommonModule, RouterModule, MobileMenuComponent, AvatarComponent],
   templateUrl: './header.html',
   styleUrls: ['./header.scss', './mobile-menu.scss'],
 })
@@ -69,10 +70,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isLoading.set(false);
+          this.loadUserRole();
         },
         error: () => {
           this.handleLogout();
           this.isLoading.set(false);
+        },
+      });
+  }
+
+  private loadUserRole() {
+    this.isLoading.set(true);
+    this.userStateService
+      .getUserRole()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.userRoles.set(response.data ?? []);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.isLoading.set(false);
+          this.userRoles.set([]);
         },
       });
   }
@@ -169,6 +188,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   getProfileDisplay(): string {
     const profile = this.userProfile();
     return profile?.profilepicture?.text || '';
+  }
+
+  getUserFullName(): string {
+    const profile = this.userProfile();
+    if (!profile) return '';
+    const firstName = profile.firstname || '';
+    const lastName = profile.lastname || '';
+    return `${firstName} ${lastName}`.trim();
   }
 
   getProfileImage(): string {

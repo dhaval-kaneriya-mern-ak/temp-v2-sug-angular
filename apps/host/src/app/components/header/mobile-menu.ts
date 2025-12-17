@@ -13,11 +13,12 @@ import { MemberProfile, UserRole } from '@services/interfaces';
 import { environment } from '@environments/environment';
 import { Subject, takeUntil } from 'rxjs';
 import { UserStateService } from '@services/user-state.service';
+import { AvatarComponent } from './avatar.component';
 
 @Component({
   selector: 'sug-mobile-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AvatarComponent],
   styleUrls: ['./mobile-menu.scss'],
   templateUrl: './mobile-menu.html',
 })
@@ -88,5 +89,13 @@ export class MobileMenuComponent implements OnInit, OnDestroy {
   getProfileImage(): string {
     const profile = this.userProfile();
     return profile?.profilepicture?.small || '';
+  }
+
+  getUserFullName(): string {
+    const profile = this.userProfile();
+    if (!profile) return '';
+    const firstName = profile.firstname || '';
+    const lastName = profile.lastname || '';
+    return `${firstName} ${lastName}`.trim();
   }
 }

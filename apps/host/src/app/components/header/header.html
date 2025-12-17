@@ -251,13 +251,14 @@
             } @else { @if (isLoading()) {
             <i class="pi pi-spin pi-spinner"></i>
             } @else {
-            <img
+            <sug-avatar
               [src]="getProfileImage()"
+              [userName]="getUserFullName()"
+              [width]="34"
+              [height]="34"
               alt="profile"
-              height="34"
-              width="34"
               class="profile-img"
-            />
+            ></sug-avatar>
             } }
           </button>
 
