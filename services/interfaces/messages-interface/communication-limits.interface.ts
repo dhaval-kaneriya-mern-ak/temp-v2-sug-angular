@@ -1,4 +1,5 @@
 import { Timezone, CreatedBy } from './common.interface';
+
 export interface MessageLimitsResponse {
   sentemailtoday: number;
   sentemailforthemonth: number;
