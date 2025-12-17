@@ -17,7 +17,9 @@
       <div class="info color-info">
         @if (detailsMessage.signups && detailsMessage.signups.length > 0) { @if
         (detailsMessage.signups.length === 1) {
-        <span>{{ detailsMessage.signups[0].title }}</span>
+        <a href="/go/{{detailsMessage.signups[0].urlid}}"
+          ><span>{{ detailsMessage.signups[0].title }}</span></a
+        >
         } @else {
         <span>Multiple Signups</span>
         } } @else {
@@ -35,7 +37,7 @@
     </div>
     <div class="content-info">
       <div class="info">Sent To</div>
-      <div class="info">{{ detailsMessage.totalsent }} recipients</div>
+      <div class="info">{{ detailsMessage.senttoname }}</div>
     </div>
     <!-- TODO: Add attachments support when available in API -->
     <!-- <div class="content-info">
