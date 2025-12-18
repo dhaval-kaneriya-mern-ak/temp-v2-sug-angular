@@ -67,6 +67,7 @@ import {
   IDateSlotsResponse,
   IDateSlotItem,
   IMemberInfoDto,
+  IMesssageMember,
 } from '@services/interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -1427,6 +1428,27 @@ export class ComposeEmailComponent
         }
 
         case 'ImportEmailFromProvider': {
+          // Use recipients from stateService which has the full contact info
+          const recipients = this.stateService.recipients || [];
+
+          payload.to = recipients
+            .filter((recipient: IMesssageMember) => recipient.email)
+            .map((recipient: IMesssageMember) => {
+              const emailObj: IMesssageMember = {
+                email: recipient.email?.trim(),
+              };
+
+              // Include firstname and lastname if they exist and are not empty
+              if (recipient.firstname && recipient.firstname.trim()) {
+                emailObj.firstname = recipient.firstname.trim();
+              }
+
+              if (recipient.lastname && recipient.lastname.trim()) {
+                emailObj.lastname = recipient.lastname.trim();
+              }
+
+              return emailObj;
+            });
           payload.sentto = SentTo.IMPORT;
           payload.sendtotype = SendToType.CUSTOM;
           break;
