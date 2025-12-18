@@ -1,14 +1,6 @@
-import { ApplicationRef, Injectable, inject, signal } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import {
-  map,
-  catchError,
-  switchMap,
-  tap,
-  shareReplay,
-  finalize,
-  delay,
-} from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { map, catchError, switchMap, shareReplay } from 'rxjs/operators';
 import { SugApiService } from './sug-api.service';
 import { UserStateService } from './user-state.service';
 
@@ -53,10 +45,6 @@ export interface IValidateVerificationCodeResponse {
 export class VerificationService {
   private readonly sugApiService = inject(SugApiService);
   private readonly userStateService = inject(UserStateService);
-  private readonly appRef = inject(ApplicationRef);
-
-  private readonly _loading = signal<boolean>(false);
-  public readonly loading = this._loading.asReadonly();
 
   private verificationRequest$: Observable<number> | null = null;
   /**
@@ -70,27 +58,17 @@ export class VerificationService {
     const isVerified = this.userStateService.isUserVerified();
     const isLoaded = this.userStateService.isVerificationLoaded();
 
-    // Scenarios 3 & 4: Data is loaded and we are not forcing a refresh
+    // Scenarios: Data is loaded and we are not forcing a refresh
     // Return the cached value immediately
     if (isLoaded && !forceRefresh) {
       return of(isVerified);
     }
 
-    this._loading.set(true);
-    this.appRef.tick();
-    console.log(this._loading());
-    console.log('state true');
-
-    // Scenarios 1 & 2 (Not loaded or Failed) OR Force Refresh
+    // Scenarios: (Not loaded or Failed) OR Force Refresh
     // Call the API
     return this.checkVerificationStatus(forceRefresh).pipe(
       map((verified) => Number(verified) === 1),
-      catchError(() => of(false)),
-      finalize(() => {
-        this._loading.set(false);
-        console.log(this._loading());
-        console.log('state false');
-      })
+      catchError(() => of(false))
     );
   }
 
@@ -154,7 +132,7 @@ export class VerificationService {
         switchMap((response) => {
           // If validation succeeded, force refresh the verification status
           // so the rest of the app knows the user is now verified.
-          if (response.success) {
+          if (response.success && response.data?.success) {
             return this.ensureVerificationStatus(true).pipe(
               map(() => response) // Return the original response to the caller
             );

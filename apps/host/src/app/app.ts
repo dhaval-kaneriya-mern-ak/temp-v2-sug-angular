@@ -5,7 +5,6 @@ import {
   OnDestroy,
   inject,
   PLATFORM_ID,
-  ChangeDetectorRef,
 } from '@angular/core';
 import {
   RouterModule,

@@ -14,7 +14,7 @@ import { ComposeTextMessageComponent } from '../components/compose/compose_text_
 import { SentDetails } from '../components/sent/details/sent-details';
 import { scheduleGuard } from '../guards/schedule.guard';
 import { unsavedChangesGuard } from '../guards/unsaved-changes.guard';
-import { verificationGuard } from '../guards/verification.guard';
+import { verificationGuard } from '@services/guards/verification.guard';
 
 export const remoteRoutes: Route[] = [
   {
