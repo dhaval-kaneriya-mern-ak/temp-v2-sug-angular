@@ -776,16 +776,37 @@ export class ComposeEmailComponent
   }
 
   onSignupsSelected(): void {
-    // Called when signups are selected from dialog
-    // State is already updated by the dialog component
-
     // Update subject and message based on selected signups
-    if (this.userProfile?.features.multinotify === 1) {
-      const user = this.stateService.subAdminsData
-        .filter((x) => x.label === this.userProfile?.email)
-        .map((item) => String(item.value));
-      this.currentForm.get('replyTo')?.setValue(user);
-      this.currentForm.get('replyTo')?.updateValueAndValidity();
+    if (
+      this.userProfile?.features.multinotify === 1 &&
+      this.userStateService.isGoldPlusUser(this.userProfile)
+    ) {
+      // Collect all notification IDs from selected signups
+      const notificationIds = this.stateService.selectedSignups
+        .map((signup) => signup.notificationids)
+        .filter((ids) => ids) // Remove undefined/null values
+        .flatMap((ids) => ids!.split(',').map((id) => id.trim()))
+        .filter((id) => id.length > 0); // Remove empty strings
+
+      // Match notification IDs with sub-admins
+      const matchedSubAdmins = this.stateService.subAdminsData
+        .filter((subAdmin) => notificationIds.includes(subAdmin.value))
+        .map((subAdmin) => String(subAdmin.value));
+
+      // Set the matched sub-admins to replyTo control, or fallback to current user
+      if (matchedSubAdmins.length > 0) {
+        this.currentForm.get('replyTo')?.setValue(matchedSubAdmins);
+        this.currentForm.get('replyTo')?.updateValueAndValidity();
+      } else {
+        // No matches found, use the current logged-in user's email
+        if (this.stateService.selectedSignups.length > 0) {
+          const user = this.stateService.subAdminsData
+            .filter((x) => x.label === this.userProfile?.email)
+            .map((item) => String(item.value));
+          this.currentForm.get('replyTo')?.setValue(user);
+          this.currentForm.get('replyTo')?.updateValueAndValidity();
+        }
+      }
     }
     this.updateSubjectAndMessage();
   }

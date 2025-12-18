@@ -240,6 +240,19 @@ export class UserStateService implements OnDestroy {
     return isBasic;
   }
 
+  isGoldPlusUser(userProfile?: MemberProfile | null): boolean {
+    const profile = userProfile ?? this._userProfile();
+    if (!profile) return false; // Treat null profile as basic user (not gold+)
+
+    // Check if subscription and productcode exist to prevent runtime errors
+    const productCode = profile.subscription?.productcode?.toLowerCase();
+    if (!productCode) return false;
+
+    const isGoldPlus =
+      !productCode.includes('silver') && profile.ispro === true;
+    return isGoldPlus;
+  }
+
   /**
    * Update user profile
    */
