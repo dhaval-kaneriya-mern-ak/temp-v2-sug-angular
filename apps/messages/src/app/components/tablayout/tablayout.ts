@@ -170,22 +170,6 @@ export class TabLayoutComponent implements OnInit, OnDestroy {
     }
 
     if (selectedTab && selectedTab.route) {
-      // Check if navigating to compose and user is not verified
-      // if (selectedTab.route === '/messages/compose') {
-      //   this.verificationService
-      //     .ensureVerificationStatus()
-      //     .pipe(take(1))
-      //     .subscribe((isVerified) => {
-      //       if (!isVerified) {
-      //         this.pendingRoute = selectedTab.route;
-      //         this.verificationModalService.open();
-      //       } else {
-      //         this.router.navigate([selectedTab.route]);
-      //       }
-      //     });
-      //   return;
-      // }
-
       // Navigate normally for other routes or verified users
       this.router.navigate([selectedTab.route]);
     }
