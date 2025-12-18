@@ -3,6 +3,7 @@ import type {
   CloudSpongeContact,
   CloudSpongeOwner,
 } from './interfaces/cloudsponge.interface';
+import { environment } from '@environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -48,12 +49,65 @@ export class CloudSpongeService {
   );
 
   private isInitialized = false;
+  private isScriptLoaded = false;
+  private isScriptLoading = false;
+
+  cloudspongeApiKey = environment.CLOUDSPONGE_KEY || '';
+
+  /**
+   * Dynamically load CloudSponge script
+   */
+  private loadCloudSpongeScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // If script is already loaded, resolve immediately
+      if (this.isScriptLoaded && typeof window.cloudsponge !== 'undefined') {
+        resolve();
+        return;
+      }
+
+      // If script is currently loading, wait for it
+      if (this.isScriptLoading) {
+        const checkLoaded = () => {
+          if (this.isScriptLoaded) {
+            resolve();
+          } else {
+            setTimeout(checkLoaded, 100);
+          }
+        };
+        checkLoaded();
+        return;
+      }
+
+      this.isScriptLoading = true;
+
+      const script = document.createElement('script');
+
+      script.src = `https://api.cloudsponge.com/widget/${this.cloudspongeApiKey}.js`;
+
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => {
+        console.log('CloudSponge script loaded successfully');
+        this.isScriptLoaded = true;
+        this.isScriptLoading = false;
+        resolve();
+      };
+
+      script.onerror = () => {
+        console.error('Failed to load CloudSponge script');
+        this.isScriptLoading = false;
+      };
+
+      document.head.appendChild(script);
+    });
+  }
 
   /**
    * Initialize CloudSponge widget
    * @param sources - Array of contact sources to enable (e.g., ['gmail', 'yahoo', 'windowslive'])
    */
-  initCloudSponge(
+  async initCloudSponge(
     sources: string[] = [
       'gmail',
       'yahoo',
@@ -62,60 +116,83 @@ export class CloudSpongeService {
       'icloud',
       'aol',
     ]
-  ): void {
+  ): Promise<void> {
+    console.log('initCloudSponge called, current isInitialized:', this.isInitialized);
+    
     if (this.isInitialized) {
       console.log('CloudSponge already initialized');
       return;
     }
 
-    if (
-      typeof window === 'undefined' ||
-      typeof window.cloudsponge === 'undefined'
-    ) {
-      console.error('CloudSponge library not loaded');
+    try {
+      console.log('Loading CloudSponge script...');
+      // Load the script first
+      await this.loadCloudSpongeScript();
+
+      console.log('Script loaded, checking availability...');
+      if (
+        typeof window === 'undefined' ||
+        typeof window.cloudsponge === 'undefined'
+      ) {
+        throw new Error('CloudSponge library not available after loading script');
+      }
+    } catch (error) {
+      console.error('Failed to load CloudSponge:', error);
       return;
     }
 
-    window.cloudsponge.init({
-      sources,
-      css: { primaryColor: '#0d6efd' },
-      selectionLimit: 50,
+    
+    // Create a promise that resolves when CloudSponge is fully initialized
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('CloudSponge initialization timeout'));
+      }, 10000); // 10 second timeout
 
-      // Filter contacts to only include those with emails
-      filter: (contact: CloudSpongeContact) =>
-        contact.email !== undefined && contact.email.length > 0,
+      if (!window.cloudsponge) {
+        reject(new Error('CloudSponge not available on window object.'));
+        return;
+      }
 
-      afterInit: () => {
-        console.log('CloudSponge initialized successfully');
-        this.isInitialized = true;
-      },
+      window.cloudsponge.init({
+        sources,
+        css: { primaryColor: '#0d6efd' },
+        selectionLimit: 50,
 
-      beforeDisplayContacts: (
-        contacts: CloudSpongeContact[],
-        source: string,
-        owner: CloudSpongeOwner
-      ) => {
-        console.log('beforeDisplayContacts:', contacts.length);
-        this.allContactsSignal.set(contacts);
-        this.importSourceSignal.set(source);
-        this.ownerSignal.set(owner);
-        this.isLoadingSignal.set(false);
-      },
+        // Filter contacts to only include those with emails
+        filter: (contact: CloudSpongeContact) =>
+          contact.email !== undefined && contact.email.length > 0,
 
-      afterSubmitContacts: (
-        contacts: CloudSpongeContact[],
-        source: string,
-        owner: CloudSpongeOwner
-      ) => {
-        console.log('afterSubmitContacts:', contacts.length);
-        this.selectedContactsSignal.set(contacts);
-        this.importSourceSignal.set(source);
-        this.ownerSignal.set(owner);
-      },
+        afterInit: () => {
+          this.isInitialized = true;
+          clearTimeout(timeout);
+          resolve();
+        },
 
-      beforeClosing: () => {
-        this.isLoadingSignal.set(false);
-      },
+        beforeDisplayContacts: (
+          contacts: CloudSpongeContact[],
+          source: string,
+          owner: CloudSpongeOwner
+        ) => {
+          this.allContactsSignal.set(contacts);
+          this.importSourceSignal.set(source);
+          this.ownerSignal.set(owner);
+          this.isLoadingSignal.set(false);
+        },
+
+        afterSubmitContacts: (
+          contacts: CloudSpongeContact[],
+          source: string,
+          owner: CloudSpongeOwner
+        ) => {
+          this.selectedContactsSignal.set(contacts);
+          this.importSourceSignal.set(source);
+          this.ownerSignal.set(owner);
+        },
+
+        beforeClosing: () => {
+          this.isLoadingSignal.set(false);
+        },
+      });
     });
   }
 
@@ -123,25 +200,35 @@ export class CloudSpongeService {
    * Launch CloudSponge widget for a specific source
    * @param source - Optional source to launch directly (e.g., 'gmail')
    */
-  launch(source?: string): void {
-    if (!this.isInitialized) {
-      console.error(
-        'CloudSponge not initialized. Call initCloudSponge() first.'
-      );
-      return;
-    }
+  async launch(source?: string): Promise<void> {
+    try {
+      console.log('CloudSponge launch called with source:', source);
 
-    if (typeof window.cloudsponge === 'undefined') {
-      console.error('CloudSponge library not available');
-      return;
-    }
+      // Always try to initialize if not already done
+      await this.initCloudSponge();
 
-    this.isLoadingSignal.set(true);
+      console.log('After initCloudSponge, isInitialized:', this.isInitialized);
 
-    if (source) {
-      window.cloudsponge.launch(source);
-    } else {
-      window.cloudsponge.launch();
+      if (typeof window.cloudsponge === 'undefined') {
+        console.error('CloudSponge library not available');
+        return;
+      }
+
+      if (!this.isInitialized) {
+        console.error('CloudSponge still not initialized after init call');
+        return;
+      }
+
+      this.isLoadingSignal.set(true);
+
+      if (source) {
+        window.cloudsponge.launch(source);
+      } else {
+        window.cloudsponge.launch();
+      }
+    } catch (error) {
+      console.error('Failed to launch CloudSponge:', error);
+      this.isLoadingSignal.set(false);
     }
   }
 

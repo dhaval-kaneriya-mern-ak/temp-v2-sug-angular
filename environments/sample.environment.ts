@@ -7,4 +7,5 @@ export const environment = {
   DONATIONS_SITE_URL: 'https://donations.signupgenius.rocks',
   TICKETS_SITE_URL: 'https://tickets.signupgenius.rocks/#/welcome',
   siteKey: '',
+  CLOUDSPONGE_KEY: "localhost-only"
 };

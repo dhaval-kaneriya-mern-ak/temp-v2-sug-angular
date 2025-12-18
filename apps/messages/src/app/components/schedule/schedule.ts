@@ -82,7 +82,7 @@ export class Schedule {
     {
       field: 'messagetype',
       header: 'Type',
-      sortable: false,
+      sortable: true,
       filterable: false,
     },
     {
