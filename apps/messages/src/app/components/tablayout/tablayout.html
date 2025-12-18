@@ -50,7 +50,7 @@
 
 <!-- Verification Modal -->
 <sug-verification-modal
-  [visible]="showVerificationModal"
+  [visible]="verificationModalService.showModal()"
   (verified)="onVerificationSuccess()"
   (closed)="onVerificationModalClosed()"
 ></sug-verification-modal>

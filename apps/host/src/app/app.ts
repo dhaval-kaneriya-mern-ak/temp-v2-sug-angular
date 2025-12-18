@@ -11,6 +11,9 @@ import {
   Router,
   NavigationEnd,
   ActivatedRoute,
+  NavigationStart,
+  NavigationCancel,
+  NavigationError,
 } from '@angular/router';
 import { HeaderComponent } from './components/header/header';
 import { FooterComponent } from './components/footer/footer';
@@ -21,12 +24,10 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { FreestarService } from '@services/freestar.service';
 import { UserStateService } from '@services/user-state.service';
-import { VerificationService } from '@services/verification.service';
 import { MemberProfile } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 import { AdRouteService } from '@services/ad-route.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   imports: [
@@ -52,7 +53,6 @@ export class App implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly userStateService = inject(UserStateService);
-  private readonly verificationService = inject(VerificationService);
   private readonly adRouteService = inject(AdRouteService);
   private readonly platformId: object = inject(PLATFORM_ID);
 
@@ -64,12 +64,25 @@ export class App implements OnInit, OnDestroy {
     }
   );
 
+  isNavigating = false;
   // constructor(
   //   private router: Router,
   //   private freestarService: FreestarService
   // ) {}
 
   ngOnInit(): void {
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.isNavigating = true;
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        this.isNavigating = false;
+      }
+    });
+
     // console.log('[App] Component initialized, current URL:', this.router.url);
 
     // Set up router subscription early to catch redirects (before profile loads)
@@ -89,9 +102,6 @@ export class App implements OnInit, OnDestroy {
       // );
       this.applyAdsPolicy(currentProfile);
       this.profileLoaded = true;
-
-      // Call verification API for already loaded profile
-      this.loadVerificationStatus();
     } else {
       // console.log('[App] Profile not loaded yet, loading profile...');
       this.userStateService.loadUserProfile().subscribe({
@@ -105,9 +115,6 @@ export class App implements OnInit, OnDestroy {
           // });
           this.applyAdsPolicy(profile);
           this.profileLoaded = true;
-
-          // Call verification API after profile is loaded
-          this.loadVerificationStatus();
         },
         error: (err) => {
           console.error('[App] Error loading profile:', err);
@@ -136,9 +143,6 @@ export class App implements OnInit, OnDestroy {
                   // );
                   this.applyAdsPolicy(profile);
                   this.profileLoaded = true;
-
-                  // Call verification API after profile is loaded
-                  this.loadVerificationStatus();
                 },
                 error: (retryErr) => {
                   console.error(
@@ -294,22 +298,4 @@ export class App implements OnInit, OnDestroy {
   //     willShowAds: showAds && this.freestarService.areAdsEnabled(),
   //   });
   // }
-
-  /**
-   * Load user verification status and store in UserStateService
-   * Called after profile is loaded
-   */
-  private loadVerificationStatus(): void {
-    this.verificationService.checkVerificationStatus().subscribe({
-      next: (verified: number) => {
-        this.userStateService.setVerificationStatus(verified);
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('[App] Error loading verification status:', err);
-        // Set to not verified on error
-        this.userStateService.setVerificationStatus(0);
-        this.userStateService.setVerifyApiFailed(true);
-      },
-    });
-  }
 }

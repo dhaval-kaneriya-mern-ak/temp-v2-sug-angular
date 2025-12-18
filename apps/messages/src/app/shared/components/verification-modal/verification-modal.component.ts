@@ -131,30 +131,21 @@ export class VerificationModalComponent implements OnChanges, AfterViewInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Chain the observables using switchMap
+    // Call validateVerificationCode which now handles the status refresh internally
     this.verificationService
       .validateVerificationCode(this.verificationCode.trim())
-      .pipe(
-        switchMap((response: IValidateVerificationCodeResponse) => {
-          if (!response.data.success) {
-            throw new Error('Invalid verification code');
-          }
-          // Code verified successfully - now fetch updated verification status
-          return this.verificationService.checkVerificationStatus();
-        })
-      )
       .subscribe({
-        next: (verified: number) => {
-          // Update verification status from server response
-          this.userStateService.setVerificationStatus(verified);
-          this.isLoading = false;
-          if (!this.userStateService.isVerifyApiFailed()) {
+        next: (response: IValidateVerificationCodeResponse) => {
+          if (response.data.success) {
+            // Success: The service has already refreshed the verification status
+            this.isLoading = false;
             this.visible = false;
             this.visibleChange.emit(false);
             this.verified.emit();
           } else {
+            // API returned success: true but data.success: false (invalid code)
             this.errorMessage =
-              'Failed to fetch verification status. Please try again later.';
+              'Enter a valid verification code or click the activation link in the verification email.';
             this.isLoading = false;
           }
         },

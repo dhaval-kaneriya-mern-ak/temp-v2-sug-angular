@@ -10,10 +10,7 @@ import {
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
 import { USER_PROFILE_SUBJECT } from './user-profile-token';
-import {
-  VERIFICATION_STATE_SUBJECT,
-  VerificationState,
-} from './verification-state-token';
+import { VERIFICATION_STATE_SUBJECT } from './verification-state-token';
 
 @Injectable({
   providedIn: 'root',
@@ -116,6 +113,7 @@ export class UserStateService implements OnDestroy {
     this._verificationState$.next({
       isVerified: false,
       isApiFailed: false,
+      isLoaded: false,
     });
   }
 
@@ -124,6 +122,7 @@ export class UserStateService implements OnDestroy {
     this._verificationState$.next({
       ...current,
       isVerified: verified === 1,
+      isLoaded: true,
     });
   }
 
@@ -144,6 +143,14 @@ export class UserStateService implements OnDestroy {
 
   isVerifyApiFailed(): boolean {
     return this._verificationState$.value.isApiFailed;
+  }
+
+  isVerificationLoaded(): boolean {
+    return this._verificationState$.value.isLoaded;
+  }
+
+  getVerificationState() {
+    return this._verificationState$.asObservable();
   }
 
   /**
