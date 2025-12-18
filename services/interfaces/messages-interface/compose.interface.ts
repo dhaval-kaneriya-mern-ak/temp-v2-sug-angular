@@ -822,6 +822,7 @@ export interface IMesssageMember {
   lastname?: string;
   email?: string;
   isgroupemail?: boolean;
+  displayname?: string;
 }
 
 export interface ICreateMessageResponse {

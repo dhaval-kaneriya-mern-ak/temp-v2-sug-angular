@@ -338,7 +338,7 @@ export class PeopleSelectionDialogComponent
       : this.formTwoRadioOptions;
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.userStateService.userProfile$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -349,8 +349,10 @@ export class PeopleSelectionDialogComponent
     this.initializeForm();
     this.setupSingleSelectionEnforcement();
 
-    // Initialize CloudSponge
-    this.cloudSpongeService.initCloudSponge(['gmail']);
+    // Initialize CloudSponge - don't block the UI, but ensure it's ready
+    this.cloudSpongeService.initCloudSponge(['gmail']).catch((error) => {
+      console.error('Failed to initialize CloudSponge in component:', error);
+    });
   }
 
   ngOnDestroy(): void {
@@ -959,9 +961,10 @@ export class PeopleSelectionDialogComponent
         }
       } else if (selectedValue === 'ImportEmailFromProvider') {
         // Import from provider using CloudSponge
+        const cloudSpongeContacts = this.cloudSpongeService.selectedContacts();
         const cloudSpongeEmails = this.cloudSpongeService.contactEmailsArray();
 
-        if (cloudSpongeEmails.length === 0) {
+        if (cloudSpongeContacts.length === 0) {
           this.openInfoDialog(
             'Please import contacts by clicking one of the provider buttons above.'
           );
@@ -975,25 +978,28 @@ export class PeopleSelectionDialogComponent
           },
         ]);
 
-        // Set recipient count and emails
-        this.recipientCountChange.emit(cloudSpongeEmails.length);
+        // Set recipient count
+        this.recipientCountChange.emit(cloudSpongeContacts.length);
 
-        // Store the emails as recipients for the recipient details dialog
-        const recipients = cloudSpongeEmails.map((email: string) => ({
-          email,
+        // Create recipients with both name and email for the recipient details dialog
+        const recipients = cloudSpongeContacts.map((contact) => ({
+          email: contact.selectedEmail(),
+          firstname: contact.first_name || '',
+          lastname: contact.last_name || '',
+          displayname: contact.fullName() || '',
         }));
         this.recipientsChange.emit(recipients);
 
-        // Clear date slots when switching to import from provider
-        this.selectedDateSlotsChange.emit([]);
-        this.selectedMemberGroupsChange.emit([]);
-
-        // Pass the imported emails as recipients
+        // Pass the imported emails as recipients (for API compatibility)
         this.selectedRadioOption.emit({
           selectedValue,
           includeNonGroupMembers: false,
           recipients: cloudSpongeEmails,
         });
+
+        // Clear date slots when switching to import from provider
+        this.selectedDateSlotsChange.emit([]);
+        this.selectedMemberGroupsChange.emit([]);
 
         // Clear CloudSponge contacts after successful import
         // This prepares for next use
@@ -1483,9 +1489,17 @@ export class PeopleSelectionDialogComponent
    * Launch CloudSponge widget for a specific service
    * @param service - The contact provider service (e.g., 'gmail', 'yahoo', 'windowslive')
    */
-  launchCloudSponge(service: string): void {
-    // Launch the CloudSponge widget for the specified service
-    this.cloudSpongeService.launch(service);
+  async launchCloudSponge(service: string): Promise<void> {
+    try {
+      // Launch the CloudSponge widget for the specified service
+      await this.cloudSpongeService.launch(service);
+    } catch (error) {
+      console.error(
+        'Failed to launch CloudSponge for service:',
+        service,
+        error
+      );
+    }
   }
 
   /**
