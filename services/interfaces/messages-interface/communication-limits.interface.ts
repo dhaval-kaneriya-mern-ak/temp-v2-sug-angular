@@ -1,3 +1,5 @@
+import { Timezone, CreatedBy } from './common.interface';
+
 export interface MessageLimitsResponse {
   sentemailtoday: number;
   sentemailforthemonth: number;
@@ -10,16 +12,6 @@ export interface MessageLimitsResponse {
   senttexttoday: number;
 }
 
-export interface MessageTimezone {
-  id: number;
-  zone: string;
-}
-
-export interface MessageCreatedBy {
-  memberid: number;
-  email: string;
-}
-
 export interface MessageItem {
   messageid?: number;
   sentdate?: string;
@@ -28,9 +20,17 @@ export interface MessageItem {
   subject?: string;
   sentTo?: string;
   chart?: string;
-  timezone?: MessageTimezone;
-  createdby?: MessageCreatedBy;
+  timezone?: Timezone;
+  createdby?: CreatedBy;
   totalsent?: number;
 }
 
 export type MessagesListResponse = MessageItem[];
+
+export interface IMessageDeliveryStats {
+  id: number;
+  name: string;
+  ct: number;
+  badgestyle: string;
+  badgecolor: string;
+}

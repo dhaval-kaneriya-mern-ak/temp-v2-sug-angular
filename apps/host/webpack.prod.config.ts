@@ -12,6 +12,7 @@ export default withModuleFederation(
     remotes: [
       // ['reports', process.env['REPORTS_URL'] ?? ''],
       ['messages', process.env['MESSAGES_URL'] ?? ''],
+      ['groups', process.env['GROUPS_URL'] ?? ''],
     ],
     /*
      * Remote overrides for production.

@@ -5,6 +5,7 @@ import {
   IUpdateUserApiResponse,
   IUpdateUserPayload,
   MemberProfile,
+  UserRole,
 } from './interfaces';
 import { Observable, of, throwError } from 'rxjs';
 import { shareReplay, catchError, tap, finalize, map } from 'rxjs/operators';
@@ -328,5 +329,12 @@ export class UserStateService implements OnDestroy {
       });
       return 'Date formatting error';
     }
+  }
+
+  /**
+   * Get user role
+   */
+  getUserRole(): Observable<ApiResponse<UserRole[]>> {
+    return this.sugApiService.get('/auth/roles');
   }
 }

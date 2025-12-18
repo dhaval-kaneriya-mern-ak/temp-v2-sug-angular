@@ -104,6 +104,65 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private generateDynamicColumns(membereventsJson: string): void {
+    try {
+      const parsedEvents = JSON.parse(membereventsJson);
+      const columns: ISugTableColumn[] = [
+        {
+          field: 'email',
+          header: 'Email',
+          sortable: true,
+          filterable: false,
+        },
+      ];
+
+      // Add Status column first
+      if (parsedEvents.Status) {
+        columns.push({
+          field: 'status',
+          header: 'Status',
+          sortable: true,
+          filterable: false,
+          width: '100px',
+        });
+      }
+
+      // Add Issues column after Status
+      columns.push({
+        field: 'issues',
+        header: 'Issues',
+        sortable: true,
+        filterable: false,
+        width: '100px',
+      });
+
+      // Add Signed Up column at the end
+      columns.push({
+        field: 'signedup',
+        header: 'Signed Up',
+        sortable: true,
+        filterable: false,
+        width: '120px',
+      });
+
+      // Add remaining columns from memberevents (except Status)
+      Object.keys(parsedEvents).forEach((key) => {
+        if (key !== 'Status') {
+          columns.push({
+            field: key.toLowerCase(),
+            header: key,
+            sortable: true,
+            filterable: false,
+          });
+        }
+      });
+
+      this.tableColumns = columns;
+    } catch (error) {
+      console.error('Error parsing memberevents:', error);
+    }
+  }
+
   private initializeChartPlugins(): void {
     // Custom plugin to draw percentage labels on pie slices
     const percentagePlugin: Plugin<'pie'> = {
@@ -278,26 +337,34 @@ export class MessageAnalyticsComponent implements OnInit, OnDestroy {
                 badgeColor: 'teal',
               },
             ];
-            this.tableData = (sentDetails || []).map((detail) => ({
-              email: detail.email,
-              mobile: detail.mobile,
-              status: JSON.parse(detail.memberevents).Status,
-              issues: detail.issues
-                ? '<span><i class="pi pi-check"></i></span>'
-                : '',
-              signedup: detail.signedup
-                ? '<span><i class="pi pi-check"></i></span>'
-                : '',
-              opened: detail.opened
-                ? '<span><i class="pi pi-check"></i></span>'
-                : '',
-              clicked: detail.clicked
-                ? '<span><i class="pi pi-check"></i></span>'
-                : '',
-              memberevents: detail.memberevents,
-              memberid: detail.memberid,
-              units: detail.units,
-            }));
+            // Dynamically generate columns from first record's memberevents
+            if (sentDetails && sentDetails.length > 0) {
+              this.generateDynamicColumns(sentDetails[0].memberevents);
+            }
+
+            this.tableData = (sentDetails || []).map((detail) => {
+              const parsedEvents = JSON.parse(detail.memberevents);
+              const rowData: any = {
+                email: detail.email,
+                issues: detail.issues
+                  ? '<span><i class="pi pi-check"></i></span>'
+                  : '',
+                signedup: detail.signedup
+                  ? '<span><i class="pi pi-check"></i></span>'
+                  : '',
+                memberid: detail.memberid,
+              };
+
+              // Add all memberevents fields dynamically, but skip 'issues' and 'signedup' to avoid overwriting
+              Object.keys(parsedEvents).forEach((key) => {
+                const lowercaseKey = key.toLowerCase();
+                if (lowercaseKey !== 'issues' && lowercaseKey !== 'signedup') {
+                  rowData[lowercaseKey] = parsedEvents[key];
+                }
+              });
+
+              return rowData;
+            });
           }
           this.isLoading = false;
         },
