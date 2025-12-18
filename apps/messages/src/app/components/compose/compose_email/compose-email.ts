@@ -776,11 +776,11 @@ export class ComposeEmailComponent
   }
 
   onSignupsSelected(): void {
-    // Called when signups are selected from dialog
-    // State is already updated by the dialog component
-
     // Update subject and message based on selected signups
-    if (this.userProfile?.features.multinotify === 1) {
+    if (
+      this.userProfile?.features.multinotify === 1 &&
+      this.userStateService.isGoldPlusUser(this.userProfile)
+    ) {
       // Collect all notification IDs from selected signups
       const notificationIds = this.stateService.selectedSignups
         .map((signup) => signup.notificationids)
