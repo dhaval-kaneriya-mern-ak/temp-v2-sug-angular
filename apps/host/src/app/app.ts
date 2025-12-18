@@ -12,6 +12,9 @@ import {
   Router,
   NavigationEnd,
   ActivatedRoute,
+  NavigationStart,
+  NavigationCancel,
+  NavigationError,
 } from '@angular/router';
 import { HeaderComponent } from './components/header/header';
 import { FooterComponent } from './components/footer/footer';
@@ -26,7 +29,6 @@ import { MemberProfile } from '@services/interfaces';
 import { SugUiLoadingSpinnerComponent } from '@lumaverse/sug-ui';
 import { AdRouteService } from '@services/ad-route.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { VerificationService } from '@services/verification.service';
 
 @Component({
   imports: [
@@ -62,12 +64,26 @@ export class App implements OnInit, OnDestroy {
       initialValue: false,
     }
   );
+
+  isNavigating = false;
   // constructor(
   //   private router: Router,
   //   private freestarService: FreestarService
   // ) {}
 
   ngOnInit(): void {
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.isNavigating = true;
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        this.isNavigating = false;
+      }
+    });
+
     // console.log('[App] Component initialized, current URL:', this.router.url);
 
     // Set up router subscription early to catch redirects (before profile loads)
