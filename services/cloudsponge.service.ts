@@ -97,7 +97,6 @@ export class CloudSpongeService {
       script.onerror = () => {
         console.error('Failed to load CloudSponge script');
         this.isScriptLoading = false;
-        reject(new Error('Failed to load CloudSponge script'));
       };
 
       document.head.appendChild(script);
@@ -137,18 +136,15 @@ export class CloudSpongeService {
       ) {
         throw new Error('CloudSponge library not available after loading script');
       }
-      console.log('CloudSponge library is available');
     } catch (error) {
       console.error('Failed to load CloudSponge:', error);
       return;
     }
 
-    console.log('Initializing CloudSponge with sources:', sources);
     
     // Create a promise that resolves when CloudSponge is fully initialized
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        console.error('CloudSponge initialization timeout');
         reject(new Error('CloudSponge initialization timeout'));
       }, 10000); // 10 second timeout
 
@@ -167,7 +163,6 @@ export class CloudSpongeService {
           contact.email !== undefined && contact.email.length > 0,
 
         afterInit: () => {
-          console.log('CloudSponge afterInit callback called - setting initialized to true');
           this.isInitialized = true;
           clearTimeout(timeout);
           resolve();
@@ -178,7 +173,6 @@ export class CloudSpongeService {
           source: string,
           owner: CloudSpongeOwner
         ) => {
-          console.log('beforeDisplayContacts:', contacts.length);
           this.allContactsSignal.set(contacts);
           this.importSourceSignal.set(source);
           this.ownerSignal.set(owner);
@@ -190,7 +184,6 @@ export class CloudSpongeService {
           source: string,
           owner: CloudSpongeOwner
         ) => {
-          console.log('afterSubmitContacts:', contacts.length);
           this.selectedContactsSignal.set(contacts);
           this.importSourceSignal.set(source);
           this.ownerSignal.set(owner);
@@ -210,13 +203,11 @@ export class CloudSpongeService {
   async launch(source?: string): Promise<void> {
     try {
       console.log('CloudSponge launch called with source:', source);
-      console.log('Current isInitialized state:', this.isInitialized);
 
       // Always try to initialize if not already done
       await this.initCloudSponge();
 
       console.log('After initCloudSponge, isInitialized:', this.isInitialized);
-      console.log('CloudSponge object available:', typeof window.cloudsponge);
 
       if (typeof window.cloudsponge === 'undefined') {
         console.error('CloudSponge library not available');
@@ -230,7 +221,6 @@ export class CloudSpongeService {
 
       this.isLoadingSignal.set(true);
 
-      console.log('Launching CloudSponge widget...');
       if (source) {
         window.cloudsponge.launch(source);
       } else {
