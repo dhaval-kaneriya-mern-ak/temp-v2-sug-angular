@@ -9,9 +9,10 @@ import {
   ISugTableConfig,
   SugUiPaginationComponent,
   IPagination,
+  SugUiTableComponent,
+  SugUiButtonComponent,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
-import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { ScheduleService } from './schedule.servvice';
 import { MemberProfile, Message, MessageTypeId } from '@services/interfaces';
 import { Router } from '@angular/router';
@@ -72,6 +73,7 @@ export class Schedule {
       header: 'Scheduled For',
       sortable: true,
       filterable: false,
+      width: '150px',
     },
     {
       field: 'subject',
@@ -84,10 +86,11 @@ export class Schedule {
       header: 'Type',
       sortable: true,
       filterable: false,
+      width: '70px',
     },
     {
       field: 'action',
-      header: 'Actions',
+      header: '',
       sortable: false,
       filterable: false,
     },

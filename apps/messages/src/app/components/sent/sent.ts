@@ -7,9 +7,9 @@ import {
   SugUiLoadingSpinnerComponent,
   SugUiPaginationComponent,
   IPagination,
+  SugUiTableComponent,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
-import { SugUiTableComponent } from '@lumaverse/sug-ui';
 import { RouterOutlet, Router } from '@angular/router';
 import { SentService } from './sent.service';
 import { SentMessage } from '@services/interfaces/messages-interface/sent.interface';
