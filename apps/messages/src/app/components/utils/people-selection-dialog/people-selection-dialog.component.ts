@@ -71,6 +71,7 @@ export class PeopleSelectionDialogComponent
   @Input() selectedSignups: any[] = [];
   @Input() isSignUpIndexPageSelected = false;
   @Input() isFromTextMessage = false;
+  @Input() isTextMessageParticipants = false;
 
   @Input() selectedPortalPages: ISelectPortalOption[] = [];
   @Input() selectedTabGroups: any[] = [];
@@ -139,6 +140,15 @@ export class PeopleSelectionDialogComponent
     contentStyleClass: 'dialog-overflow-visible',
   };
 
+  get isWaitlistEligible(): boolean {
+    if (!this.userProfile?.ispro) {
+      return false;
+    }
+    const productCode =
+      this.userProfile?.subscription?.productcode?.toUpperCase() || '';
+    return !productCode.includes('SILVER');
+  }
+
   // Form One radio options
   get formOneRadioOptions() {
     const options = [
@@ -180,41 +190,60 @@ export class PeopleSelectionDialogComponent
       (signup: any) => signup.mode?.toLowerCase() === 'rsvp'
     );
 
-    // Show waitlist options only when:
-    // - Any selected signup(s) has waitlist slots for emailParticipants
-    // - OR text message (isFromTextMessage already indicates waitlist is available)
+    const isEligible = this.isWaitlistEligible;
+
+    // Helper to get waitlist options
+    const getWaitlistOptions = (disabled: boolean) => [
+      {
+        label: 'People who have signed up',
+        value: 'peopleWhoSignedUp',
+      },
+      {
+        label: 'People who are on a waitlist',
+        value: 'peopleOnWaitlist',
+        disabled: disabled,
+        isPro: disabled,
+      },
+      {
+        label: 'People who have signed up and people who are on a waitlist',
+        value: 'peopleSignedUpAndWaitlist',
+        disabled: disabled,
+        isPro: disabled,
+      },
+      {
+        label: 'People who have NOT signed up',
+        value: 'peopleWhoNotSignedUp',
+      },
+      {
+        label: 'People in specific group(s)',
+        value: 'sendMessagePeopleRadio',
+        hasCustomContent: true,
+      },
+      {
+        label: 'People I will select',
+        value: 'sendMessagePeopleIselect',
+        hasCustomContent: true,
+      },
+    ];
+
+    // 1. Enabled Waitlist Options (Gold+ with slots OR Text Message)
     if (
-      (this.hasWaitlistSlots && this.formType === 'emailParticipants') ||
-      this.isFromTextMessage
+      (this.hasWaitlistSlots &&
+        this.formType === 'emailParticipants' &&
+        isEligible) ||
+      (this.isFromTextMessage && isEligible)
     ) {
-      return [
-        {
-          label: 'People who have signed up',
-          value: 'peopleWhoSignedUp',
-        },
-        {
-          label: 'People who are on a waitlist',
-          value: 'peopleOnWaitlist',
-        },
-        {
-          label: 'People who have signed up and people who are on a waitlist',
-          value: 'peopleSignedUpAndWaitlist',
-        },
-        {
-          label: 'People who have NOT signed up',
-          value: 'peopleWhoNotSignedUp',
-        },
-        {
-          label: 'People in specific group(s)',
-          value: 'sendMessagePeopleRadio',
-          hasCustomContent: true,
-        },
-        {
-          label: 'People I will select',
-          value: 'sendMessagePeopleIselect',
-          hasCustomContent: true,
-        },
-      ];
+      return getWaitlistOptions(false);
+    }
+
+    // 2. Disabled Waitlist Options (Basic/Silver - Priority over RSVP)
+    // Always show disabled waitlist options for ineligible users in emailParticipants mode (Email or Text)
+    if (
+      (this.formType === 'emailParticipants' ||
+        this.isTextMessageParticipants) &&
+      !isEligible
+    ) {
+      return getWaitlistOptions(true);
     }
 
     // If RSVP signup is selected, show RSVP-specific options

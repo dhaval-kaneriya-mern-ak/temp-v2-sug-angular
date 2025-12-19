@@ -23,6 +23,12 @@
           [options]="currentRadioOptions"
           (valueChange)="onRadioChange()"
         >
+          <ng-template #optionTemplate let-option>
+            <span class="radio-label-text">{{ option.label }}</span>
+            @if (option.isPro) {
+            <span class="pro-badge">PRO</span>
+            }
+          </ng-template>
         </sug-ui-radio-checkbox-button>
 
         <div class="radio-content-panel">
