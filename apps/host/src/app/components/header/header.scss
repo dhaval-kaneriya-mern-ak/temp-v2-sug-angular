@@ -331,3 +331,24 @@
     border-bottom: 5px solid #fff590;
   }
 }
+
+.subAdminHeader {
+  background-color: #f5f5f5;
+  border: 1px solid #dddddd;
+  text-align: center;
+  padding: 5px;
+  color: #9f9f9f;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  span {
+    font-size: 13px;
+  }
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  @media (max-width: 767px) {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
