@@ -214,4 +214,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isUserAdmin(): boolean {
     return this.userProfile()?.isadmin || false;
   }
+
+  showSubAdminHeader(): boolean {
+    const profile = this.userProfile();
+    return profile?.issubadmin || false;
+  }
+
+  getAdminAccountName(): string {
+    const profile = this.userProfile();
+    return profile?.firstname + ' ' + profile?.lastname || '';
+  }
 }
