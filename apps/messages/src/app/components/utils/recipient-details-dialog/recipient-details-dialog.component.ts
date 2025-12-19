@@ -11,8 +11,10 @@ import {
   SugUiDialogComponent,
   SugUiButtonComponent,
   SugUiTableComponent,
+  SugUiPaginationComponent,
   DialogConfig,
   ISugTableColumn,
+  IPagination,
 } from '@lumaverse/sug-ui';
 import {
   IRecipient,
@@ -27,6 +29,7 @@ import {
     SugUiDialogComponent,
     SugUiButtonComponent,
     SugUiTableComponent,
+    SugUiPaginationComponent,
   ],
   templateUrl: './recipient-details-dialog.component.html',
   styleUrls: ['../../compose/compose_email/compose-email.scss'],
@@ -48,15 +51,25 @@ export class RecipientDetailsDialogComponent implements OnInit, OnChanges {
 
   recipientColumns: ISugTableColumn[] = [];
   filteredRecipients: (IGroupMember | IRecipient)[] = [];
+  paginatedRecipients: (IGroupMember | IRecipient)[] = [];
+
+  paginationOptions: IPagination = {
+    totalRecords: 0,
+    rows: 10,
+    first: 0,
+    pageSizes: [5, 10, 25, 50],
+  };
 
   ngOnInit(): void {
     this.setRecipientColumns();
     this.filterRecipients();
+    this.updatePaginatedRecipients();
   }
 
   ngOnChanges(): void {
     this.setRecipientColumns();
     this.filterRecipients();
+    this.updatePaginatedRecipients();
   }
 
   private setRecipientColumns(): void {
@@ -120,6 +133,21 @@ export class RecipientDetailsDialogComponent implements OnInit, OnChanges {
         return true;
       });
     }
+
+    this.paginationOptions.totalRecords = this.filteredRecipients.length;
+    this.paginationOptions.first = 0;
+    this.updatePaginatedRecipients();
+  }
+
+  updatePaginatedRecipients(): void {
+    const start = this.paginationOptions.first;
+    const end = start + this.paginationOptions.rows;
+    this.paginatedRecipients = this.filteredRecipients.slice(start, end);
+  }
+
+  onPaginationChange(pagination: IPagination): void {
+    this.paginationOptions = pagination;
+    this.updatePaginatedRecipients();
   }
 
   closeDialog(): void {

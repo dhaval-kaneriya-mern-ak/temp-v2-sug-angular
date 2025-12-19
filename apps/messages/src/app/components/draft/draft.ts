@@ -9,9 +9,10 @@ import {
   ISugTableConfig,
   SugUiPaginationComponent,
   IPagination,
+  SugUiButtonComponent,
+  SugUiTableComponent,
 } from '@lumaverse/sug-ui';
 import { BadgeModule } from 'primeng/badge';
-import { SugUiTableComponent, SugUiButtonComponent } from '@lumaverse/sug-ui';
 import { DraftService } from './draft.service';
 import {
   DraftMessage,
