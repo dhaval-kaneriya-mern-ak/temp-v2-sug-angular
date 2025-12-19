@@ -353,7 +353,14 @@ export class ComposeTextMessageComponent
       this.stateService.clearAllSelections();
     } else {
       value = [value[value.length - 1]];
-      this.getSlotsForSignup(Number(value[0]));
+      const selectedSignupId = Number(value[0]);
+      // Get the actual signup object for the selected ID
+      const selectedSignup = this.signupOptionsData.find(
+        (signup) => signup.signupid === selectedSignupId
+      );
+      if (selectedSignup) {
+        this.getSlotsForSignup(selectedSignupId, selectedSignup);
+      }
       this.controlsToToggle.forEach((ctrl: string) =>
         this.sendTextEmailForm.get(ctrl)?.enable()
       );
@@ -2243,7 +2250,7 @@ export class ComposeTextMessageComponent
       });
   }
 
-  getSlotsForSignup(signupId: number): void {
+  getSlotsForSignup(signupId: number, selectedSignup?: ISignUpItem): void {
     this.isLoading = true;
 
     checkForWaitlistSlots({
@@ -2253,7 +2260,18 @@ export class ComposeTextMessageComponent
       onResult: (hasWaitlistSlots) => {
         this.hasWaitlistSlots = hasWaitlistSlots;
         this.isLoading = false;
-        const urlPath = this.getSelectedSignup()[0]?.urlid?.split('go/')[1];
+
+        // Use the passed signup object or fall back to getSelectedSignup
+        const signup = selectedSignup || this.getSelectedSignup()[0];
+        const urlPath = signup?.urlid?.split('go/')[1];
+
+        // Update email subject with the correct signup title
+        if (signup) {
+          this.sendTextEmailForm.patchValue({
+            emailSubject: signup.title || '',
+          });
+        }
+
         if (urlPath) {
           // Check if includelink is enabled and update message accordingly
           const shouldUpdateMessage =
@@ -2543,6 +2561,7 @@ export class ComposeTextMessageComponent
         const selectedSignup = this.getSelectedSignup();
         if (selectedSignup && selectedSignup.length > 0) {
           const urlPath = selectedSignup[0]?.urlid?.split('go/')[1];
+          console.log(urlPath, this.getSelectedSignup()[0]);
           if (urlPath) {
             // Fetch short URL and add to message when received
             this.getShortUrl(urlPath, true);
@@ -2621,27 +2640,30 @@ export class ComposeTextMessageComponent
    * @param newUrl - New short URL to use
    */
   private updateShortUrlInMessage(previousUrl: string, newUrl: string): void {
-    // Validate input parameters
-    if (newUrl.trim() === '' || typeof newUrl !== 'string') {
+    // Validate new URL parameter
+    if (typeof newUrl !== 'string' || newUrl.trim() === '') {
       return;
     }
 
     const currentMessage = this.sendTextEmailForm.value.message;
-    if (!currentMessage || typeof currentMessage !== 'string') {
+    if (typeof currentMessage !== 'string') {
       return;
     }
 
     let updatedMessage = currentMessage;
 
-    // If there was a previous URL, replace it with the new one
+    // If there was a previous URL and it exists in the message, replace it
     if (
-      previousUrl &&
       typeof previousUrl === 'string' &&
+      previousUrl.trim() !== '' &&
       currentMessage.includes(previousUrl)
     ) {
-      updatedMessage = currentMessage.replace(previousUrl, newUrl);
+      const escapedUrl = previousUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedUrl, 'g');
+
+      updatedMessage = currentMessage.replace(regex, newUrl);
     } else {
-      // If no previous URL in message, add the new one
+      // This handles the first-time signup change case
       updatedMessage = this.addShortUrl(currentMessage, newUrl);
     }
 
