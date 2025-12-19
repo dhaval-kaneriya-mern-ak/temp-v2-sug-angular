@@ -3108,4 +3108,14 @@ export class ComposeEmailComponent
       smsoptin: false,
     };
   }
+
+  get shouldShowInlineSignupDropdown(): boolean {
+    return this.getIsBasicUser();
+  }
+
+  handleInlineSignupSelection(signups: ISignUpItem[]): void {
+    this.stateService.setSelectedSignups(signups);
+    // Trigger the logic that updates 'Reply To' and other dependencies
+    this.onSignupsSelected();
+  }
 }

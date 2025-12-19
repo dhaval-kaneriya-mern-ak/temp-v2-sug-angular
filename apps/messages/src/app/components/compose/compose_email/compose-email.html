@@ -64,6 +64,9 @@
       [selectedPortalPages]="stateService.selectedPortalPages"
       [selectedAttachments]="stateService.selectedAttachment"
       [isBasicUser]="getIsBasicUser()"
+      [signUpOptions]="stateService.signUpOptions"
+      [showInlineSignupDropdown]="shouldShowInlineSignupDropdown"
+      (selectedSignupsChange)="handleInlineSignupSelection($event)"
     >
     </sug-email-form>
 

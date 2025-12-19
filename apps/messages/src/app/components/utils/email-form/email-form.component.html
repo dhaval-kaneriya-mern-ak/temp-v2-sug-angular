@@ -21,7 +21,25 @@
     <!-- Sign Up Links -->
     <div class="form-wrapper">
       <label for="signup-links">Sign Up Link(s)</label>
-      @if (!hasSignupSelection) {
+      @if (showInlineSignupDropdown) {
+      <sug-ui-multi-select-dropdown
+        [options]="signUpOptions"
+        [optionGroupLabel]="'label'"
+        [optionGroupChildren]="'items'"
+        [group]="true"
+        [placeholder]="'Select Sign Up(s)'"
+        panelStyleClass="custom-dropdown"
+        appendTo="parent"
+        (valueChanged)="onSignUpSelectionChange($event)"
+        [formControl]="dropdownControl"
+      >
+        <ng-template #group let-group>
+          <div class="flex items-center">
+            <span> {{ group.label }}</span>
+          </div>
+        </ng-template>
+      </sug-ui-multi-select-dropdown>
+      } @else if (!hasSignupSelection) {
       <sug-ui-button
         type="button"
         class="add-link-btn"
@@ -30,7 +48,7 @@
         (buttonClick)="onOpenSignUpsDialog()"
       >
       </sug-ui-button>
-      } @if (hasSignupSelection) {
+      } @else if (hasSignupSelection) {
       <div class="signup-chips-container">
         <div class="chips-container">
           @for (item of selectedSignups; track item.signupid || $index; let i =
