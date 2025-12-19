@@ -10,100 +10,114 @@
     <form [formGroup]="signUpDialogForm">
       <div class="radio-group">
         @for (option of dialogRadioOptions; track option.value) {
-        <div style="display: flex; align-items: baseline; gap: 3px">
-          <sug-ui-radio-checkbox-button
-            type="radio"
-            name="signupRadioGroup"
-            [inputId]="option.value"
-            formControlName="selectedSignupValue"
-            [options]="[option]"
-            (valueChange)="getSignupLinkRadioValue($event)"
-          ></sug-ui-radio-checkbox-button>
-          @if (option.value === 'LinkMainAccount') {
-          <div class="signup-tooltip-content">
-            <button
-              type="button"
-              class="link-button"
-              (click)="openMemberIndexPage()"
-            >
-              Sign Up Index Page
-            </button>
-            <sug-ui-tooltip
-              [text]="
-                'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'
-              "
-              [position]="'bottom'"
-              [tooltipClass]="'custom-tooltip'"
-              [tooltipOptions]="{
-                showDelay: 200,
-                autoHide: true,
-                tooltipEvent: 'hover'
-              }"
-            >
+        <div>
+          <!-- Radio Button Row -->
+          <div style="display: flex; align-items: baseline; gap: 3px">
+            <sug-ui-radio-checkbox-button
+              type="radio"
+              name="signupRadioGroup"
+              [inputId]="option.value"
+              formControlName="selectedSignupValue"
+              [options]="[option]"
+              (valueChange)="getSignupLinkRadioValue($event)"
+            ></sug-ui-radio-checkbox-button>
+            @if (option.value === 'LinkMainAccount') {
+            <div class="signup-tooltip-content">
               <button
-                class="info-button"
-                style="vertical-align: top; margin-top: -2px"
+                type="button"
+                class="link-button"
+                (click)="openMemberIndexPage()"
               >
-                <i class="fa-solid fa-circle-question"></i>
+                Sign Up Index Page
               </button>
-            </sug-ui-tooltip>
+              <sug-ui-tooltip
+                [text]="
+                  'You can provide a link to a page that displays all your sign ups. The sign ups displayed on your Account Index Page will change over time depending on which of your sign ups are active (i.e. the event is not over)'
+                "
+                [position]="'bottom'"
+                [tooltipClass]="'custom-tooltip'"
+                [tooltipOptions]="{
+                  showDelay: 200,
+                  autoHide: true,
+                  tooltipEvent: 'hover'
+                }"
+              >
+                <button
+                  class="info-button"
+                  style="vertical-align: top; margin-top: -2px"
+                >
+                  <i class="fa-solid fa-circle-question"></i>
+                </button>
+              </sug-ui-tooltip>
+            </div>
+            }
           </div>
+
+          <!-- Gray Line Connector (only show when this option is selected) -->
+          @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+          option.value && option.value !== 'LinkMainAccount') {
+          <div class="radio-connector-line"></div>
+          <div class="radio-connector-dot"></div>
           }
+
+          <!-- Dropdown Content Directly Below This Radio Option -->
+          @if (signUpDialogForm.get('selectedSignupValue')?.value ===
+          option.value) { @if (option.value === 'LinkSpecificSignup') {
+          <div class="signup-radio-content">
+            <sug-ui-multi-select-dropdown
+              [options]="signUpOptions"
+              [optionGroupLabel]="'label'"
+              [optionGroupChildren]="'items'"
+              [group]="true"
+              [placeholder]="'Select Sign Up(s)'"
+              panelStyleClass="custom-dropdown"
+              appendTo="parent"
+              (valueChanged)="onSignUpSelectionChange($event)"
+              formControlName="selectedSignups"
+            >
+              <ng-template #group let-group>
+                <div class="flex items-center">
+                  <span> {{ group.label }}</span>
+                </div>
+              </ng-template>
+            </sug-ui-multi-select-dropdown>
+          </div>
+          } @if (option.value === 'LinkSpecifixTabGroup') {
+          <p class="signup-content-p">
+            Choose one or more tab group from the list.
+          </p>
+          <div class="signup-radio-content">
+            <sug-ui-multi-select-dropdown
+              [placeholder]="'Select Tab Group(s)'"
+              [options]="tabGroupsForDropdown"
+              formControlName="selectedTabGroups"
+              panelStyleClass="custom-dropdown"
+              appendTo="parent"
+              (valueChanged)="onTabGroupSelectionChange($event)"
+            >
+            </sug-ui-multi-select-dropdown>
+          </div>
+          } @if (option.value === 'LinkSpecificPortalPage') {
+          <p class="signup-content-p">
+            Choose one or more portal page from the list.
+          </p>
+          <div class="signup-radio-content">
+            <sug-ui-multi-select-dropdown
+              [options]="portalOptionsForDropdown"
+              [optionLabel]="'label'"
+              [optionValue]="'value'"
+              [placeholder]="'Select Portal Page(s)'"
+              panelStyleClass="custom-dropdown"
+              appendTo="parent"
+              (valueChanged)="onPortalPageSelectionChange($event)"
+              formControlName="selectedPortalPages"
+            >
+            </sug-ui-multi-select-dropdown>
+          </div>
+          } }
         </div>
         }
       </div>
-
-      @if (signUpDialogForm.get('selectedSignupValue')?.value ===
-      'LinkSpecificSignup') {
-      <div class="signup-radio-content">
-        <sug-ui-multi-select-dropdown
-          [options]="signUpOptions"
-          [optionGroupLabel]="'label'"
-          [optionGroupChildren]="'items'"
-          [group]="true"
-          [placeholder]="'Select Sign Up(s)'"
-          panelStyleClass="custom-dropdown"
-          appendTo="parent"
-          panelStyleClass="custom-dropdown"
-          (valueChanged)="onSignUpSelectionChange($event)"
-          formControlName="selectedSignups"
-        >
-          <ng-template #group let-group>
-            <div class="flex items-center">
-              <span> {{ group.label }}</span>
-            </div>
-          </ng-template>
-        </sug-ui-multi-select-dropdown>
-      </div>
-      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
-      'LinkSpecifixTabGroup') {
-      <div class="signup-radio-content">
-        <sug-ui-multi-select-dropdown
-          [placeholder]="'Select Tab Group(s)'"
-          [options]="tabGroupsForDropdown"
-          formControlName="selectedTabGroups"
-          panelStyleClass="custom-dropdown"
-          appendTo="parent"
-          (valueChanged)="onTabGroupSelectionChange($event)"
-        >
-        </sug-ui-multi-select-dropdown>
-      </div>
-      } @if (signUpDialogForm.get('selectedSignupValue')?.value ===
-      'LinkSpecificPortalPage') {
-      <div class="signup-radio-content">
-        <sug-ui-multi-select-dropdown
-          [options]="portalOptionsForDropdown"
-          [optionLabel]="'label'"
-          [optionValue]="'value'"
-          [placeholder]="'Select Portal Page(s)'"
-          panelStyleClass="custom-dropdown"
-          appendTo="parent"
-          (valueChanged)="onPortalPageSelectionChange($event)"
-          formControlName="selectedPortalPages"
-        >
-        </sug-ui-multi-select-dropdown>
-      </div>
-      }
     </form>
   </div>
 
