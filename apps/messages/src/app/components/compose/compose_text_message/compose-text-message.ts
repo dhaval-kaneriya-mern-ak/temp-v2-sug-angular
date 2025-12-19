@@ -2621,13 +2621,24 @@ export class ComposeTextMessageComponent
    * @param newUrl - New short URL to use
    */
   private updateShortUrlInMessage(previousUrl: string, newUrl: string): void {
+    // Validate input parameters
+    if (newUrl.trim() === '' || typeof newUrl !== 'string') {
+      return;
+    }
+
     const currentMessage = this.sendTextEmailForm.value.message;
-    if (!currentMessage) return;
+    if (!currentMessage || typeof currentMessage !== 'string') {
+      return;
+    }
 
     let updatedMessage = currentMessage;
 
     // If there was a previous URL, replace it with the new one
-    if (previousUrl && currentMessage.includes(previousUrl)) {
+    if (
+      previousUrl &&
+      typeof previousUrl === 'string' &&
+      currentMessage.includes(previousUrl)
+    ) {
       updatedMessage = currentMessage.replace(previousUrl, newUrl);
     } else {
       // If no previous URL in message, add the new one
