@@ -168,21 +168,25 @@ export class EmailFormComponent implements OnInit, OnChanges {
       changes['selectedSignups'] ||
       changes['selectedTabGroups'] ||
       changes['selectedPortalPages'] ||
-      changes['isSignUpIndexPageSelected']
+      changes['isSignUpIndexPageSelected'] ||
+      changes['showInlineSignupDropdown']
     ) {
       this.updateFormControlsState();
     }
 
     // Sync form controls with input property changes
-    if (changes['selectedSignups'] && this.emailForm) {
+    if (
+      (changes['selectedSignups'] || changes['showInlineSignupDropdown']) &&
+      this.emailForm
+    ) {
       if (this.showInlineSignupDropdown) {
-        // FIX: Map objects to IDs for the dropdown
+        // Map objects to IDs for the dropdown
         const selectedIds = this.selectedSignups.map((s) =>
           s.signupid.toString()
         );
         this.dropdownControl.setValue(selectedIds, { emitEvent: false });
 
-        // 2. CRITICAL FIX: Update the Main Form with OBJECTS (so compose-email.ts doesn't crash)
+        //  Update the Main Form with OBJECTS (so compose-email.ts doesn't crash)
         this.emailForm.patchValue(
           { selectedSignups: this.selectedSignups },
           { emitEvent: false }
@@ -457,7 +461,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
     if (this.showInlineSignupDropdown && selectedIds.length > 1) {
       selectedIds = [selectedIds[selectedIds.length - 1]];
 
-      // FIX: Use setTimeout to force the UI to update.
+      // Use setTimeout to force the UI to update.
       // Without this, the component's internal state might overwrite our change in the same tick.
       setTimeout(() => {
         this.dropdownControl.setValue(selectedIds, { emitEvent: false });
@@ -487,7 +491,7 @@ export class EmailFormComponent implements OnInit, OnChanges {
       }
     });
 
-    // Update the Main Form with OBJECTS (fixes the crash in compose-email.ts)
+    // Update the Main Form with OBJECTS
     this.emailForm.get('selectedSignups')?.setValue(selectedSignups);
 
     // Emit the selected signup object(s) to the parent component
