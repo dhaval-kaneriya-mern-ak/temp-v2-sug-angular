@@ -454,10 +454,14 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
     // Enforce single selection logic:
     // If we are in "inline dropdown" mode and have a selection, keep only the last selected item.
-    if (this.showInlineSignupDropdown && selectedIds.length > 0) {
+    if (this.showInlineSignupDropdown && selectedIds.length > 1) {
       selectedIds = [selectedIds[selectedIds.length - 1]];
 
-      this.dropdownControl.setValue(selectedIds, { emitEvent: false });
+      // FIX: Use setTimeout to force the UI to update.
+      // Without this, the component's internal state might overwrite our change in the same tick.
+      setTimeout(() => {
+        this.dropdownControl.setValue(selectedIds, { emitEvent: false });
+      });
     }
 
     const selectedSignups: ISignUpItem[] = [];
@@ -473,12 +477,20 @@ export class EmailFormComponent implements OnInit, OnChanges {
             selectedSignups.push(item.signupData);
           }
         });
+      } else {
+        // Handle direct ISelectOption items (flat list)
+        // Cast to any to check for signupData property which might exist on the option
+        const item = groupOrOption as any;
+        if (selectedIds.includes(item.value) && item.signupData) {
+          selectedSignups.push(item.signupData);
+        }
       }
     });
 
+    // Update the Main Form with OBJECTS (fixes the crash in compose-email.ts)
     this.emailForm.get('selectedSignups')?.setValue(selectedSignups);
 
-    // Emit to parent
+    // Emit the selected signup object(s) to the parent component
     this.selectedSignupsChange.emit(selectedSignups);
   }
 }

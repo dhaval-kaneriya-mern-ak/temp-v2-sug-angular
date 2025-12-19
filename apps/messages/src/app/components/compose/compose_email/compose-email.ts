@@ -3110,10 +3110,6 @@ export class ComposeEmailComponent
   }
 
   get shouldShowInlineSignupDropdown(): boolean {
-    // Show inline dropdown ONLY if:
-    // 1. User is Basic (not Pro, not Trial)
-    // 2. There are signup options available
-    // 3. User does NOT have an Index Page (which would require the popup to select)
     return this.getIsBasicUser();
   }
 
