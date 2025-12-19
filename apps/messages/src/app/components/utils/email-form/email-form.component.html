@@ -39,7 +39,7 @@
           </div>
         </ng-template>
       </sug-ui-multi-select-dropdown>
-      } @else{ @if (!hasSignupSelection) {
+      } @else if (!hasSignupSelection) {
       <sug-ui-button
         type="button"
         class="add-link-btn"
@@ -48,7 +48,7 @@
         (buttonClick)="onOpenSignUpsDialog()"
       >
       </sug-ui-button>
-      } @if (hasSignupSelection) {
+      } @else if (hasSignupSelection) {
       <div class="signup-chips-container">
         <div class="chips-container">
           @for (item of selectedSignups; track item.signupid || $index; let i =
@@ -101,7 +101,7 @@
           <i class="fa-solid fa-pencil"></i>
         </button>
       </div>
-      } }
+      }
     </div>
 
     <!-- From Name -->
