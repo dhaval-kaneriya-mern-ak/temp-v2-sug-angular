@@ -244,10 +244,7 @@
     margin-right: 10px;
     padding: 6px 10px;
     margin-left: 4px;
-    @media (max-width: 767px) {
-      font-weight: 500;
-      font-size: 20px;
-    }
+    font-size: 16px;
   }
   .btn-text {
     font-size: 16px;
@@ -271,14 +268,11 @@
   }
 }
 .searchLink {
-  font-size: 20px;
+  font-size: 16px;
   color: $white-color;
   border: none;
   text-decoration: none;
   padding: 7px 12px 3px;
-  @media (max-width: 767px) {
-    font-size: 16px;
-  }
 }
 .extendedMenuWrap {
   position: absolute;
