@@ -364,7 +364,7 @@
         <!-- Search Link -->
         <a
           class="searchLink desktop-search"
-          routerLink="/findasignup"
+          href="/findasignup"
           aria-label="Search for a Sign Up"
         >
           <!-- Search Icon -->
@@ -406,3 +406,26 @@
     ></sug-mobile-menu>
   </div>
 </header>
+@if(showSubAdminHeader()) {
+<header class="subAdminHeader">
+  <span>YOU ARE LOGGED IN AS AN ADMIN FOR:</span>
+  <span> {{ getAdminAccountName() }} --</span>
+  <span>
+    <a
+      class="subAdminMenuLink"
+      href="/index.cfm?go=m.mypermissions"
+      aria-label="View my permissions"
+    >
+      View my permissions
+    </a>
+    |
+    <a
+      class="subAdminMenuLink"
+      href="/MyAccount/ResetAdminID/1?switch=true"
+      aria-label="Switch to another account"
+    >
+      Switch to another account
+    </a>
+  </span>
+</header>
+}

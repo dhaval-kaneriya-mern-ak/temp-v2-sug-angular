@@ -9,7 +9,7 @@ import {
   Output,
   inject,
 } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   SugUiButtonComponent,
   SugUiTooltipComponent,
@@ -25,6 +25,7 @@ import {
   ISelectPortalOption,
   ISignUpItem,
   ITabGroupItem,
+  SignupOptionGroup,
 } from '@services/interfaces/messages-interface/compose.interface';
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { environment } from '@environments/environment';
@@ -73,7 +74,10 @@ export class EmailFormComponent implements OnInit, OnChanges {
   @Input() subAdminsData: ISelectOption[] = [];
   @Input() selectedMemberGroups: IMemberInfoDto[] = [];
   @Input() selectedAttachments: IFileItem[] = [];
+  @Input() signUpOptions: (ISelectOption | SignupOptionGroup)[] = [];
+  @Input() showInlineSignupDropdown = false;
 
+  @Output() selectedSignupsChange = new EventEmitter<ISignUpItem[]>();
   @Output() openSignUpsDialog = new EventEmitter<void>();
   @Output() openPeopleDialog = new EventEmitter<void>();
   @Output() openSelectFileDialog = new EventEmitter<void>();
@@ -112,6 +116,8 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   attachmentUploadProgress: Map<string | number, number> = new Map();
   attachmentUploadError: Map<string | number, string> = new Map();
+
+  dropdownControl = new FormControl<string[]>([]);
 
   get hasSignupSelection(): boolean {
     return (
@@ -162,14 +168,33 @@ export class EmailFormComponent implements OnInit, OnChanges {
       changes['selectedSignups'] ||
       changes['selectedTabGroups'] ||
       changes['selectedPortalPages'] ||
-      changes['isSignUpIndexPageSelected']
+      changes['isSignUpIndexPageSelected'] ||
+      changes['showInlineSignupDropdown']
     ) {
       this.updateFormControlsState();
     }
 
     // Sync form controls with input property changes
-    if (changes['selectedSignups'] && this.emailForm) {
-      this.emailForm.patchValue({ selectedSignups: this.selectedSignups });
+    if (
+      (changes['selectedSignups'] || changes['showInlineSignupDropdown']) &&
+      this.emailForm
+    ) {
+      if (this.showInlineSignupDropdown) {
+        // Map objects to IDs for the dropdown
+        const selectedIds = this.selectedSignups.map((s) =>
+          s.signupid.toString()
+        );
+        this.dropdownControl.setValue(selectedIds, { emitEvent: false });
+
+        //  Update the Main Form with OBJECTS (so compose-email.ts doesn't crash)
+        this.emailForm.patchValue(
+          { selectedSignups: this.selectedSignups },
+          { emitEvent: false }
+        );
+      } else {
+        // Standard flow uses objects
+        this.emailForm.patchValue({ selectedSignups: this.selectedSignups });
+      }
     }
 
     if (changes['selectedGroups'] && this.emailForm) {
@@ -425,5 +450,51 @@ export class EmailFormComponent implements OnInit, OnChanges {
 
   removeGroup(index: number): void {
     this.removeGroupItem.emit(index);
+  }
+
+  onSignUpSelectionChange(event: { value: string[] }): void {
+    // Get the current selection from the event
+    let selectedIds = event.value || [];
+
+    // Enforce single selection logic:
+    // If we are in "inline dropdown" mode and have a selection, keep only the last selected item.
+    if (this.showInlineSignupDropdown && selectedIds.length > 1) {
+      selectedIds = [selectedIds[selectedIds.length - 1]];
+
+      // Use setTimeout to force the UI to update.
+      // Without this, the component's internal state might overwrite our change in the same tick.
+      setTimeout(() => {
+        this.dropdownControl.setValue(selectedIds, { emitEvent: false });
+      });
+    }
+
+    const selectedSignups: ISignUpItem[] = [];
+
+    // Type Safety: Iterate through options to find the selected objects without unsafe casting
+    this.signUpOptions.forEach((groupOrOption) => {
+      // Check if it is a group (has 'items' array)
+      if ('items' in groupOrOption && Array.isArray(groupOrOption.items)) {
+        const group = groupOrOption as SignupOptionGroup;
+
+        group.items.forEach((item) => {
+          if (selectedIds.includes(item.value)) {
+            selectedSignups.push(item.signupData);
+          }
+        });
+      } else {
+        // Handle direct ISelectOption items (flat list)
+        // Cast to any to check for signupData property which might exist on the option
+        const item = groupOrOption as any;
+        if (selectedIds.includes(item.value) && item.signupData) {
+          selectedSignups.push(item.signupData);
+        }
+      }
+    });
+
+    // Update the Main Form with OBJECTS
+    this.emailForm.get('selectedSignups')?.setValue(selectedSignups);
+
+    // Emit the selected signup object(s) to the parent component
+    this.selectedSignupsChange.emit(selectedSignups);
   }
 }
