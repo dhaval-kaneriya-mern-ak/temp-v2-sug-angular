@@ -1,0 +1,29 @@
+::ng-deep {
+  // Target the input element directly
+  input[type='radio'][name='peopleSendMessageRadioGroup']:disabled
+    ~ .p-radiobutton-box {
+    display: none !important;
+  }
+
+  // Add icon before the radiobutton component
+  input[type='radio'][name='peopleSendMessageRadioGroup']:disabled {
+    display: none !important;
+  }
+
+  // Target the parent p-radiobutton component
+  p-radiobutton:has(input[name='peopleSendMessageRadioGroup']:disabled) {
+    &::before {
+      content: '\f559' !important;
+      font-family: 'Font Awesome 5 Free' !important;
+      font-weight: 900 !important;
+      font-size: 20px !important;
+      color: #ff6b35 !important;
+      display: inline-block !important;
+      margin-right: 10px !important;
+    }
+
+    .p-radiobutton-box {
+      display: none !important;
+    }
+  }
+}

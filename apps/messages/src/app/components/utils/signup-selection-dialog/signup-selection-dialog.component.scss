@@ -1,0 +1,77 @@
+// Radio option container with connector
+.radio-group > div {
+  position: relative;
+}
+
+// Gray vertical line connecting radio to dropdown
+.radio-connector-line {
+  position: absolute;
+  left: 7px;
+  top: 18px;
+  width: 2px;
+  background: linear-gradient(to bottom, #d0d0d0 0%, #d0d0d0 100%);
+  z-index: 1;
+
+  // Use height based on content
+  height: auto;
+  max-width: 200px;
+  bottom: 20px;
+  opacity: 0;
+  animation: lineExtend 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes lineExtend {
+  0% {
+    max-height: 0;
+    opacity: 0;
+  }
+  100% {
+    max-height: 200px;
+    opacity: 1;
+  }
+}
+
+// Gray dot at the end of the line (before dropdown)
+.radio-connector-dot {
+  position: absolute;
+  left: 3px;
+  // top: 79px;
+  bottom: 10px;
+  width: 10px;
+  height: 10px;
+  background-color: #d0d0d0;
+  // border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0.5);
+  animation: dotPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
+}
+
+@keyframes dotPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Adjust dropdown content positioning
+.signup-radio-content {
+  margin-top: 8px;
+  margin-left: 28px; // Indent to align with content
+  padding-left: 12px;
+  position: relative;
+}
+
+.signup-content-p {
+  margin: 0 0 0 26px;
+  font-size: smaller;
+}

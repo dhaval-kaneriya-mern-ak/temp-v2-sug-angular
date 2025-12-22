@@ -60,7 +60,10 @@ import { CloudSpongeService } from '@services/cloudsponge.service';
     SugInformationDialogComponent,
   ],
   templateUrl: './people-selection-dialog.component.html',
-  styleUrls: ['../../compose/compose_email/compose-email.scss'],
+  styleUrls: [
+    '../../compose/compose_email/compose-email.scss',
+    './people-selection-dialog.component.scss',
+  ],
 })
 export class PeopleSelectionDialogComponent
   implements OnInit, OnChanges, OnDestroy
