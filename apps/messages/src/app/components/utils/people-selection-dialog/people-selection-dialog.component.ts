@@ -146,8 +146,11 @@ export class PeopleSelectionDialogComponent
   };
 
   get isWaitlistEligible(): boolean {
-    if (!this.userProfile?.ispro) {
+    if (!this.userProfile?.ispro && !this.userProfile?.istrial) {
       return false;
+    }
+    if (this.userProfile?.istrial) {
+      return true;
     }
     const productCode =
       this.userProfile?.subscription?.productcode?.toUpperCase() || '';
