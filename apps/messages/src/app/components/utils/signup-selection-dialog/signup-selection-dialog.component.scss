@@ -9,12 +9,10 @@
   left: 7px;
   top: 18px;
   width: 2px;
-  background: linear-gradient(to bottom, #d0d0d0 0%, #d0d0d0 100%);
+  background: #d0d0d0;
   z-index: 1;
-
-  // Use height based on content
   height: auto;
-  max-width: 200px;
+  max-height: 200px;
   bottom: 20px;
   opacity: 0;
   animation: lineExtend 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -35,12 +33,10 @@
 .radio-connector-dot {
   position: absolute;
   left: 3px;
-  // top: 79px;
   bottom: 10px;
   width: 10px;
   height: 10px;
   background-color: #d0d0d0;
-  // border: 3px solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 2;
@@ -66,7 +62,7 @@
 // Adjust dropdown content positioning
 .signup-radio-content {
   margin-top: 8px;
-  margin-left: 28px; // Indent to align with content
+  margin-left: 28px;
   padding-left: 12px;
   position: relative;
 }

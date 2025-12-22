@@ -11,6 +11,7 @@ import {
   ChangeDetectorRef,
   OnDestroy,
   ChangeDetectionStrategy,
+  ViewEncapsulation,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -64,6 +65,7 @@ import { CloudSpongeService } from '@services/cloudsponge.service';
     '../../compose/compose_email/compose-email.scss',
     './people-selection-dialog.component.scss',
   ],
+  encapsulation: ViewEncapsulation.None,
 })
 export class PeopleSelectionDialogComponent
   implements OnInit, OnChanges, OnDestroy
@@ -195,40 +197,6 @@ export class PeopleSelectionDialogComponent
 
     const isEligible = this.isWaitlistEligible;
 
-    // Helper to get waitlist options
-    const getWaitlistOptions = (disabled: boolean) => [
-      {
-        label: 'People who have signed up',
-        value: 'peopleWhoSignedUp',
-      },
-      {
-        label: 'People who are on a waitlist',
-        value: 'peopleOnWaitlist',
-        disabled: disabled,
-        isPro: disabled,
-      },
-      {
-        label: 'People who have signed up and people who are on a waitlist',
-        value: 'peopleSignedUpAndWaitlist',
-        disabled: disabled,
-        isPro: disabled,
-      },
-      {
-        label: 'People who have NOT signed up',
-        value: 'peopleWhoNotSignedUp',
-      },
-      {
-        label: 'People in specific group(s)',
-        value: 'sendMessagePeopleRadio',
-        hasCustomContent: true,
-      },
-      {
-        label: 'People I will select',
-        value: 'sendMessagePeopleIselect',
-        hasCustomContent: true,
-      },
-    ];
-
     // 1. Enabled Waitlist Options (Gold+ with slots OR Text Message)
     if (
       (this.hasWaitlistSlots &&
@@ -236,7 +204,7 @@ export class PeopleSelectionDialogComponent
         isEligible) ||
       (this.isFromTextMessage && isEligible)
     ) {
-      return getWaitlistOptions(false);
+      return this.getWaitlistOptions(false);
     }
 
     // 2. Disabled Waitlist Options (Basic/Silver - Priority over RSVP)
@@ -246,7 +214,7 @@ export class PeopleSelectionDialogComponent
         this.isTextMessageParticipants) &&
       !isEligible
     ) {
-      return getWaitlistOptions(true);
+      return this.getWaitlistOptions(true);
     }
 
     // If RSVP signup is selected, show RSVP-specific options
@@ -324,6 +292,40 @@ export class PeopleSelectionDialogComponent
       },
     ];
   }
+
+  // Helper to get waitlist options
+  private getWaitlistOptions = (disabled: boolean) => [
+    {
+      label: 'People who have signed up',
+      value: 'peopleWhoSignedUp',
+    },
+    {
+      label: 'People who are on a waitlist',
+      value: 'peopleOnWaitlist',
+      disabled: disabled,
+      isPro: disabled,
+    },
+    {
+      label: 'People who have signed up and people who are on a waitlist',
+      value: 'peopleSignedUpAndWaitlist',
+      disabled: disabled,
+      isPro: disabled,
+    },
+    {
+      label: 'People who have NOT signed up',
+      value: 'peopleWhoNotSignedUp',
+    },
+    {
+      label: 'People in specific group(s)',
+      value: 'sendMessagePeopleRadio',
+      hasCustomContent: true,
+    },
+    {
+      label: 'People I will select',
+      value: 'sendMessagePeopleIselect',
+      hasCustomContent: true,
+    },
+  ];
 
   nonGroupMemberOption = [
     {
