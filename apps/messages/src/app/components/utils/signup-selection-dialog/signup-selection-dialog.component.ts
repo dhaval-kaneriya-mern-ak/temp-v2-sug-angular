@@ -43,7 +43,10 @@ import { SugInformationDialogComponent } from '../information-dialog/information
     SugInformationDialogComponent,
   ],
   templateUrl: './signup-selection-dialog.component.html',
-  styleUrls: ['../../compose/compose_email/compose-email.scss'],
+  styleUrls: [
+    '../../compose/compose_email/compose-email.scss',
+    './signup-selection-dialog.component.scss',
+  ],
 })
 export class SignupSelectionDialogComponent implements OnInit, OnDestroy {
   @Input() visible = false;

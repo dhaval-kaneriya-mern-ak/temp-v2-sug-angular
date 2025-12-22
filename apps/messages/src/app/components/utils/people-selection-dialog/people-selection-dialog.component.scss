@@ -1,0 +1,27 @@
+// Target the input element directly
+input[type='radio'][name='peopleSendMessageRadioGroup']:disabled
+  ~ .p-radiobutton-box {
+  display: none;
+}
+
+// Add icon before the radiobutton component
+input[type='radio'][name='peopleSendMessageRadioGroup']:disabled {
+  display: none;
+}
+
+// Target the parent p-radiobutton component
+p-radiobutton:has(input[name='peopleSendMessageRadioGroup']:disabled) {
+  &::before {
+    content: '\f559';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 20px;
+    color: #ff6b35;
+    display: inline-block;
+    margin-right: 10px;
+  }
+
+  .p-radiobutton-box {
+    display: none;
+  }
+}

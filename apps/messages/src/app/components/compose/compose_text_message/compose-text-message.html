@@ -467,8 +467,9 @@
 <sug-people-selection-dialog
   [(visible)]="isPeopleDialogVisible"
   [isFromTextMessage]="hasWaitlistSlots"
+  [isTextMessageParticipants]="selectedValue === 'emailoptiontwo'"
   [messageTypeId]="selectedValue === 'emailoptionone' ? 14 : 15"
-  [formType]="'emailParticipants'"
+  [formType]="currentFormType"
   [groupOptions]="groupData"
   [selectedSignups]="getSelectedSignup()"
   [isSignUpIndexPageSelected]="false"
