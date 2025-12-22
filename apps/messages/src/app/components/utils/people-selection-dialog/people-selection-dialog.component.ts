@@ -196,6 +196,7 @@ export class PeopleSelectionDialogComponent
     );
 
     const isEligible = this.isWaitlistEligible;
+    const hasSelectedSignups = selectedSignups.length > 0;
 
     // 1. Enabled Waitlist Options (Gold+ with slots OR Text Message)
     if (
@@ -212,7 +213,8 @@ export class PeopleSelectionDialogComponent
     if (
       (this.formType === 'emailParticipants' ||
         this.isTextMessageParticipants) &&
-      !isEligible
+      !isEligible &&
+      hasSelectedSignups
     ) {
       return this.getWaitlistOptions(true);
     }
