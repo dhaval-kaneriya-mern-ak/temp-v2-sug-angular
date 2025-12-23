@@ -1,4 +1,257 @@
-<div class="p-4">
+<div class="group-list">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading()"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
   <h2 class="text-2xl font-bold mb-4">Groups List</h2>
-  <sug-ui-table [data]="tableData" [columns]="tableColumns"></sug-ui-table>
+
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="groups-list">
+      <sug-ui-loading-spinner
+        [isLoading]="isLoading()"
+        [isFullPageLoader]="true"
+      ></sug-ui-loading-spinner>
+
+      <div class="d-flex gap-3 flex-wrap justify-content-between mb-4">
+        <div class="dropdown-container">
+          <div class="dropdown-item">
+            Sort By
+            <sug-ui-select-box
+              [options]="sortByOptions"
+              [initialSelectedOption]="selectedSortBy"
+              design="sort"
+            ></sug-ui-select-box>
+          </div>
+          <div class="dropdown-item">
+            Order
+            <sug-ui-select-box
+              [options]="currentSortOrderOptions"
+              [initialSelectedOption]="selectedSortOrder"
+            >
+            </sug-ui-select-box>
+          </div>
+
+          <div></div>
+        </div>
+
+        <div class="search-input-container">
+          <div class="search-box mb-3 d-flex">
+            <i
+              class="fa-solid fa-magnifying-glass btn-search"
+              title="Search"
+              aria-hidden="true"
+            ></i>
+            <input
+              type="text"
+              [formControl]="searchControl"
+              placeholder="Search Groups..."
+              class="form-control"
+            />
+          </div>
+
+          <sug-ui-button
+            [buttonText]="'Add Group'"
+            [severity]="'primary'"
+            [outlined]="false"
+            icon="pi pi-plus"
+            styleClass="rounded-1"
+            (buttonClick)="addGroup()"
+          >
+          </sug-ui-button>
+        </div>
+      </div>
+      <ng-template #memberTemplate let-rowData>
+        <div
+          class="icon-counter-wrapper"
+          [title]="'There are ' + rowData.membercount + ' members in this group'"
+        >
+          <i class="fa-solid fa-user"></i>
+          <span class="count-badge">{{ rowData.membercount }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template #signupTemplate let-rowData>
+        <div
+          class="icon-counter-wrapper"
+          [title]="'There are ' + rowData.signupcount + ' sign ups'"
+        >
+          <i class="fa-solid fa-check"></i>
+          <span class="count-badge">{{ rowData.signupcount }}</span>
+        </div>
+      </ng-template>
+
+      <sug-ui-table
+        *ngIf="tableColumns().length"
+        [data]="tableData()"
+        [columns]="tableColumns()"
+        [totalRecords]="paginationOptions().totalRecords"
+        [paginator]="false"
+        [rows]="paginationOptions().rows"
+        [first]="paginationOptions().first"
+        [loading]="isLoading()"
+        (sort)="onTableHeaderSort($event)"
+      >
+        <ng-template
+          #actionTemplate
+          let-rowData
+          let-column="column"
+          let-rowIndex="rowIndex"
+        >
+          <div class="table-action-wrapper d-flex justify-content-end gap-3">
+            <i
+              class="fa-solid fa-pencil btn-action"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Edit group ' + rowData.title"
+              (click)="editGroup(rowData)"
+              (keydown.enter)="editGroup(rowData)"
+              (keydown.space)="editGroup(rowData)"
+              title="Edit group"
+            ></i>
+
+            <i
+              class="fa-solid fa-trash-can btn-action"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Delete group ' + rowData.title"
+              (click)="deleteGroup(rowData)"
+              (keydown.enter)="deleteGroup(rowData)"
+              (keydown.space)="deleteGroup(rowData)"
+              title="Delete group"
+            ></i>
+
+            <sug-ui-list-action-dropdown [items]="getMoreActionItems(rowData)">
+            </sug-ui-list-action-dropdown>
+          </div>
+        </ng-template>
+      </sug-ui-table>
+      <!-- <sug-ui-table
+        [data]="tableData()"
+        [columns]="tableColumns"
+        [totalRecords]="paginationOptions().totalRecords"
+        [paginator]="false"
+        [rows]="paginationOptions().rows"
+        [first]="paginationOptions().first"
+        [loading]="isLoading()"
+        (sort)="onTableHeaderSort($event)"
+      >
+        <ng-template #memberTemplate let-rowData>
+          <div class="d-flex flex-column align-items-center">
+            <i class="fa-solid fa-user"></i>
+            <span>{{ rowData.membercount }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template #signupTemplate let-rowData>
+          <div class="d-flex flex-column align-items-center">
+            <i class="fa-solid fa-check"></i>
+            <span>{{ rowData.signupcount }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template
+          #actionTemplate
+          let-rowData
+          let-column="column"
+          let-rowIndex="rowIndex"
+        >
+          <div class="table-action-wrapper d-flex justify-content-end gap-3">
+            <i
+              class="fa-solid fa-pencil btn-action"
+              (click)="editGroup(rowData)"
+              title="Edit"
+            >
+            </i>
+            <i
+              class="fa-solid fa-trash-can btn-action"
+              (click)="deleteGroup(rowData)"
+              title="Delete"
+            >
+            </i>
+            <sug-ui-list-action-dropdown [items]="getMoreActionItems(rowData)">
+            </sug-ui-list-action-dropdown>
+          </div>
+        </ng-template>
+      </sug-ui-table> -->
+
+      <div class="my-3">
+        <sug-ui-pagination
+          [paginationOptions]="paginationOptions()"
+          [paginationKey]="paginationKey"
+          (selectedPaginationOption)="onPaginationChange($event)"
+        ></sug-ui-pagination>
+      </div>
+    </div>
+  </div>
+
+  <sug-ui-dialog
+    [config]="dialogConf"
+    [(visible)]="isAddGroupVisible"
+    [showHeader]="true"
+    [showFooter]="true"
+  >
+    <h2 slot="header">Add New Group</h2>
+    <div class="d-flex align-items-center gap-5 p-3">
+      <label for="groupName" class="form-label mb-0">Group Name</label>
+      <input
+        id="groupName"
+        type="text"
+        class="form-control"
+        style="flex: 1"
+        [formControl]="groupNameControl"
+        placeholder="Enter group name"
+      />
+    </div>
+
+    <div
+      class="text-danger mt-1"
+      *ngIf="groupNameControl.invalid && groupNameControl.touched"
+    >
+      Group Name is required.
+    </div>
+
+    <div
+      slot="footer"
+      class="d-flex justify-content-center align-items-center w-100"
+    >
+      <sug-ui-button
+        label="Create"
+        icon=""
+        [rounded]="false"
+        [size]="'large'"
+        [severity]="'success'"
+        [outlined]="false"
+        styleClass="confirmation-btn"
+        (buttonClick)="createGroup()"
+      ></sug-ui-button>
+    </div>
+  </sug-ui-dialog>
+
+  <sug-ui-dialog
+    [config]="deletedialogConf"
+    [(visible)]="isDeleteDialogVisible"
+    [showHeader]="false"
+    [showFooter]="false"
+  >
+    <div class="delete-confirmation p-4 text-center">
+      <h3 class="mb-2">Are you sure?</h3>
+
+      <p class="mb-4">
+        You are about to delete the group "{{ selectedGroupToDelete?.title }}".
+      </p>
+
+      <div class="d-flex justify-content-center gap-3">
+        <sug-ui-button
+          label="Delete"
+          icon=""
+          [rounded]="false"
+          [size]="'large'"
+          [severity]="'success'"
+          [outlined]="false"
+          styleClass="confirmation-btn"
+          (buttonClick)="confirmDeleteGroup()"
+        ></sug-ui-button>
+      </div>
+    </div>
+  </sug-ui-dialog>
 </div>
