@@ -943,6 +943,10 @@ export class ComposeEmailComponent
           membercount: this.stateService.recipientCount,
         }));
     }
+    if (this.selectedRadioOption?.recipients?.length > 0) {
+      payload.sendto = [];
+    }
+
     // Load signups
     this.composeService.messagePreview(payload).subscribe({
       next: (response) => {
