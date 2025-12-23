@@ -1,3 +1,16 @@
+@if (isLoadingSignups) {
+<div class="loading-container">
+  <sug-ui-loading-spinner [isLoading]="true"></sug-ui-loading-spinner>
+</div>
+} @else if (!hasSignups) {
+<div class="no-signups-message">
+  There are no active sign ups. You must
+  <a href="/index.cfm?go=w.create1" aria-label="Create a sign up"
+    >create a sign up</a
+  >
+  before you can compose and send messages.
+</div>
+} @else {
 <div class="row">
   @if(!isShowSuccessPage){
   <div class="col-md-12">
@@ -314,6 +327,7 @@
   ></sug-success-page>
   }
 </div>
+}
 <!-- <div class="compose-message">
   <h2>Compose New Message</h2>
   <form class="compose-form">

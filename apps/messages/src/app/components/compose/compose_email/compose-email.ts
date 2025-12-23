@@ -123,9 +123,6 @@ import { ComponentCanDeactivate } from '../../../guards/unsaved-changes.guard';
     ConfirmationDialogComponent,
     SugUiDialogComponent,
   ],
-  providers: [
-    ComposeEmailStateService, // Provide at component level
-  ],
   templateUrl: './compose-email.html',
   styleUrls: ['./compose-email.scss'],
 })
@@ -432,15 +429,6 @@ export class ComposeEmailComponent
     // Load sub-admins first to ensure they're available for signup configuration
     this.loadSubAdmins();
 
-    // Load signups
-    this.composeService.getSignUpList().subscribe({
-      next: (response) => {
-        if (response?.data) {
-          const signupOptions = this.transformSignupsToOptions(response.data);
-          this.stateService.setSignUpOptions(signupOptions);
-        }
-      },
-    });
     //Load tab groups
     if (this.userProfile?.features?.signuptabbing) {
       this.composeService.getTabGroupList().subscribe({
@@ -615,50 +603,6 @@ export class ComposeEmailComponent
     // Tab groups API call - implement when API is available
     // For now, set empty array
     this.stateService.setTabGroupsOptions([]);
-  }
-
-  /**
-   * Transform signup data to select options with grouping
-   */
-  private transformSignupsToOptions(
-    signups: ISignUpItem[]
-  ): SignupOptionGroup[] {
-    const rsvpSignUps = signups.filter(
-      (signup) => signup.mode?.toLowerCase() === 'rsvp'
-    );
-    const regularSignUps = signups.filter(
-      (signup) => signup.mode?.toLowerCase() === 'standard'
-    );
-
-    const groups: SignupOptionGroup[] = [];
-
-    // Add RSVP Sign Ups group if there are any
-    if (rsvpSignUps.length > 0) {
-      groups.push({
-        label: 'RSVP Sign Ups',
-        value: 'rsvp-group',
-        items: rsvpSignUps.map((signup) => ({
-          label: signup.title || signup.fulltitle || 'Untitled',
-          value: signup.signupid.toString(),
-          signupData: signup,
-        })),
-      });
-    }
-
-    // Add Standard Sign Ups group if there are any
-    if (regularSignUps.length > 0) {
-      groups.push({
-        label: 'Standard Sign Ups',
-        value: 'standard-group',
-        items: regularSignUps.map((signup) => ({
-          label: signup.title || signup.fulltitle || 'Untitled',
-          value: signup.signupid.toString(),
-          signupData: signup,
-        })),
-      });
-    }
-
-    return groups;
   }
 
   /**
