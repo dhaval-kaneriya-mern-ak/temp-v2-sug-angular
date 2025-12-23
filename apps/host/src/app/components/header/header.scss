@@ -175,6 +175,18 @@
   &:hover {
     color: $primary-color-light;
   }
+
+  .more-menu-button {
+    position: relative;
+  }
+
+  .more-menu-button .fa-caret-down {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translate(-50%, 5%);
+    transition: 0.2s all;
+  }
   // &::before {
   //   content: '';
   //   position: absolute;
@@ -204,7 +216,7 @@
     top: 14px;
     pointer-events: none;
     border-color: rgba(248, 127, 24, 0);
-    border-bottom-color: $primary-color;
+    border-bottom-color: #f89f43;
     border-width: 14px;
     margin-left: -14px;
     z-index: 1040;
@@ -220,6 +232,9 @@
     &:after {
       transform: scale(1);
       opacity: 1;
+    }
+    .more-menu-button .fa-caret-down {
+      display: none;
     }
   }
   // Additional styles for button elements to maintain original appearance
@@ -276,11 +291,11 @@
 }
 .extendedMenuWrap {
   position: absolute;
-  top: 54px;
+  top: 50px;
   left: 0;
   z-index: 9;
   width: 100%;
-  background-color: $primary-color;
+  background-color: #f89f43;
   box-shadow: 0 10px 40px -10px rgba(34, 34, 34, 0.35);
   padding: 8px 100px 0 0;
   margin: 0;
@@ -291,6 +306,13 @@
   list-style: none;
   &.open-menu {
     display: flex;
+    @media (max-width: 767px) {
+      display: none;
+    }
+
+    .profile-name &:hover {
+      transform: scale(1.1);
+    }
   }
   &.extendedLoginMenuWrap {
     padding: 10px 44px 0 0;

@@ -90,7 +90,7 @@
       </div>
 
       <!-- Logo -->
-      <a routerLink="/" aria-label="Go to home page">
+      <a href="/" aria-label="Go to home page">
         <img
           class="logoImage"
           src="/logo-signupgenius.svg"
@@ -143,7 +143,10 @@
             type="button"
             aria-label="Show more options"
           >
-            More
+            <span class="more-menu-button">
+              <span>More</span>
+              <i class="fa-solid fa-caret-down caret-icon"></i>
+            </span>
           </button>
           <ul
             class="extendedMenuWrap"
@@ -345,10 +348,10 @@
               <a
                 (click)="handleCloseLoginMoreMenu()"
                 class="extendedMenuLink"
-                routerLink="/admin"
+                href="/admin"
                 aria-label="Admin"
               >
-                🔒 Admin
+                <i class="fa-solid fa-lock"></i> Admin
               </a>
             </li>
             }
