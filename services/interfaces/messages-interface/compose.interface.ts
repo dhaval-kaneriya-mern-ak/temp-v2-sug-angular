@@ -1030,6 +1030,7 @@ export interface IShortUrlResponse {
  */
 export const EXCLUDED_RECIPIENT_VALUES = new Set<string>([
   'manual_entry',
+  'ImportEmailFromProvider',
   'sendMessagePeopleIselect',
   'peopleOnWaitlist',
   'peopleSignedUpAndWaitlist',

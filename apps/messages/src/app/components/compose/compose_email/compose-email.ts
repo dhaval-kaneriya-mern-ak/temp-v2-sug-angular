@@ -943,6 +943,10 @@ export class ComposeEmailComponent
           membercount: this.stateService.recipientCount,
         }));
     }
+    if (this.selectedRadioOption?.selectedValue === 'ImportEmailFromProvider') {
+      payload.sendto = [];
+    }
+
     // Load signups
     this.composeService.messagePreview(payload).subscribe({
       next: (response) => {
