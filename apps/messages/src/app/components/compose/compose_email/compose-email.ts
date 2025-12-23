@@ -943,7 +943,7 @@ export class ComposeEmailComponent
           membercount: this.stateService.recipientCount,
         }));
     }
-    if (this.selectedRadioOption?.recipients?.length > 0) {
+    if (this.selectedRadioOption?.selectedValue === 'ImportEmailFromProvider') {
       payload.sendto = [];
     }
 
