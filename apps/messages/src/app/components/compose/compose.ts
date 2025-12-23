@@ -164,14 +164,6 @@ export class Compose implements OnInit, OnDestroy {
       .subscribe((isSelected) => {
         this.isOptionSelected = isSelected;
       });
-
-    // Subscribe to signup options to check if signups are available
-    this.stateService.signUpOptions$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((signupOptions) => {
-        // Check if there are any signups available
-        this.hasSignups = signupOptions && signupOptions.length > 0;
-      });
   }
 
   private checkIfSuccessRoute() {
