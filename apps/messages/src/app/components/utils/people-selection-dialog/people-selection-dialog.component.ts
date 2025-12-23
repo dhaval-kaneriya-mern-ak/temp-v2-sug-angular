@@ -65,7 +65,6 @@ import { CloudSpongeService } from '@services/cloudsponge.service';
     '../../compose/compose_email/compose-email.scss',
     './people-selection-dialog.component.scss',
   ],
-  encapsulation: ViewEncapsulation.None,
 })
 export class PeopleSelectionDialogComponent
   implements OnInit, OnChanges, OnDestroy
