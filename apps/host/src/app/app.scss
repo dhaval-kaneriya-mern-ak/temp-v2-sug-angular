@@ -1,0 +1,62 @@
+/* Main Container */
+.main-container {
+  display: flex;
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 0;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: var(--white);
+  min-height: calc(100vh - 140px);
+  max-width: calc(100% - 70px);
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  @media (max-width: 768px) {
+    max-width: 100%;
+    width: 100%;
+    padding: 1rem;
+    min-height: auto;
+    flex-direction: column;
+  }
+}
+
+/* Content Wrapper */
+.content-wrapper {
+  flex: 1;
+  min-width: 0; // Prevents flex item from overflowing
+}
+
+/* Right Sidebar Ad Container */
+.right-sidebar-ad {
+  flex-shrink: 0;
+  width: 300px;
+  @media (max-width: 768px) {
+    display: none; // Hide on mobile
+  }
+}
+
+/* Header Ad Section */
+.header-ad-section {
+  border-bottom: 1px solid #d9d9d9;
+  background-color: #fefde6;
+}
+
+/* Footer Ad Section */
+.footer-ad-section {
+  border-bottom: 1px solid #d9d9d9;
+  background-color: #fefde6;
+}
+
+/* Remove Ads Message */
+.please-remove {
+  padding: 8px 0 0 0;
+  text-align: center;
+  line-height: 1.35em;
+}

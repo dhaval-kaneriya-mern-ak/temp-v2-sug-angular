@@ -1,0 +1,86 @@
+<div class="scheduled-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+  <h2>Scheduled Messages</h2>
+  @if (tableData.length > 0) {
+  <sug-ui-table
+    [data]="tableData"
+    [columns]="tableColumns"
+    [totalRecords]="paginationOptions().totalRecords"
+    [config]="tableConfig"
+    [loading]="isLoading"
+    [paginator]="false"
+    [lazy]="true"
+    [rows]="paginationOptions().rows"
+    (sort)="onSort($event)"
+    [first]="paginationOptions().first"
+  >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="fa-solid fa-pencil btn-action"
+          (click)="editMessage(rowData)"
+          title="Edit message"
+          style="cursor: pointer"
+        ></i>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="fa-solid fa-trash-can btn-action"
+          (click)="openDeleteDialog(rowData)"
+          title="Delete message"
+          style="cursor: pointer"
+        ></i>
+      </div>
+    </ng-template>
+  </sug-ui-table>
+  <div class="my-3">
+    <sug-ui-pagination
+      [paginationOptions]="paginationOptions()"
+      [paginationKey]="paginationKey"
+      (selectedPaginationOption)="onPaginationChange($event)"
+    ></sug-ui-pagination>
+  </div>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>No scheduled messages.</p>
+  </div>
+  }
+  <!-- <div class="bottom-note">
+    <span>NOTE: Dates are in mm/dd/yyyy. Times are shown in - EST. To modify, update your</span><a href="https://test.signupgenius.rocks/index.cfm?go=m.otherSettings">settings.</a>
+  </div> -->
+</div>
+<sug-ui-dialog
+  [config]="dialogConf"
+  [(visible)]="isVisible"
+  [showHeader]="true"
+  [showFooter]="true"
+>
+  <h2 slot="header">Confirmation</h2>
+  <p class="fs-4">
+    Are you sure you want to remove "{{ selectedItem?.subject }}" message from
+    the list?
+  </p>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Yes"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      styleClass="confirmation-btn"
+      (buttonClick)="deleteScheduleMessage()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>

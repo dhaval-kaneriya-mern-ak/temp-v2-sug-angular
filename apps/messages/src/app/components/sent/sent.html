@@ -1,0 +1,53 @@
+<div class="sent-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+  <h2>Sent Messages</h2>
+  @if(tableData.length > 0) {
+  <sug-ui-table
+    [data]="tableData"
+    [columns]="tableColumns"
+    [totalRecords]="paginationOptions().totalRecords"
+    [paginator]="false"
+    [lazy]="true"
+    [rows]="paginationOptions().rows"
+    [first]="paginationOptions().first"
+    [loading]="isLoading"
+    [config]="tableConfig"
+    (sort)="onSort($event)"
+  >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="fa-solid fa-chart-pie chart-icon"
+          (click)="onActionClick(rowData)"
+          style="cursor: pointer"
+          data-message-id="${rowData.messageid}"
+          title="View message details"
+        ></i>
+      </div>
+    </ng-template>
+  </sug-ui-table>
+  <div class="my-3">
+    <sug-ui-pagination
+      [paginationOptions]="paginationOptions()"
+      [paginationKey]="paginationKey"
+      (selectedPaginationOption)="onPaginationChange($event)"
+    ></sug-ui-pagination>
+  </div>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>No sent messages.</p>
+  </div>
+  }
+</div>
+<div class="sent-content">
+  <router-outlet></router-outlet>
+</div>

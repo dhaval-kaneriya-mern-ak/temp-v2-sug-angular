@@ -1,0 +1,206 @@
+<div class="mobileHeaderMenuWrap">
+  <ul class="mobileHeaderMenuList mobileMenuIconList">
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/index.cfm?go=c.myaccount#/"
+        (click)="onLinkClick()"
+      >
+        <i class="fa-solid fa-clipboard-list"></i>
+        <span>Sign Ups</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/index.cfm?go=t.mygroups#/">
+        <i class="fa-solid fa-users"></i>
+        <span>Groups</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/messages">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span>Messages</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/index.cfm?go=t.reports&memberid=182192759"
+      >
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Reports</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/index.cfm?go=t.protools">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <span>Tools</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/index.cfm?go=o.PGActivation">
+        <i class="fa-solid fa-money-check-dollar"></i>
+        <span>Collect</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/index.cfm?go=o.mypurchases">
+        <i class="fa-solid fa-pager"></i>
+        <span>Billing</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/MyAccount/ResetAdminID/1?switch=true"
+      >
+        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        <span>Switch Account</span>
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
+      >
+        <i class="fa-solid fa-star"></i>
+        <span>Free Premium Trial</span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Main Menu Items -->
+  <ul class="mobileHeaderMenuList">
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/features" (click)="onLinkClick()">
+        Features
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/pricing" (click)="onLinkClick()">
+        Pricing
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/collect-money"
+        (click)="onLinkClick()"
+      >
+        Collect Money
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/resources" (click)="onLinkClick()">
+        Resources & Tips
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/blog" (click)="onLinkClick()">
+        Blog
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a
+        class="mobileHeaderMenuLink"
+        href="/enterprise"
+        (click)="onLinkClick()"
+      >
+        Enterprise
+      </a>
+    </li>
+    <li class="mobileHeaderMenu">
+      <a class="mobileHeaderMenuLink" href="/register" (click)="onLinkClick()">
+        Log In
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- Mobile Header Sidebar -->
+<div class="mobileHeaderSidebar">
+  <button
+    class="closeMenu"
+    (click)="closeMenu()"
+    type="button"
+    aria-label="Close menu"
+  >
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+
+  <!-- Login/Profile Section -->
+  @if (isLoading()) {
+  <div class="loading">
+    <!-- Loader Icon -->
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="animate-spin"
+    >
+      <path
+        d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+        opacity=".25"
+      />
+      <path
+        d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"
+      />
+    </svg>
+  </div>
+  } @else {
+  <!-- Logged In User -->
+  @if (userProfile()) {
+  <div class="loginMoreMenuWrap show-m">
+    <button class="headerMenuLinkButton show-m" type="button">
+      @if (getProfileDisplay()) {
+      <span class="profile-name"> {{ getProfileDisplay() }} </span>
+      } @else { @if (isLoading()) {
+      <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+      <sug-avatar
+        [src]="getProfileImage()"
+        [userName]="getUserFullName()"
+        [width]="34"
+        [height]="34"
+        alt="profile"
+        class="profile-img"
+      ></sug-avatar>
+      } }
+    </button>
+  </div>
+  } @else {
+  <!-- Logged Out State -->
+  <a class="btn btn-text" href="/register" title="Log In or Register">
+    Log In
+  </a>
+  } }
+
+  <!-- Button Wrap -->
+  <div class="btnWrap">
+    <!-- Search Button -->
+    <a class="searchLink" href="/findasignup" aria-label="Find a signup">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </a>
+
+    <!-- Help Button -->
+    <a class="searchLink" href="/support" aria-label="Get support">
+      <i class="fa-solid fa-circle-question"></i>
+    </a>
+
+    <!-- Logout Button -->
+    <a
+      class="searchLink"
+      href="/index.cfm?go=c.logout"
+      aria-label="Log out"
+      (click)="onLogout()"
+    >
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    </a>
+
+    <!-- Admin Button -->
+    <a class="searchLink" href="/admin" aria-label="Admin panel">
+      <i class="fa-solid fa-lock"></i>
+    </a>
+  </div>
+</div>

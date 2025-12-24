@@ -1,0 +1,197 @@
+<footer class="footerStyled">
+  <div class="footer text-black">
+    <div class="container">
+      <div class="footer-container">
+        <div class="row">
+          <div class="mobile-footer d-block d-md-none">
+            <div class="row">
+              <div class="col">
+                <div class="d-flex justify-content-center">
+                  <button
+                    [class]="
+                      'mobileToggleMenu footer-toggle ' +
+                      (isCollapsed ? 'collapsed' : '')
+                    "
+                    (click)="toggleCollapse()"
+                    [attr.aria-expanded]="!isCollapsed"
+                    aria-controls="collapseFooter"
+                    aria-label="Toggle footer menu"
+                    type="button"
+                  >
+                    <i
+                      class="fa-solid fa-xl"
+                      [ngClass]="{
+                      'fa-bars': isCollapsed,
+                      'fa-xmark': !isCollapsed
+                      }"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            *ngFor="let column of footerData.slice(0, 4); let i = index"
+            [class]="
+              'col-6 col-md footer-collapse-content ' +
+              (isCollapsed ? 'd-none' : '')
+            "
+            id="collapseFooter"
+          >
+            <h2 class="d-flex">
+              <ng-container
+                *ngIf="column.title === 'About SignUpGenius'; else regularTitle"
+              >
+                About
+                <span class="d-block d-lg-none mx-1">Us</span>
+                <span class="d-none d-lg-block mx-1">SignUpGenius</span>
+              </ng-container>
+              <ng-template #regularTitle> {{ column.title }} </ng-template>
+            </h2>
+
+            <ul *ngIf="column.links" class="list-group list-group-flush">
+              <li
+                *ngFor="let link of column.links"
+                class="list-group-item border-0 p-0"
+              >
+                <a
+                  [href]="link.href"
+                  class="text-decoration-none"
+                  [attr.aria-label]="link.label"
+                  [target]="link.target || '_self'"
+                  (click)="clickOnLinkHandle()"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-xl col-lg-12">
+            <div class="form-column">
+              <h2>{{ footerData[4].title }}</h2>
+
+              <!-- Buttons -->
+              <div class="d-grid gap-2 mb-2">
+                <a
+                  *ngFor="let button of footerData[4].buttons"
+                  [href]="button.href"
+                  class="btn btn-primary"
+                >
+                  {{ button.label }}
+                </a>
+              </div>
+
+              <!-- Search Input -->
+              <div class="search-input-container">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    [placeholder]="footerData[4].search?.placeholder || ''"
+                    [(ngModel)]="searchQuery"
+                    aria-label="Search Resources"
+                  />
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    (click)="onSearchClick()"
+                    aria-label="Search"
+                  >
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Social Media Icons -->
+              <div class="d-flex justify-content-center social-icons--content">
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link border-0"
+                  href="https://pinterest.com/signupgenius"
+                  target="_blank"
+                  aria-label="Pinterest"
+                >
+                  <i class="fa-brands fa-square-pinterest fa-3x"></i>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link border-0"
+                  href="https://www.facebook.com/signupgenius"
+                  target="_blank"
+                  aria-label="Facebook"
+                >
+                  <i class="fa-brands fa-square-facebook fa-3x"></i>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://twitter.com/signupgenius"
+                  target="_blank"
+                  aria-label="Twitter"
+                >
+                  <i class="fa-brands fa-square-twitter fa-3x"></i>
+                </a>
+                <a
+                  class="social-icon mx-1 p-0 btn btn-link"
+                  href="https://instagram.com/signupgenius"
+                  target="_blank"
+                  aria-label="Instagram"
+                >
+                  <i class="fa-brands fa-square-instagram fa-3x"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-footer">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="d-flex align-items-center gap-3 subfooter-content">
+            <div class="logo">
+              <a routerLink="/" aria-label="Go to homepage">
+                <img
+                  src="./logo-signupgenius-white-r.svg"
+                  alt="SignUpGenius Logo"
+                  class="logo-img"
+                />
+              </a>
+            </div>
+
+            <div class="text-content d-flex">
+              <div class="copyright-text">
+                <p>
+                  ©{{ currentYear }} SignUpGenius, Inc. All Rights Reserved.
+                </p>
+              </div>
+              <div class="d-flex links gap-4 align-items-center">
+                <a href="/privacy" aria-label="Privacy Policy" target="_blank">
+                  Privacy Policy
+                </a>
+                <a
+                  href="/terms-of-service"
+                  aria-label="Terms of Service"
+                  target="_blank"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  class="change-consent pmLink"
+                  aria-label="Do Not Sell My Information"
+                  style="visibility: visible; cursor: pointer"
+                  >Do Not Sell or Share My Personal Information</a
+                >
+                @if(isRocksEnvironment) {
+                <span class="fs-5"><strong>SUG-ANGULAR</strong></span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,531 @@
+<sug-ui-dialog
+  [config]="dialogConfig"
+  [(visible)]="visible"
+  (hide)="closeDialog(true)"
+  [showFooter]="true"
+  [showHeader]="true"
+>
+  <div slot="header" class="flex align-items-center">
+    <span class="font-bold">
+      @if (!groupDialogVisible) { Send this message to... } @else { Update group
+      }
+    </span>
+  </div>
+  @if (!groupDialogVisible) {
+
+  <div class="dialog-content">
+    <form [formGroup]="peopleDialogForm">
+      <div class="radio-option-wrapper">
+        <sug-ui-radio-checkbox-button
+          type="radio"
+          name="peopleSendMessageRadioGroup"
+          formControlName="selectedValue"
+          [options]="currentRadioOptions"
+          (valueChange)="onRadioChange()"
+        >
+          <ng-template #optionTemplate let-option>
+            <span class="radio-label-text">{{ option.label }}</span>
+            @if (option.isPro) {
+            <span class="pro-badge">PRO</span>
+            }
+          </ng-template>
+        </sug-ui-radio-checkbox-button>
+
+        <div class="radio-content-panel">
+          <!-- Form One: Members in Groups -->
+          @if (formType === 'inviteToSignUp' &&
+          peopleDialogForm.get('selectedValue')?.value === 'peopleingroups') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div
+              class="d-flex align-items-center justify-content-between gap-2 w-100"
+            >
+              <sug-ui-multi-select-dropdown
+                [options]="groupOptions"
+                formControlName="selectedGroups"
+                panelStyleClass="custom-dropdown"
+                appendTo="parent"
+              >
+              </sug-ui-multi-select-dropdown>
+              @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){
+              <button
+                type="button"
+                class="edit-signup-btn"
+                (click)="openUpdateGroupsDialog()"
+              >
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+              }
+            </div>
+
+            <!-- Only show "include non-group members" checkbox when specific signups are selected AND they are standard (not RSVP) -->
+            @if (selectedSignups.length > 0 && !isSignUpIndexPageSelected &&
+            selectedTabGroups.length === 0 && isStandardSignup) { @for (item of
+            nonGroupMemberOption; track item) {
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                formControlName="includeNonGroupMembers"
+                [binary]="true"
+                type="checkbox"
+                [options]="[item]"
+              >
+              </sug-ui-radio-checkbox-button>
+            </div>
+            } }
+          </div>
+          }
+
+          <!-- Form One: Manual Emails -->
+          @if (formType === 'inviteToSignUp' &&
+          peopleDialogForm.get('selectedValue')?.value === 'ManuallyEnterEmail')
+          {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <!-- Show "Assign the email entries to" dropdown when Sign Up Index Page is selected -->
+            @if (isSignUpIndexPageSelected || selectedPortalPages.length > 0) {
+            <div class="form-wrapper">
+              <label for="manual-emails-group"
+                >Assign the email entries to</label
+              >
+              <sug-ui-multi-select-dropdown
+                id="manual-emails-group"
+                [options]="groupOptions"
+                panelStyleClass="custom-dropdown"
+                formControlName="manualEmailsGroup"
+                appendTo="parent"
+              >
+              </sug-ui-multi-select-dropdown>
+            </div>
+            }
+            <div class="form-wrapper">
+              <label for="manual-emails"
+                >Enter emails separated by commas or line breaks.</label
+              >
+              <textarea
+                id="manual-emails"
+                placeholder="example@signupgenius.com, example@signupgenius.com"
+                formControlName="manualEmails"
+                rows="5"
+              >
+              </textarea>
+            </div>
+
+            @for (item of groupAliasCheckboxOption; track item) {
+            <div class="d-flex gap-2">
+              <sug-ui-radio-checkbox-button
+                (valueChange)="onAliasCheckboxChange()"
+                formControlName="useGroupAlias"
+                [binary]="true"
+                [inputId]="item.value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <label [for]="item.value"> {{ item.label }} </label>
+            </div>
+            } @if (peopleDialogForm.get('useGroupAlias')?.value) {
+            <div class="form-wrapper mt-2">
+              <label for="group-alias"
+                >If possible, enter individual user's emails in the box above to
+                get the most functionality from our system. If you have a group
+                email alias that sends to multiple people, enter it here:</label
+              >
+              <input
+                id="group-alias"
+                name="group-alias"
+                placeholder="group@signupgenius.com"
+                type="text"
+                pInputText
+                formControlName="groupEmailAlias"
+              />
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Form One: Import Emails -->
+          @if (formType === 'inviteToSignUp' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'ImportEmailFromProvider') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <p class="mb-3">
+              Click a button below to import contacts from your email provider:
+            </p>
+            <div class="social-btn-wrapper">
+              @for (service of cloudSpongeServices; track $index) { @if (service
+              === 'gmail') {
+              <sug-ui-button
+                type="button"
+                [label]="'Gmail'"
+                class="social-btn cloudsponge-launch"
+                icon="fa-solid fa-envelope"
+                (buttonClick)="launchCloudSponge('gmail')"
+                [attr.data-cloudsponge-source]="'gmail'"
+              ></sug-ui-button>
+              } @if (service === 'icloud') {
+              <sug-ui-button
+                type="button"
+                [label]="'iCloud'"
+                class="social-btn cloudsponge-launch"
+                icon="fa-solid fa-cloud"
+                (buttonClick)="launchCloudSponge('icloud')"
+                [attr.data-cloudsponge-source]="'icloud'"
+              ></sug-ui-button>
+              } @if (service === 'windowslive') {
+              <sug-ui-button
+                type="button"
+                [label]="'Windows Live'"
+                class="social-btn cloudsponge-launch"
+                icon="fa-brands fa-microsoft"
+                (buttonClick)="launchCloudSponge('windowslive')"
+                [attr.data-cloudsponge-source]="'windowslive'"
+              ></sug-ui-button>
+              } @if (service === 'yahoo') {
+              <sug-ui-button
+                type="button"
+                [label]="'Yahoo'"
+                class="social-btn email cloudsponge-launch"
+                icon="fa-solid fa-envelope"
+                (buttonClick)="launchCloudSponge('yahoo')"
+                [attr.data-cloudsponge-source]="'yahoo'"
+              ></sug-ui-button>
+              } @if (service === 'aol') {
+              <sug-ui-button
+                type="button"
+                [label]="'AOL'"
+                class="social-btn email cloudsponge-launch"
+                icon="fa-solid fa-envelope"
+                (buttonClick)="launchCloudSponge('aol')"
+                [attr.data-cloudsponge-source]="'aol'"
+              ></sug-ui-button>
+              } @if (service === 'csv') {
+              <sug-ui-button
+                type="button"
+                [label]="'CSV'"
+                class="social-btn email"
+                icon="fa-solid fa-file"
+              ></sug-ui-button>
+              } }
+            </div>
+
+            <!-- Display imported contacts count and status -->
+            @if (cloudSpongeService.isLoading()) {
+            <div class="mt-3 p-3 bg-light rounded">
+              <i class="pi pi-spin pi-spinner me-2"></i>
+              Loading contacts...
+            </div>
+            } @if (cloudSpongeService.hasSelectedContacts()) {
+            <div class="mt-3 p-3 bg-light rounded">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2"
+              >
+                <strong
+                  >{{ cloudSpongeService.selectedContactCount() }} contacts
+                  imported</strong
+                >
+                <sug-ui-button
+                  type="button"
+                  [label]="'Clear'"
+                  [size]="'small'"
+                  [severity]="'danger'"
+                  [outlined]="true"
+                  (buttonClick)="cloudSpongeService.clearSelectedContacts()"
+                ></sug-ui-button>
+              </div>
+              <div class="small text-muted">
+                These contacts will be used when you click "Okay"
+              </div>
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Form One: People I will select (only when sendtotype = 'custom') -->
+          @if (formType === 'inviteToSignUp' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'sendMessagePeopleIselect' && sendtotype?.toLowerCase() === 'custom')
+          {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <!-- Show selected member groups as chips if any -->
+            @if (selectedMemberGroups.length > 0) {
+            <div class="selected-slots-chips gap-3 d-flex">
+              @for (slot of selectedMemberGroups; track slot.id; let i = $index)
+              { @if (i < 2) {
+              <p-chip
+                [label]="
+                  slot.email ||
+                  slot.displayname ||
+                  (slot.firstname && slot.lastname
+                    ? slot.firstname + ' ' + slot.lastname
+                    : 'Unknown')
+                "
+                [removable]="true"
+                (onRemove)="removeSelectedMemberGroup(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              } } @if (selectedMemberGroups.length > 2) {
+              <p-chip
+                [label]="'+' + (selectedMemberGroups.length - 2) + ' more'"
+                [removable]="false"
+                styleClass="custom-chip more-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="
+                  'Edit ' +
+                  recipientCount +
+                  ' recipient' +
+                  (recipientCount !== 1 ? 's' : '')
+                "
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editMemberGroups()"
+              >
+              </sug-ui-button>
+            </div>
+            }
+            <!-- Buttons to select members -->
+            @if (selectedMemberGroups.length === 0) {
+            <div class="btn-wrapper">
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From my groups"
+                (buttonClick)="openFromMyGroupsDialog()"
+              >
+              </sug-ui-button>
+              <!-- Show "From this sign up" button when Sign Up Index Page is NOT selected and exactly 1 signup is selected -->
+              @if (!isSignUpIndexPageSelected && selectedSignups.length === 1) {
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From this sign up"
+                (buttonClick)="openFromThisSignUpDialog(true)"
+              >
+              </sug-ui-button>
+              }
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Form Two: RSVP Responses -->
+          @if (formType === 'emailParticipants' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'specificRsvpResponse') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div class="rsvp-checkbox-group">
+              @for (item of rsvpResponseOptions; track item.value) {
+              <div class="d-flex gap-2">
+                <sug-ui-radio-checkbox-button
+                  type="checkbox"
+                  [formControlName]="'rsvpResponse' + item.value"
+                  [binary]="true"
+                  [inputId]="item.value"
+                >
+                </sug-ui-radio-checkbox-button>
+                <label [for]="item.value"> {{ item.label }} </label>
+              </div>
+              }
+            </div>
+          </div>
+          }
+
+          <!-- Form Two: People in Groups -->
+          @if (formType === 'emailParticipants' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'sendMessagePeopleRadio') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <div
+              class="d-flex align-items-center justify-content-between gap-2 w-100"
+            >
+              <sug-ui-multi-select-dropdown
+                [options]="groupOptions"
+                formControlName="selectedGroups"
+                panelStyleClass="custom-dropdown"
+                appendTo="parent"
+              >
+              </sug-ui-multi-select-dropdown>
+              @if(peopleDialogForm.get('selectedGroups')?.value?.length === 1){
+              <button
+                type="button"
+                class="edit-signup-btn"
+                (click)="openUpdateGroupsDialog()"
+              >
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+              }
+            </div>
+
+            <!-- Only show "include non-group members" checkbox when specific signups are selected AND they are standard (not RSVP) -->
+            @if (selectedSignups.length > 0 && !isSignUpIndexPageSelected &&
+            selectedTabGroups.length === 0 && isStandardSignup) { @for (item of
+            nonGroupMemberOption; track item.value) {
+            <div class="d-flex gap-2">
+              <sug-ui-radio-checkbox-button
+                type="checkbox"
+                formControlName="includeNonGroupMembers"
+                [binary]="true"
+                [inputId]="item.value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <label [for]="item.value"> {{ item.label }} </label>
+            </div>
+            } }
+          </div>
+          }
+
+          <!-- Form Two: People I will select -->
+          @if (formType === 'emailParticipants' &&
+          peopleDialogForm.get('selectedValue')?.value ===
+          'sendMessagePeopleIselect') {
+          <div class="signup-radio-content send-msg-dialog-content">
+            <!-- Show selected slots as chips if any (hide for messageTypeId = 4) -->
+            @if (selectedDateSlots.length > 0) {
+            <div class="selected-slots-chips gap-3 d-flex">
+              @for (slot of selectedDateSlots; track slot.slotitemid; let i =
+              $index) {
+              <p-chip
+                [label]="slot.starttime + ' - ' + slot.item"
+                [removable]="true"
+                (onRemove)="removeSelectedSlot(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="
+                  'Edit ' +
+                  recipientCount +
+                  ' recipient' +
+                  (recipientCount !== 1 ? 's' : '')
+                "
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editSelectedSlots()"
+              >
+              </sug-ui-button>
+            </div>
+            }
+            <!-- Show selected slots as chips if any -->
+            @if (selectedMemberGroups.length > 0) {
+            <div class="selected-slots-chips gap-3 d-flex">
+              @for (slot of selectedMemberGroups; track slot.id; let i = $index)
+              { @if (i < 2) {
+              <p-chip
+                [label]="
+                  messageTypeId === 4
+                    ? slot.email ||
+                      slot.displayname ||
+                      (slot.firstname && slot.lastname
+                        ? slot.firstname + ' ' + slot.lastname
+                        : 'Unknown')
+                    : slot.displayname ||
+                      slot.email ||
+                      (slot.firstname && slot.lastname
+                        ? slot.firstname + ' ' + slot.lastname
+                        : 'Unknown')
+                "
+                [removable]="true"
+                (onRemove)="removeSelectedMemberGroup(i)"
+                styleClass="custom-chip"
+              ></p-chip>
+              } } @if (selectedMemberGroups.length > 2) {
+              <p-chip
+                [label]="'+' + (selectedMemberGroups.length - 2) + ' more'"
+                [removable]="false"
+                styleClass="custom-chip more-chip"
+              ></p-chip>
+              }
+            </div>
+            <!-- Edit recipients button -->
+            <div style="margin-bottom: 15px">
+              <sug-ui-button
+                type="button"
+                [label]="
+                  'Edit ' +
+                  recipientCount +
+                  ' recipient' +
+                  (recipientCount !== 1 ? 's' : '')
+                "
+                [size]="'small'"
+                [severity]="'secondary'"
+                [outlined]="true"
+                (buttonClick)="editMemberGroups()"
+              >
+              </sug-ui-button>
+            </div>
+            }
+            <!-- Buttons to select slots -->
+            @if ((selectedDateSlots.length === 0) && selectedMemberGroups.length
+            === 0) {
+            <div class="btn-wrapper">
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From my groups"
+                (buttonClick)="openFromMyGroupsDialog()"
+              >
+              </sug-ui-button>
+              <!-- Hide "From This Sign Up" button when Sign Up Index Page is selected or multiple signups are selected or messageTypeId is 4 -->
+              @if (!isSignUpIndexPageSelected && selectedSignups.length === 1) {
+              <sug-ui-button
+                type="button"
+                class="add-link-btn"
+                icon=""
+                label="From this sign up"
+                (buttonClick)="openFromThisSignUpDialog(false)"
+              >
+              </sug-ui-button>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="OK"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      (buttonClick)="closeDialog(false)"
+    >
+    </sug-ui-button>
+  </div>
+  } @else {
+  <!-- Update Group Dialog -->
+  <sug-update-group-section
+    [visible]="groupDialogVisible"
+    [selectedGroupId]="peopleDialogForm.get('selectedGroups')?.value?.[0]"
+    (visibleChange)="hideUpdateGroupsDialog()"
+  >
+  </sug-update-group-section>
+  }
+</sug-ui-dialog>
+@if(infoDialog){
+<sug-information-dialog
+  [(visible)]="infoDialog"
+  [title]="'Oops!!'"
+  [message]="infoMessage"
+  (visibleChange)="closeInfoDialog()"
+>
+</sug-information-dialog>
+}

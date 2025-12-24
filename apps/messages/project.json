@@ -1,0 +1,167 @@
+{
+  "name": "messages",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "sug",
+  "sourceRoot": "apps/messages/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:webpack-browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/messages",
+        "index": "apps/messages/src/index.html",
+        "main": "apps/messages/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/messages/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/messages/public"
+          }
+        ],
+        "styles": ["apps/messages/src/styles.scss"],
+        "customWebpackConfig": {
+          "path": "apps/messages/webpack.config.ts"
+        }
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "8kb",
+              "maximumError": "1mb"
+            }
+          ],
+          "outputHashing": "all",
+          "customWebpackConfig": {
+            "path": "apps/messages/webpack.prod.config.ts"
+          }
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/angular:dev-server",
+      "options": {
+        "port": 4202,
+        "publicHost": "http://localhost:4202"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "messages:build:production"
+        },
+        "development": {
+          "buildTarget": "messages:build:development"
+        },
+        "https": {
+          "buildTarget": "messages:build:development",
+          "port": 4202,
+          "host": "messages.signupgenius.rocks",
+          "publicHost": "https://messages.signupgenius.rocks:4202",
+          "ssl": true,
+          "sslCert": "ssl-certs/sug-rocks.crt",
+          "sslKey": "ssl-certs/sug-rocks.key",
+          "disableHostCheck": true,
+          "liveReload": true,
+          "hmr": true,
+          "allowedHosts": ["messages.signupgenius.rocks", "localhost"],
+          "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+          }
+        }
+      },
+      "defaultConfiguration": "development",
+      "dependsOn": ["host:serve"]
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "messages:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/messages"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "messages:build",
+        "port": 4202,
+        "watch": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "messages:build:development"
+        },
+        "production": {
+          "buildTarget": "messages:build:production"
+        }
+      }
+    },
+    "check-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --check apps/messages/",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write apps/messages/",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx prettier --write apps/messages/",
+          "npx nx lint messages --fix"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx prettier --check apps/messages/",
+          "npx nx lint messages"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

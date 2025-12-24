@@ -1,0 +1,139 @@
+.badge-icon {
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: middle;
+  color: #f68b1c;
+}
+
+.custom-tabs {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.custom-tab {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--text-color, #333);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
+
+.custom-tab.active {
+  color: black;
+  font-weight: 600;
+}
+
+.custom-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 4px;
+  background: #f68b1c;
+  border-radius: 3px;
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spacer {
+  height: 10px;
+  display: block;
+  width: auto;
+  overflow: hidden;
+}
+
+.tab-title {
+  font-family: Lato, sans-serif;
+  font-weight: 900;
+  margin: 5px auto;
+  font-size: 36px;
+  line-height: 40px;
+  margin-bottom: 20px;
+  font-style: normal;
+}
+.account-overview {
+  position: relative;
+  z-index: 9;
+  h3 {
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    margin: 0px auto;
+    font-size: 26px;
+    line-height: 32px;
+    padding: 12px 0;
+    font-weight: 400;
+    display: flex;
+    gap: 10px;
+  }
+}
+.compose-subtext {
+  .info-icon {
+    font-size: 13px;
+  }
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+::ng-deep sug-ui-dialog {
+  .p-dialog-header {
+    h2 {
+      font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+      font-size: 26px;
+      line-height: 32rpx;
+      font-weight: 400;
+      margin-bottom: 0;
+    }
+  }
+  .dialog-content {
+    p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    h4 {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+  }
+}
+.info-icon {
+  font-size: 13px;
+}
+::ng-deep p-button {
+  display: flex;
+  .p-button {
+    padding: 0;
+  }
+}
+
+::ng-deep {
+  .p-dialog .p-dialog-header .p-icon {
+    height: 20px;
+    width: 20px;
+  }
+  .p-dialog .p-dialog-header {
+    font-size: 2.25rem;
+    font-weight: normal;
+  }
+  .sug-ui-radio-checkbox-button-container
+    .sug-ui-options-group
+    .sug-ui-option-item
+    .sug-ui-radio-option
+    .sug-ui-option-label {
+    flex: unset !important;
+  }
+}
+
+.loading-signup-text,
+.no-signups-message {
+  padding: 1.5rem;
+}

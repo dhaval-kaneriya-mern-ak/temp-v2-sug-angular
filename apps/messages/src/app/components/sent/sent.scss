@@ -1,0 +1,49 @@
+.sent-messages {
+  h2 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+  ::ng-deep {
+    .table-action-wrapper {
+      .btn-action {
+        padding: 5px;
+        color: #1e293b;
+        &:hover {
+          color: #f68b1c;
+        }
+      }
+    }
+  }
+}
+::ng-deep {
+  .subject-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    .subject-text {
+      color: #222;
+      font-size: 16px;
+    }
+    .sub-text {
+      color: #777;
+      font-size: 11px;
+    }
+  }
+}
+.sent-message-title {
+  margin-bottom: 25px;
+}
+
+::ng-deep .chart-icon {
+  cursor: pointer;
+  color: #f68b1c;
+  font-size: 16px;
+  padding: 4px;
+
+  &:hover {
+    color: #f68b1c;
+    background-color: rgba(0, 123, 255, 0.1);
+    border-radius: 3px;
+  }
+}

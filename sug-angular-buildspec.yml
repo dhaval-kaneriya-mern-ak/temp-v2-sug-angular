@@ -1,0 +1,40 @@
+version: 0.2
+
+env:
+  secrets-manager:
+    API_BASE_URL: "sug-angular-config:API_BASE_URL"
+    REPORTS_URL: "sug-angular-config:REPORTS_URL"
+    MESSAGES_URL: "sug-angular-config:MESSAGES_URL"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Node.js version: $(node -v)"
+      - echo "npm version: $(npm -v)"
+      - echo "Installing project dependencies..."
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Creating .env file from Secrets Manager..."
+      - echo "REPORTS_URL=$REPORTS_URL" > .env
+      - echo "MESSAGES_URL=$MESSAGES_URL" >> .env
+      - echo "Creating environments/environment.ts..."
+
+  build:
+    commands:
+      - echo "Building Angular project..."
+      - npm run build:all
+      - ls -ltrh dist/apps/host
+      - ls -ltrh dist/apps/reports
+      - ls -ltrh dist/apps/messages
+
+  post_build:
+    commands:
+      - echo "Syncing built apps to S3..."
+      - aws s3 sync dist/apps/reports s3://sug-angular-reports/
+      - aws s3 sync dist/apps/host s3://sug-angular-host/
+      - aws s3 sync dist/apps/messages s3://sug-angular-messages/
+      - echo "Build and deployment complete."

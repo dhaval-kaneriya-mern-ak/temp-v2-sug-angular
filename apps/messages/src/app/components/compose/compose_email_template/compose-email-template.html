@@ -1,0 +1,425 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
+
+<div class="compose-container">
+  @if (formValidationErrors && formValidationErrors.length > 0) {
+  <ul class="form-validation-errors">
+    @for (error of formValidationErrors; track error) {
+    <li class="error-item">{{ error }}</li>
+    }
+  </ul>
+  } @if (showRadioButtons) {
+  <div class="radio-selection">
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="size"
+      [options]="radioOptions"
+      inputId="size-selection"
+      [(value)]="selectedValue"
+      (changeEvent)="handleSelection($event)"
+    ></sug-ui-radio-checkbox-button>
+  </div>
+  } @if (!showRadioButtons) {
+  <div>
+    @switch (selectedValue) { @case ('emailoptionone') {
+    <div class="email-form-section">
+      <h3>
+        Create a Reminder Email Template
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="fa-solid fa-circle-question info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <form [formGroup]="reminderEmailForm">
+        <div class="form-wrapper">
+          <label for="signup-links">From</label>
+          <input type="text" formControlName="fromName" id="from-email" />
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">Reply To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            formControlName="replyTo"
+            [options]="subAdminsData"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-subject">Subject</label>
+          <input
+            type="text"
+            placeholder="Enter email subject"
+            formControlName="subject"
+            id="from-subject"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+            formControlName="message"
+          ></textarea>
+        </div>
+        @if (userProfile?.ispro) {
+        <div class="form-wrapper">
+          <label for="attachments">Attachments</label>
+          <sug-ui-button
+            type="button"
+            class="add-link-btn"
+            icon="fa-solid fa-paperclip"
+            label="Add Attachments"
+            (buttonClick)="openSelectFileDialog()"
+          ></sug-ui-button>
+        </div>
+        } @if (selectedAttachment.length > 0) {
+        <div class="form-wrapper">
+          <label for="attachments-list"></label>
+          <div class="attachments-container">
+            <div class="storage-header">
+              <h3>Attachments</h3>
+            </div>
+
+            <!-- Attachments List -->
+            <div class="attachments-list">
+              @for (file of selectedAttachment; track file.id || $index; let i =
+              $index) {
+              <div class="attachment-item">
+                <!-- File Icon and Info -->
+                <div class="attachment-content">
+                  <div class="file-icon-wrapper">
+                    <i
+                      [class]="
+                        'fa-solid ' + getFileTypeIcon(file.title || file.filename || '')
+                      "
+                    ></i>
+                  </div>
+                  <div class="file-details">
+                    <div class="file-header">
+                      <span
+                        class="file-name"
+                        [title]="file.title || file.filename"
+                        >{{ file.title || file.filename }}</span
+                      >
+                      <span class="file-size"
+                        >{{ getFormattedFileSize((file.filesizekb || 0) * 1024)
+                        }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <button
+                  type="button"
+                  class="download-attachment-btn ml-1"
+                  (click)="downloadFile(file)"
+                  aria-label="Download attachment"
+                  title="Download attachment"
+                >
+                  <i class="fa-solid fa-download"></i>
+                </button>
+
+                <!-- Remove Button -->
+                <button
+                  type="button"
+                  class="remove-attachment-btn ml-1"
+                  (click)="removeAttachment(file.id)"
+                  aria-label="Remove attachment"
+                  title="Remove attachment"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              }
+            </div>
+
+            <div class="storage-info">
+              <div class="storage-header">
+                <span class="storage-size"
+                  >{{ getTotalAttachmentSizeFormatted() }} / {{
+                  getMaxAttachmentSizeFormatted() }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+        <div class="form-wrapper">
+          <label for="assign-to">Assign To</label>
+          <sug-ui-multi-select-dropdown
+            id="assign-to"
+            formControlName="assignTo"
+            [options]="signUpOptions"
+            [placeholder]="'Select a Sign Up'"
+            appendTo="parent"
+            panelStyleClass="custom-dropdown"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
+        </div>
+        <div class="btn-wrapper">
+          <sug-ui-button
+            severity="success"
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
+            [disabled]="reminderEmailForm.invalid"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            label="Preview & Save"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } @case ('emailoptiontwo') {
+    <div class="email-form-section email-form-people">
+      <h3>
+        Create a Confirmation Email Template
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="fa-solid fa-circle-question info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <form [formGroup]="confirmationEmailForm">
+        <div class="form-wrapper">
+          <label for="from-email">From</label>
+          <input type="text" formControlName="fromName" id="from-email" />
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">Reply To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            formControlName="replyTo"
+            [options]="subAdminsData"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-subject">Subject</label>
+          <input
+            type="text"
+            placeholder="Enter email subject"
+            formControlName="subject"
+            id="from-subject"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+            formControlName="message"
+          ></textarea>
+        </div>
+        @if (userProfile?.ispro) {
+        <div class="form-wrapper">
+          <label for="attachments">Attachments</label>
+          <sug-ui-button
+            type="button"
+            class="add-link-btn"
+            icon="fa-solid fa-paperclip"
+            label="Add Attachments"
+            (buttonClick)="openSelectFileDialog()"
+          ></sug-ui-button>
+        </div>
+        } @if (selectedAttachment.length > 0) {
+        <div class="form-wrapper">
+          <label for="attachments-list"></label>
+          <div class="attachments-container">
+            <div class="storage-header">
+              <h3>Attachments</h3>
+            </div>
+
+            <!-- Attachments List -->
+            <div class="attachments-list">
+              @for (file of selectedAttachment; track file.id || $index; let i =
+              $index) {
+              <div class="attachment-item">
+                <!-- File Icon and Info -->
+                <div class="attachment-content">
+                  <div class="file-icon-wrapper">
+                    <i
+                      [class]="
+                        'fa-solid ' + getFileTypeIcon(file.title || file.filename || '')
+                      "
+                    ></i>
+                  </div>
+                  <div class="file-details">
+                    <div class="file-header">
+                      <span
+                        class="file-name"
+                        [title]="file.title || file.filename"
+                        >{{ file.title || file.filename }}</span
+                      >
+                      <span class="file-size"
+                        >{{ getFormattedFileSize((file.filesizekb || 0) * 1024)
+                        }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <button
+                  type="button"
+                  class="download-attachment-btn ml-1"
+                  (click)="downloadFile(file)"
+                  aria-label="Download attachment"
+                  title="Download attachment"
+                >
+                  <i class="fa-solid fa-download"></i>
+                </button>
+
+                <!-- Remove Button -->
+                <button
+                  type="button"
+                  class="remove-attachment-btn ml-1"
+                  (click)="removeAttachment(file.id)"
+                  aria-label="Remove attachment"
+                  title="Remove attachment"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              }
+            </div>
+
+            <div class="storage-info">
+              <div class="storage-header">
+                <span class="storage-size"
+                  >{{ getTotalAttachmentSizeFormatted() }} / {{
+                  getMaxAttachmentSizeFormatted() }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+        <div class="form-wrapper">
+          <label for="assign-to">Assign To</label>
+          <sug-ui-multi-select-dropdown
+            id="assign-to"
+            appendTo="parent"
+            panelStyleClass="custom-dropdown"
+            formControlName="assignTo"
+            [options]="signUpOptions"
+            [placeholder]="'Select a Sign Up'"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
+        </div>
+        <div class="btn-wrapper">
+          <sug-ui-button
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
+            severity="success"
+            [disabled]="confirmationEmailForm.invalid"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            label="Preview & Save"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } }
+    <button (click)="handleBackButton()" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+  </div>
+  }
+</div>
+
+<sug-help-dialog
+  [(visible)]="isHelpDialogVisible"
+  [title]="selectedValue === 'emailoptionone' ? 'Help:  Create a reminder email template ' : 'Help: Create a Confirmation Email Template'"
+>
+  <p>
+    A custom reminder email is a powerful way to communicate important details
+    about your upcoming event to the participants. You can include additional
+    text and attachments by creating a custom reminder email template that
+    replaces the standard reminder.
+  </p>
+  <h4>How do I assign my custom reminder email to my sign up(s)?</h4>
+  <p>
+    There are two ways to assign a custom reminder email to a sign up. First,
+    when you create or edit your reminder template, the “Assign To” dropdown
+    allows you to choose one or more sign ups. Additionally, when you are
+    building or editing a specific sign up, you can select a reminder template
+    under “Custom Confirmation Emails & Reminders” in the "Notifications" area
+    of the "Settings" tab.
+  </p>
+  <h4>When will the custom reminder be sent?</h4>
+  <p>
+    The custom reminder uses the same settings as a standard reminder and can be
+    scheduled to go out 1 to 14 days in advance. You can view and edit the
+    reminder email setting under “Notifications” in the "Settings" tab for that
+    particular sign up.
+  </p>
+  <h4>What is the "Reply-to" field?</h4>
+  <p>
+    The reply-to field determines who will receive the message if the recipient
+    replies to the reminder email. Typically, the reply goes to the sign up
+    creator, but you can also choose to have the reply sent to one or more
+    admins who are involved in the sign up. To set up your account admins, visit
+    the "Tools" area of your account page.
+  </p>
+  <h4>How do I edit an existing template?</h4>
+  <p>
+    After you create and save your reminder template, it will be available in
+    the "Drafts & Templates" tab.
+  </p>
+</sug-help-dialog>
+<sug-file-selection-dialog
+  [(visible)]="isSelectFileDialogVisible"
+  (fileSelected)="onFileSelected($event)"
+>
+</sug-file-selection-dialog>
+<sug-preview-email
+  [(visible)]="isPreviewVisible"
+  [showThemeSelection]="!userStateService.isBasicUser()"
+  [saveCustomButton]="true"
+  (saveCustom)="onSaveDraft(messageStatus.DRAFT)"
+  (visibleChange)="onPreviewClose()"
+  (themeChange)="onThemeChange($event)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (Cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>

@@ -1,0 +1,215 @@
+@use '../../config/variable' as *;
+.footerStyled {
+  .footer-collapse-content {
+    margin-bottom: 20px;
+    @media (max-width: 767px) {
+      margin-top: 20px;
+    }
+  }
+  .list-group-item {
+    background-color: transparent;
+    a {
+      color: $primary-color;
+      font-size: 13px;
+      transition: color 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+      &:hover {
+        text-decoration: none;
+        color: $darkorange-color;
+      }
+    }
+  }
+  h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    padding-bottom: 0;
+  }
+  .social-icons--content {
+    margin-top: 50px;
+  }
+  .social-icon {
+    flex: 0 0 34px;
+    height: 34px;
+    width: 34px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: $secondary-color;
+    &:hover,
+    &:focus {
+      outline: none;
+      color: $dark-secondary-color;
+    }
+    .anticon {
+      width: 100%;
+      height: 100%;
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+  .footer {
+    border-top: 6px solid $yellow-color;
+    background: linear-gradient(180deg, #fcebbb 0, #fdfce6 17%);
+    font-family: $helvetica-neue-font;
+    padding: 24px 0;
+  }
+  .footer-container {
+    padding-top: 10px;
+  }
+  .sub-footer {
+    padding: 10px 0;
+    background: $primary-color;
+    color: $white-color;
+    font-size: 1.3rem;
+    .links {
+      a {
+        font-size: 13px;
+        text-decoration: none;
+        color: $white-color;
+      }
+    }
+    .logo {
+      .anticon {
+        display: flex;
+      }
+      img {
+        max-width: 150px;
+        height: auto;
+        color: $white-color;
+      }
+    }
+    .copyright-text {
+      p {
+        font-size: 13px;
+        margin: 0;
+      }
+    }
+    .lumaverselogo {
+      svg {
+        max-width: 130px;
+        height: auto;
+        color: $white-color;
+      }
+    }
+    .text-content {
+      flex: 1 1 auto;
+      gap: 1rem;
+      margin-top: 5px;
+      @media (max-width: 767px) {
+        margin-top: 0;
+      }
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .form-column {
+      max-width: 455px;
+      margin: 0 auto;
+      width: 100%;
+      padding-top: 26px;
+    }
+    .social-icons--content {
+      margin-bottom: 10px;
+      margin-top: 40px;
+    }
+  }
+  @media (max-width: 992px) {
+    .form-column {
+      max-width: 365px;
+    }
+    .sub-footer {
+      .text-content {
+        flex: 0 0 100%;
+        justify-content: center;
+      }
+      .subfooter-content {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  }
+  @media (max-width: 768px) {
+    .form-column {
+      max-width: 465px;
+    }
+    .sub-footer {
+      padding: 16px 0;
+      .text-content {
+        flex-direction: column;
+        gap: 5px;
+        .copyright-text {
+          text-align: center;
+        }
+        .links {
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+.mobileToggleMenu {
+  cursor: pointer;
+  position: relative;
+  right: 16px;
+  border: none;
+  background-color: transparent;
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+  span {
+    background-color: $foreground;
+  }
+  &.footer-toggle {
+    span {
+      background-color: $primary-color;
+    }
+    &:not(.collapsed) span {
+      &:nth-child(2),
+      &:nth-child(3) {
+        opacity: 1;
+        background-color: $primary-color;
+      }
+    }
+  }
+  &:not(.collapsed) {
+    span {
+      background-color: $white-color;
+      opacity: 0;
+      position: relative;
+    }
+    span:nth-child(1) {
+      transform: translateY(-20px);
+    }
+    span:nth-child(2) {
+      transform: rotate(135deg);
+      top: 6px;
+    }
+    span:nth-child(3) {
+      transform: rotate(45deg);
+    }
+    span:nth-child(4) {
+      transform: translateY(20px);
+    }
+  }
+  .toggleMenuSpan {
+    display: block;
+    width: 22px;
+    height: 3px;
+    border-radius: 1px;
+    transition: transform 0.4s cubic-bezier(0.6, 0, 0.1, 1),
+      color 0.2s cubic-bezier(0.6, 0, 0.1, 1),
+      opacity 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+    margin-bottom: 3px;
+  }
+  .toggleMenuSpanSmall {
+    display: block;
+    width: 16px;
+    height: 3px;
+    border-radius: 1px;
+    transition: transform 0.4s cubic-bezier(0.6, 0, 0.1, 1),
+      color 0.2s cubic-bezier(0.6, 0, 0.1, 1),
+      opacity 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+  }
+}

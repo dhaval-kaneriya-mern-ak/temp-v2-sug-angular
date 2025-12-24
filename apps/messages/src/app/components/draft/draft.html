@@ -1,0 +1,117 @@
+<div class="draft-messages">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+  <div class="d-flex align-items-center justify-content-between">
+    <h2 class="pt-2">Drafts & Templates</h2>
+    <div class="search-box mb-3 d-flex align-items-center">
+      <i
+        class="fa-solid fa-magnifying-glass btn-search"
+        title="Search"
+        aria-hidden="true"
+      ></i>
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Search subject..."
+        class="form-control"
+      />
+    </div>
+  </div>
+  @if (tableData.length > 0) {
+  <sug-ui-table
+    [data]="tableData"
+    [columns]="tableColumns"
+    [totalRecords]="paginationOptions().totalRecords"
+    [paginator]="false"
+    [config]="tableConfig"
+    [lazy]="true"
+    [rows]="paginationOptions().rows"
+    [first]="paginationOptions().first"
+    [loading]="isLoading"
+    (sort)="onSort($event)"
+  >
+    <ng-template
+      #actionTemplate
+      let-rowData
+      let-column="column"
+      let-rowIndex="rowIndex"
+    >
+      <div class="table-action-wrapper">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="fa-solid fa-pencil btn-action"
+          (click)="editDraft(rowData)"
+          title="Edit message"
+          style="cursor: pointer"
+        ></i>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <i
+          class="fa-solid fa-trash-can btn-action"
+          (click)="openDeleteDialog(rowData)"
+          title="Delete message"
+          style="cursor: pointer"
+        ></i>
+      </div>
+    </ng-template>
+  </sug-ui-table>
+  <div class="my-3">
+    <sug-ui-pagination
+      [paginationOptions]="paginationOptions()"
+      [paginationKey]="paginationKey"
+      (selectedPaginationOption)="onPaginationChange($event)"
+    ></sug-ui-pagination>
+  </div>
+  } @else {
+  <div class="">
+    <div class="d-flex justify-content-center mb-3">
+      <p>There are no draft and template messages.</p>
+    </div>
+    <div class="d-flex justify-content-center align-items-center gap-2">
+      <sug-ui-button
+        [buttonText]="'Draft a Message'"
+        [severity]="'primary'"
+        [outlined]="false"
+        styleClass="rounded-1"
+        (buttonClick)="navigateToDraft()"
+      ></sug-ui-button>
+      <p class="m-0">or</p>
+      <sug-ui-button
+        [buttonText]="'Create a Template'"
+        [severity]="'primary'"
+        [outlined]="false"
+        styleClass="rounded-1"
+        (buttonClick)="navigateToTemplate()"
+      ></sug-ui-button>
+    </div>
+  </div>
+  }
+</div>
+<sug-ui-dialog
+  [config]="dialogConf"
+  [(visible)]="isVisible"
+  [showHeader]="true"
+  [showFooter]="true"
+>
+  <h2 slot="header">Confirmation</h2>
+  <p class="fs-4">
+    Are you sure you want to delete "{{ selectedItem?.subject }}" draft from the
+    list?
+  </p>
+  <div
+    slot="footer"
+    class="d-flex justify-content-center align-items-center w-100"
+  >
+    <sug-ui-button
+      label="Yes"
+      icon=""
+      [rounded]="false"
+      [size]="'large'"
+      [severity]="'success'"
+      [outlined]="false"
+      styleClass="confirmation-btn"
+      (buttonClick)="closeDeleteDialog()"
+    ></sug-ui-button>
+  </div>
+</sug-ui-dialog>

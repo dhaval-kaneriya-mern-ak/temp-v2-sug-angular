@@ -1,0 +1,260 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
+
+<div class="compose-container">
+  <!-- Main Radio Selection -->
+  @if (showRadioButtons) {
+  <div class="radio-selection">
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="emailOption"
+      [options]="radioOptions"
+      inputId="email-option-selection"
+      [(value)]="selectedValue"
+      (changeEvent)="handleSelection($event)"
+    >
+    </sug-ui-radio-checkbox-button>
+  </div>
+  }
+
+  <!-- Email Form Section -->
+  @if (!showRadioButtons && selectedValue) {
+  <div>
+    <!-- Validation Errors Display -->
+    @if (formValidationErrors && formValidationErrors.length > 0) {
+    <ul class="form-validation-errors">
+      @for (error of formValidationErrors; track error) {
+      <li class="error-item">{{ error }}</li>
+      }
+    </ul>
+    }
+
+    <!-- Email Form Component (Reusable for both form types) -->
+    <sug-email-form
+      [emailForm]="currentForm"
+      [showAttachments]="userProfile?.ispro ? true : false"
+      [formType]="currentFormType"
+      [title]="currentFormTitle"
+      [selectedSignups]="stateService.selectedSignups"
+      [selectedTabGroups]="stateService.selectedTabGroups"
+      [isSignUpIndexPageSelected]="stateService.isSignUpIndexPageSelected"
+      [selectedGroups]="stateService.selectedGroups"
+      [recipientCount]="stateService.recipientCount"
+      [selectedDateSlots]="stateService.selectedDateSlots"
+      [subAdminsData]="stateService.subAdminsData"
+      [selectedMemberGroups]="stateService.selectedMemberGroups"
+      (openSignUpsDialog)="openSignUpsDialog()"
+      (openPeopleDialog)="openPeopleDialog()"
+      (openSelectFileDialog)="openSelectFileDialog()"
+      (openHelpDialog)="openHelpDialog()"
+      (previewAndSend)="onPreviewAndSend(currentFormType)"
+      (saveDraft)="onSaveDraft(messageStatus.DRAFT, undefined, currentFormType)"
+      (showRecipientDetails)="showRecipientDetails()"
+      (editSelectedSlots)="openDateSlotsDialog()"
+      (editSelectedMemberGroups)="openMyGroupDialog()"
+      (openMyGroupDialog)="openMyGroupDialog()"
+      (removeSignupItem)="stateService.removeSignup($event)"
+      (removeTabGroupItem)="stateService.removeTabGroup($event)"
+      (removePortalPageItem)="stateService.removePortalPage($event)"
+      (removeGroupItem)="stateService.removeGroup($event)"
+      (removeSignUpIndexPageItem)="stateService.setSignUpIndexPageSelected(false)"
+      (downloadFileEvent)="onDownloadFile($event)"
+      [selectedPortalPages]="stateService.selectedPortalPages"
+      [selectedAttachments]="stateService.selectedAttachment"
+      [isBasicUser]="getIsBasicUser()"
+      [signUpOptions]="stateService.signUpOptions"
+      [showInlineSignupDropdown]="shouldShowInlineSignupDropdown"
+      (selectedSignupsChange)="handleInlineSignupSelection($event)"
+    >
+    </sug-email-form>
+
+    <!-- Back Button -->
+    <button (click)="handleBackButton()" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+  </div>
+  }
+</div>
+
+<!-- Signup Selection Dialog -->
+<sug-signup-selection-dialog
+  [signUpOptions]="stateService.signUpOptions"
+  [tabGroupsData]="stateService.tabGroupsOptions"
+  [selectedSignups]="stateService.selectedSignups"
+  [selectedPortalPages]="stateService.selectedPortalPages"
+  [selectedTabGroups]="stateService.selectedTabGroups"
+  [isSignUpIndexPageSelected]="stateService.isSignUpIndexPageSelected"
+  (signUpOptionsChange)="stateService.setSignUpOptions($event)"
+  (selectedSignupsChange)="stateService.setSelectedSignups($event)"
+  (selectedPortalPagesChange)="stateService.setSelectedPortalPages($event)"
+  (selectedTabGroupsChange)="stateService.setSelectedTabGroups($event)"
+  (signUpIndexPageSelectedChange)="stateService.setSignUpIndexPageSelected($event)"
+  (signupsSelected)="onSignupsSelected()"
+>
+</sug-signup-selection-dialog>
+
+<!-- Help Dialog -->
+<sug-help-dialog
+  [(visible)]="isHelpDialogVisible"
+  [title]="'Help: Invite People to a Sign Up'"
+>
+  <p>
+    Ready to open the sign up floodgates? Use this page to invite new people to
+    your sign up page by email and get the participation flowing!
+  </p>
+  <h4>
+    Will SignUpGenius send out one email to everyone or individual emails?
+  </h4>
+  <p>
+    We'll send out individual emails to each of your invitees. Your invitees
+    will not know the email addresses of anyone else you invite. You'll be able
+    to confirm that each email was delivered in the "Sent" tab of our Messages
+    area.
+  </p>
+  <h4>Do I need to include a link to my sign up in the message I write?</h4>
+  <p>
+    Nope. We make it easy and include that link for you in the email right
+    underneath the message that you compose. To select which sign up the email
+    <span>DID YOU KNOW...</span>
+  </p>
+
+  <p>
+    SignUpGenius Pro customers can send one email to invite users to multiple
+    sign ups at once or invite them to a group of tabbed sign ups. Learn more
+    about SignUpGenius Pro <a href="">here.</a>
+  </p>
+  <h4>Who will the email come from?</h4>
+  <p>
+    For basic users, when an invitee receives your email, the "from" name in
+    your invitee's email program will show the name that is on your account as
+    the sign up creator. To ensure we comply with spam regulations, the email
+    will come from info@signupgenius.com, but if a user replies to the message,
+    the reply will go to your email address.
+  </p>
+  <span>DID YOU KNOW...</span>
+  <p>
+    SignUpGenius Pro customers have the ability to customize the "from" name
+    (useful if you are writing on behalf of an organization) and can have
+    replies directed to multiple account admins. To set up your account admins,
+    visit the "Pro Tools" area of your account page. Learn more about
+    SignUpGenius Pro <a href="">here.</a>
+  </p>
+  <h4>How do I select the people I want to invite?</h4>
+  <p>
+    We provide lots of options so you can invite as many or as few people as
+    you'd like. If you haven't worked with SignUpGenius previously, you can
+    manually enter emails or import a list of emails from a variety of popular
+    formats. If you've used SignUpGenius before, you can select an existing
+    group of users to send out your invites. Emails that you enter manually or
+    import will automatically be added to the group associated with your sign up
+    so that you can use the list again in the future.
+  </p>
+  <span>DID YOU KNOW...</span>
+  <p>
+    SignUpGenius Pro customers can send messages and invites to multiple email
+    groups at once and can include attachments in their emails. Learn more about
+    SignUpGenius Pro <a href="">here.</a>
+  </p>
+</sug-help-dialog>
+
+<!-- People Selection Dialog -->
+<sug-people-selection-dialog
+  [(visible)]="isPeopleDialogVisible"
+  [messageTypeId]="selectedValue === 'emailoptionone' ? 4 : 1"
+  [formType]="currentFormType"
+  [selectedSignups]="stateService.selectedSignups"
+  [isSignUpIndexPageSelected]="stateService.isSignUpIndexPageSelected"
+  [selectedTabGroups]="stateService.selectedTabGroups"
+  [groupOptions]="stateService.groupOptions"
+  [selectedGroups]="stateService.selectedGroups"
+  [selectedDateSlots]="stateService.selectedDateSlots"
+  [recipientCount]="stateService.recipientCount"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  [peopleSelectionData]="stateService.peopleSelectionData"
+  [sendtotype]="currentSendToType"
+  [selectedCustomUserIds]="selectedCustomUserIds"
+  [hasWaitlistSlots]="hasWaitlistSlots"
+  [selectedPortalPages]="stateService.selectedPortalPages"
+  (selectedGroupsChange)="stateService.setSelectedGroups($event)"
+  (recipientsChange)="stateService.setRecipients($event)"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
+  (selectedRadioOption)="setSelectedRadio($event)"
+  (removeSlot)="stateService.removeSelectedSlot($event)"
+  (removeMemberGroup)="stateService.removeSelectedMemberGroup($event)"
+  (openDateSlotsDialog)="openDateSlotsDialog()"
+  (openMyGroupDialog)="openMyGroupDialog()"
+>
+</sug-people-selection-dialog>
+
+<!-- Date Slots Selection Dialog -->
+<sug-date-slots-selection
+  [(visible)]="isDateSlotsDialogVisible"
+  [selectedSignups]="stateService.selectedSignups"
+  [selectedDateSlots]="stateService.selectedDateSlots"
+  (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="stateService.setRecipients($event)"
+  (slotsSelected)="onDateSlotsSelected()"
+>
+</sug-date-slots-selection>
+
+<!-- My Groups Selection -->
+<sug-my-group-selection
+  [(visible)]="isMyGroupsDialogVisible"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="stateService.setRecipients($event)"
+  (groupMemberSelected)="onMyGroupsSelected()"
+></sug-my-group-selection>
+<!-- Recipient Details Dialog -->
+<sug-recipient-details-dialog
+  [textOption]="false"
+  [(visible)]="isRecipientDialogVisible"
+  [recipients]="stateService.recipients"
+>
+</sug-recipient-details-dialog>
+
+<!-- File Selection Dialog -->
+<sug-file-selection-dialog
+  [(visible)]="isSelectFileDialogVisible"
+  (fileSelected)="onFileSelected($event)"
+>
+</sug-file-selection-dialog>
+<!-- Preview Email Dialog -->
+<sug-preview-email
+  [(visible)]="isPreviewDialogVisible"
+  [showThemeSelection]="!userStateService.isBasicUser(userProfile)"
+  [isScheduledMessage]="messageOriginalStatus === messageStatus.SCHEDULED"
+  [prePopulatedDate]="scheduledDateForPreview"
+  [prePopulatedTime]="scheduledTimeForPreview"
+  (visibleChange)="onPreviewClose()"
+  (themeChange)="onThemeChange($event)"
+  (scheduleEmail)="scheduleEmail($event)"
+  (sendNow)="onSaveDraft(messageStatus.SEND)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>
+<!-- Confirmation Dialog for Unsaved Changes -->
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (Cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>
+
+<sug-ui-dialog [config]="{}" [(visible)]="errorVisible" [showFooter]="true">
+  <h2 slot="header">Error</h2>
+  <div class="row col-sm-12 mb-4">
+    <h4>{{errorMessage}}</h4>
+  </div>
+  <div slot="footer">
+    <button class="send-now-btn" (click)="closeErrorDialog()">OK</button>
+  </div>
+</sug-ui-dialog>

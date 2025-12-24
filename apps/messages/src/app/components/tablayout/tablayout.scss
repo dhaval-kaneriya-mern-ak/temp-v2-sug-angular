@@ -1,0 +1,60 @@
+.message-container {
+  .tab-content {
+    padding-bottom: 20px;
+    font-size: 16px;
+  }
+  .tab-title {
+    font-family: Lato, sans-serif;
+    font-weight: 900;
+    margin-top: 5px;
+    font-size: 36px;
+    line-height: 40px;
+    font-style: normal;
+  }
+
+  // Remove left padding from first tab
+  sug-ui-menu-tabs {
+    ::ng-deep .p-tabs .p-tablist .p-tab:first-child {
+      padding-left: 0 !important;
+    }
+  }
+}
+.link-text {
+  color: var(--p-surface-500);
+  font-size: 11px;
+  line-height: 18px;
+  a {
+    transition: color 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+    text-decoration: none;
+    color: var(--p-primary-500);
+    cursor: pointer;
+  }
+}
+
+.convert-special-banner {
+  display: block;
+  text-align: center;
+  z-index: 8;
+  overflow: hidden;
+  position: relative;
+  min-height: 28px;
+  background-color: #eae6e1;
+  border-radius: 4px;
+  // margin: 35px 400px 20px 400px;
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  #customText {
+    font-weight: 500;
+    line-height: 2.6rem;
+    padding-top: 12px;
+    margin-bottom: 12px;
+    a {
+      color: #f68b1c;
+      border: 1px solid white;
+      border-radius: 4px;
+      padding: 6px;
+      margin-left: 6px;
+      background-color: white;
+      cursor: pointer;
+    }
+  }
+}

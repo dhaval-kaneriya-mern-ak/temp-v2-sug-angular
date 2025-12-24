@@ -1,0 +1,49 @@
+.message-content-details {
+  margin: 20px 0;
+  .content-info {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    .info {
+      width: 50%;
+      font-size: 14px;
+      color: #666;
+      span {
+        color: #777;
+        font-size: 13px;
+      }
+    }
+    .color-info span {
+      color: #f68b1c;
+    }
+    .download-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      ::ng-deep {
+        .p-button {
+          padding: 0;
+          border: none;
+          &:hover,
+          &:active {
+            background: none;
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+::ng-deep {
+  .html-content {
+    .sign-up-genius {
+      img {
+        max-width: fit-content;
+        width: auto;
+        height: revert-layer;
+      }
+    }
+  }
+}

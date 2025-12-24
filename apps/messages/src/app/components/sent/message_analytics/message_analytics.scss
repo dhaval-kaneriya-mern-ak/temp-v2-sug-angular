@@ -1,0 +1,98 @@
+.message-analytics-wrapper {
+  margin: 20px 0;
+  h3 {
+    margin-bottom: 20px;
+  }
+  .stats-wrapper {
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .percentage-warnings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
+
+    .warning-card {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      &.green {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+
+        .warning-icon {
+          color: #28a745;
+        }
+
+        h4 {
+          color: #155724;
+        }
+      }
+
+      &.orange {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+
+        .warning-icon {
+          color: #ffc107;
+        }
+
+        h4 {
+          color: #856404;
+        }
+      }
+
+      &.red {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+
+        .warning-icon {
+          color: #dc3545;
+        }
+
+        h4 {
+          color: #721c24;
+        }
+      }
+
+      .warning-icon {
+        font-size: 32px;
+        font-weight: bold;
+        line-height: 1;
+      }
+
+      .warning-content {
+        flex: 1;
+
+        h4 {
+          margin: 0 0 5px 0;
+          font-size: 24px;
+          font-weight: bold;
+        }
+
+        .warning-title {
+          margin: 0 0 8px 0;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .warning-text {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.4;
+          opacity: 0.9;
+        }
+      }
+    }
+  }
+}

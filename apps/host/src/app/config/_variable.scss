@@ -1,0 +1,124 @@
+@use 'sass:map';
+
+// SCSS Color Variables
+$background: #ffffff;
+$background-grey: #f4f4f5;
+$foreground-77: #777;
+$foreground-4a: #4a4a4a;
+$foreground: #222;
+$primary-color: #f68b1c;
+$primary-color-300: #fabd7e;
+$primary-color-light: #fff590;
+$secondary-color: #acc034;
+$secondary-color-dark: #9eb030;
+$black-color: #000;
+$white-color: #fff;
+$darkorange-color: #d67109;
+$dark-secondary-color: #9eb030;
+$border-d9: #d9d9d9;
+$gray-8d: #8d8d8d;
+$yellow-color: #fefde6;
+$bg-grey: #f4f4f4;
+$gray-cd: #cdcdcd;
+$yellow-color-ff: #fff37c;
+$yellow-color-fe: #fefde6;
+$yellow-color-fff5: #fff5af;
+$secondary-color-3b: #3b1f10;
+$gray-b3: #b3b3b3;
+$gray-55: #555;
+$gray-f5: #f5f5f5;
+$gray-dd: #ddd;
+$primary-hover: #d67109;
+$grey-f6: #6f6f6f;
+$grey-B4: #b4b4b4;
+$grey-f8: #f8f8f8;
+$grey-d7: #d7e1e6;
+$grey-d4: #d4d5d5;
+$grey-ada: #adadad;
+$grey-f9: #f9f9fa;
+$orange-f89: #f89f43;
+$orange-color-f4: #f4810a;
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #{$background};
+    --foreground: #{$foreground};
+  }
+}
+
+$lato-font: 'Lato', serif;
+$helvetica-neue-font: 'Helvetica Neue';
+
+// Breakpoints
+$breakpoints: (
+  xs: '(min-width: 480px)',
+  sm: '(min-width: 576px)',
+  md: '(min-width: 768px)',
+  lg: '(min-width: 992px)',
+  xl: '(min-width: 1200px)',
+  xxl: '(min-width: 1600px)',
+);
+
+$breakpointsDown: (
+  xs: '(max-width: 479px)',
+  sm: '(max-width: 575px)',
+  md: '(max-width: 767px)',
+  lg: '(max-width: 991px)',
+  xl: '(max-width: 1199px)',
+  xxl: '(max-width: 1599px)',
+);
+
+// Spacing Values
+$spacing-values: (0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32);
+
+// Size Values
+$size-values: (1, 2, 4, 8, 10, 12, 14, 16, 20, 24, 32, 36, 40, 44);
+
+// Font Sizes
+$font-sizes: (6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36, 48, 60);
+
+// Font Weights
+$font-weights: (300, 400, 500, 600, 700, 800, 900);
+
+// Radius Values
+$radius-values: (0, 2, 4, 6, 8, 12, 16, 24, 1000);
+
+// Display Values
+$display-values: ('none', 'block', 'inline', 'inline-block', 'flex', 'grid');
+
+// Align Items Values
+$align-items-values: (
+  'center',
+  'start',
+  'end',
+  'flex-start',
+  'flex-end',
+  'baseline'
+);
+
+// Justify Content Values
+$justify-content-values: (
+  'center',
+  'start',
+  'end',
+  'flex-start',
+  'flex-end',
+  'space-between',
+  'space-around',
+  'space-evenly'
+);
+
+// Flex Direction Values
+$flex-direction-values: ('column', 'column-reverse', 'row', 'row-reverse');
+
+// Text Align Values
+$text-align-values: ('start', 'center', 'end', 'left', 'right', 'justify');
+
+// Rem Conversion Function
+@function rem($px-value) {
+  $ratio: 16; // Set according to the project configuration ratio
+  @if type-of($px-value) == 'list' {
+    $px-value: nth($px-value, 1);
+  }
+  @return ($px-value / $ratio) * 1rem;
+}

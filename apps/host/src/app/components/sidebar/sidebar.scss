@@ -1,0 +1,71 @@
+@use '../../config/variable' as *;
+.sidebar-wrapper {
+  width: 70px;
+  height: 100%;
+  z-index: 1000;
+  padding-top: 30px;
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+.sidebar-nav {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  .sidebar-nav-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: transform 0.2s cubic-bezier(0.6, 0, 0.1, 1),
+      background-color 0.2s cubic-bezier(0.6, 0, 0.1, 1),
+      margin 0.2s cubic-bezier(0.6, 0, 0.1, 1);
+    text-align: center;
+  }
+  .sidebar-nav-link {
+    color: $foreground-77;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    .sidebar-nav-label {
+      display: block;
+      line-height: 24px;
+      @media (max-width: 767px) {
+        display: none;
+      }
+    }
+    svg {
+      color: $border-d9;
+    }
+  }
+  .sidebar-nav-item {
+    width: 100%;
+    &:hover {
+      .sidebar-nav-icon {
+        background-color: $primary-color;
+      }
+      svg {
+        color: $white-color;
+      }
+      .sidebar-nav-link {
+        color: $primary-color;
+      }
+    }
+    &.active {
+      .sidebar-nav-icon {
+        background-color: $foreground-77;
+      }
+      svg {
+        color: $white-color;
+      }
+      .sidebar-nav-link {
+        color: $foreground;
+      }
+    }
+  }
+}

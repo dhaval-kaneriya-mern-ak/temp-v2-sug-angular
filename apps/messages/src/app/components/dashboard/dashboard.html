@@ -1,0 +1,131 @@
+<div class="row">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+  <div class="dashboard-stats col-md-12">
+    <div class="account-overview">
+      <h3><span>{{ getCurrentMonthName() }}</span> Messaging Overview</h3>
+    </div>
+    <div class="plan pt-3">
+      <p><strong>Plan:</strong> {{ planName }}</p>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-6 align-content-center">
+        <div class="progressbar col-sm-12">
+          <sug-ui-progress-bar
+            [value]="progressTodayValue"
+            [max]="progressTodayMaxValue"
+            type="default"
+            [striped]="false"
+            [animated]="false"
+            [showLabel]="true"
+            [label]="progressToday"
+          ></sug-ui-progress-bar>
+        </div>
+        <div class="progressbar col-sm-12">
+          <sug-ui-progress-bar
+            [value]="progressMonthValue"
+            [max]="progressMonthMaxValue"
+            type="default"
+            [striped]="false"
+            [animated]="false"
+            [showLabel]="true"
+            [label]="progressMonth"
+          ></sug-ui-progress-bar>
+        </div>
+        <div class="progressbar col-sm-12">
+          <sug-ui-progress-bar
+            [value]="progressTextMessageValue"
+            [max]="progressTextMessageMaxValue"
+            type="default"
+            [striped]="false"
+            [animated]="false"
+            [showLabel]="true"
+            [label]="progressTextMessage"
+          ></sug-ui-progress-bar>
+        </div>
+      </div>
+
+      @if (hasDeliveryStats) {
+      <div class="col-12 col-sm-6 col-md-3">
+        <sug-ui-delivery-stats
+          [deliveryStats]="deliveryStats"
+          columnClass="col-12"
+        >
+        </sug-ui-delivery-stats>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <div class="chart-container">
+          <p-chart
+            type="pie"
+            [data]="chartData"
+            [options]="chartOptions"
+            [plugins]="chartPlugins"
+          ></p-chart>
+        </div>
+      </div>
+      }
+    </div>
+    <div class="account-overview">
+      <h3>Recently Sent</h3>
+    </div>
+    @if(tableData.length > 0) {
+    <sug-ui-table
+      [data]="tableData"
+      [columns]="tableColumns"
+      [(selection)]="selectedItems"
+      [paginator]="false"
+      [responsiveLayout]="'scroll'"
+    >
+      <ng-template
+        #actionTemplate
+        let-rowData
+        let-column="column"
+        let-rowIndex="rowIndex"
+      >
+        <div class="table-action-wrapper">
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+          <i
+            class="fa-solid fa-chart-pie chart-icon"
+            (click)="onActionClick(rowData)"
+            style="cursor: pointer"
+            data-message-id="${rowData.messageid}"
+            title="View message details"
+          ></i>
+        </div>
+      </ng-template>
+      <ng-template #footerTemplate>
+        <tr>
+          <td colspan="4">
+            <div class="text-end p-1">
+              <sug-ui-button
+                icon=""
+                size="small"
+                varient="outlined"
+                [rounded]="false"
+                styleClass="bg-white rounded-1 text-black"
+                [raised]="false"
+                label="View More"
+                (buttonClick)="onViewMore()"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </sug-ui-table>
+    } @else {
+    <div class="justify-content-center d-flex">
+      <p>No recent messages.</p>
+    </div>
+    }
+  </div>
+  <!-- <div class="recent-activity">
+    <h3>Recent Activity</h3>
+    <ul>
+      <li>Message sent to John Doe - 2 minutes ago</li>
+      <li>Draft saved for "Weekly Newsletter" - 15 minutes ago</li>
+      <li>Message scheduled for tomorrow - 1 hour ago</li>
+    </ul>
+  </div> -->
+</div>

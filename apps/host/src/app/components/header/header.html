@@ -1,0 +1,434 @@
+<header class="headerStyledMain">
+  <div class="container">
+    <div class="headerStyled">
+      <!-- Solutions Menu Toggle -->
+      <div class="signupSolutionWrap" #extendedWrapRef>
+        <button
+          class="toggleIcon"
+          (click)="toggleVisibility()"
+          (keydown.enter)="toggleVisibility()"
+          (keydown.space)="toggleVisibility()"
+          type="button"
+          aria-label="Toggle Solutions Menu"
+          [attr.aria-expanded]="isVisible()"
+        >
+          <!-- Discovery Trigger Icon - replace with your icon component -->
+          <svg
+            id="discovery-menu-trigger"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <defs></defs>
+            <path
+              id="discovery-trigger"
+              d="m6,2v2c0,1.1-.9,2-2,2h-2c-1.1,0-2-.9-2-2v-2C0,.9.9,0,2,0h2c1.1,0,2,.9,2,2ZM11,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm7,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2ZM4,7h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm7,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm7,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm-14,7h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm7,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Zm7,0h-2c-1.1,0-2,.9-2,2v2c0,1.1.9,2,2,2h2c1.1,0,2-.9,2-2v-2c0-1.1-.9-2-2-2Z"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Extended Solutions Menu -->
+        @if (isVisible()) {
+        <div
+          class="extendedWrap"
+          role="region"
+          aria-labelledby="solutions-menu"
+        >
+          <h5>Explore SignUpGenius Solutions</h5>
+          <div class="explore-giving">
+            <a
+              class="discoverLogo"
+              href="auctionUrl"
+              target="_blank"
+              aria-label="Explore Auction - Online Auctions"
+              id="auction"
+            >
+              <img src="/auction.png" alt="Auctions" width="40" height="40" />
+              <div class="discoverInfo">
+                <h5>Auctions</h5>
+                <span>Online Auctions</span>
+              </div>
+            </a>
+
+            <a
+              class="discoverLogo"
+              href="donationUrl"
+              target="_blank"
+              aria-label="Explore Giving - Fundraising and donations"
+            >
+              <img
+                src="/giving-icon.webp"
+                alt="Donations"
+                width="40"
+                height="40"
+              />
+              <div class="discoverInfo">
+                <h5>Donations</h5>
+                <span>Fundraising and Donations</span>
+              </div>
+            </a>
+
+            <a
+              class="discoverLogo"
+              href="ticketUrl"
+              target="_blank"
+              aria-label="Tickets - Event ticketing"
+            >
+              <img
+                src="/tickets-icon.png"
+                alt="Tickets"
+                width="40"
+                height="40"
+              />
+              <div class="discoverInfo">
+                <h5>Tickets</h5>
+                <span>Event Ticketing</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Logo -->
+      <a href="/" aria-label="Go to home page">
+        <img
+          class="logoImage"
+          src="/logo-signupgenius.svg"
+          alt="SignUpGenius-logo"
+          width="144"
+          height="45"
+        />
+      </a>
+
+      <!-- Main Navigation Menu -->
+      <ul class="headerMenuWrap">
+        <li class="headerMenu">
+          <a class="headerMenuLink" href="/features" aria-label="Features page">
+            Features
+          </a>
+        </li>
+        <li class="headerMenu">
+          <a class="headerMenuLink" href="/pricing" aria-label="Pricing page">
+            Pricing
+          </a>
+        </li>
+        <li class="headerMenu show-d">
+          <a
+            class="headerMenuLink"
+            href="/how-to-use/collect-money"
+            aria-label="Collect Money page"
+          >
+            Collect Money
+          </a>
+        </li>
+        <li class="headerMenu show-m">
+          <a
+            class="headerMenuLink"
+            href="/how-to-use/collect-money"
+            aria-label="Collect Money page"
+          >
+            Collect
+          </a>
+        </li>
+
+        <!-- More Menu -->
+        <li class="headerMenu" #moreMenuRef>
+          <button
+            (click)="showMoreMenu()"
+            (keydown.enter)="showMoreMenu()"
+            (keydown.space)="showMoreMenu()"
+            class="headerMenuLinkBtn"
+            [class.menu-show]="moreMenu()"
+            [class.menu-hide]="!moreMenu()"
+            type="button"
+            aria-label="Show more options"
+          >
+            <span class="more-menu-button">
+              <span>More</span>
+              <i class="fa-solid fa-caret-down caret-icon"></i>
+            </span>
+          </button>
+          <ul
+            class="extendedMenuWrap"
+            [class.open-menu]="moreMenu()"
+            [class.hide-menu]="!moreMenu()"
+            role="menu"
+            [attr.aria-hidden]="!moreMenu()"
+          >
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseMoreMenu()"
+                class="extendedMenuLink"
+                href="/resources"
+                aria-label="Resources & Tips"
+              >
+                Resources & Tips
+              </a>
+            </li>
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseMoreMenu()"
+                class="extendedMenuLink"
+                href="/blog"
+                aria-label="Blog page"
+              >
+                Blog
+              </a>
+            </li>
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseMoreMenu()"
+                class="extendedMenuLink"
+                href="/enterprise"
+                aria-label="Enterprise page"
+              >
+                Enterprise
+              </a>
+            </li>
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseMoreMenu()"
+                class="extendedMenuLink"
+                href="'https://support.signupgenius.com/hc/en-us'"
+                aria-label="Help & Support"
+              >
+                Help
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- Right Side Actions -->
+      <div class="headerRightWrap">
+        <!-- Create Button -->
+        <a
+          class="btn btn-primary show-m"
+          href="/index.cfm?go=w.Welcome&prior=w.createSignUp&formName=registerForm"
+        >
+          Create
+        </a>
+        <a
+          class="btn btn-primary show-d"
+          href="/index.cfm?go=w.Welcome&prior=w.createSignUp&formName=registerForm"
+        >
+          Create a Sign Up
+        </a>
+
+        <!-- Login/Profile Section -->
+        @if (isLoading()) {
+        <div class="loading">
+          <!-- Loader Icon -->
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="animate-spin"
+          >
+            <path
+              d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+              opacity=".25"
+            />
+            <path
+              d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"
+            />
+          </svg>
+        </div>
+        } @else {
+        <!-- Logged In User -->
+        @if (userProfile()) {
+        <div #moreLoginMenuRef class="loginMoreMenuWrap">
+          <button
+            (click)="showLoginMoreMenu()"
+            (keydown.enter)="showLoginMoreMenu()"
+            (keydown.space)="showLoginMoreMenu()"
+            class="headerMenuLinkBtn"
+            [class.menu-show]="moreLoginMenu()"
+            [class.menu-hide]="!moreLoginMenu()"
+            type="button"
+            aria-label="Show more options"
+          >
+            @if (getProfileDisplay()) {
+            <span class="profile-name"> {{ getProfileDisplay() }} </span>
+            } @else { @if (isLoading()) {
+            <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+            <sug-avatar
+              [src]="getProfileImage()"
+              [userName]="getUserFullName()"
+              [width]="34"
+              [height]="34"
+              alt="profile"
+              class="profile-img"
+            ></sug-avatar>
+            } }
+          </button>
+
+          <!-- User Menu Dropdown -->
+          <ul
+            class="extendedMenuWrap extendedLoginMenuWrap"
+            [class.open-menu]="moreLoginMenu()"
+            [class.hide-menu]="!moreLoginMenu()"
+            role="menu"
+            [attr.aria-hidden]="!moreLoginMenu()"
+          >
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/myaccount"
+                aria-label="Sign Ups"
+              >
+                Sign Ups
+              </a>
+            </li>
+
+            @if (hasUserRoles()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/MyAccount/ResetAdminID/1?switch=true"
+                aria-label="Switch Account"
+              >
+                Switch Account
+              </a>
+            </li>
+            }
+
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/index.cfm?go=m.editprofile&memberid=166042"
+                aria-label="Settings"
+              >
+                Settings
+              </a>
+            </li>
+
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/index.cfm?go=o.mypurchases"
+                aria-label="Billing"
+              >
+                Billing
+              </a>
+            </li>
+
+            @if (!isUserPro()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
+                aria-label="Free Premium Trial"
+              >
+                Free Premium Trial
+              </a>
+            </li>
+            }
+
+            <li class="extendedMenu">
+              <a
+                class="extendedMenuLink"
+                href="/index.cfm?go=c.logout"
+                aria-label="Logout"
+                (click)="handleLogout()"
+              >
+                Log Out
+              </a>
+            </li>
+
+            @if (isUserAdmin()) {
+            <li class="extendedMenu">
+              <a
+                (click)="handleCloseLoginMoreMenu()"
+                class="extendedMenuLink"
+                href="/admin"
+                aria-label="Admin"
+              >
+                <i class="fa-solid fa-lock"></i> Admin
+              </a>
+            </li>
+            }
+          </ul>
+        </div>
+        } @else {
+        <!-- Logged Out State -->
+        <a class="btn btn-text" href="'/register'" title="Log In or Register">
+          Log In
+        </a>
+        } }
+
+        <!-- Search Link -->
+        <a
+          class="searchLink desktop-search"
+          href="/findasignup"
+          aria-label="Search for a Sign Up"
+        >
+          <!-- Search Icon -->
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </a>
+
+        <!-- Mobile Menu Toggle -->
+        <button
+          class="toggle-menu"
+          [class.collapsed]="!mobileMenu()"
+          (click)="openMobileMenu()"
+          aria-label="Toggle mobile menu"
+          [attr.aria-expanded]="mobileMenu()"
+        >
+          <div class="mobileToggleMenu">
+            <!-- <span class="toggleMenuSpan"></span
+            ><span class="toggleMenuSpan"></span
+            ><span class="toggleMenuSpan"></span
+            ><span class="toggleMenuSpanSmall"></span> -->
+            <i class="fa-solid fa-bars fa-2xl"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div
+    class="mobileHeaderWrap"
+    [class.show-menu]="mobileMenu()"
+    [class.hide-menu]="!mobileMenu()"
+    role="region"
+    [attr.aria-hidden]="!mobileMenu()"
+  >
+    <sug-mobile-menu
+      (closeMenuRequested)="clickOnLinkHandle()"
+      (linkClick)="clickOnLinkHandle()"
+      (logout)="handleLogout()"
+    ></sug-mobile-menu>
+  </div>
+</header>
+@if(showSubAdminHeader()) {
+<header class="subAdminHeader">
+  <span>YOU ARE LOGGED IN AS AN ADMIN FOR:</span>
+  <span> {{ getAdminAccountName() }} --</span>
+  <span>
+    <a
+      class="subAdminMenuLink"
+      href="/index.cfm?go=m.mypermissions"
+      aria-label="View my permissions"
+    >
+      View my permissions
+    </a>
+    |
+    <a
+      class="subAdminMenuLink"
+      href="/MyAccount/ResetAdminID/1?switch=true"
+      aria-label="Switch to another account"
+    >
+      Switch to another account
+    </a>
+  </span>
+</header>
+}

@@ -1,0 +1,39 @@
+.account-overview {
+  h3 {
+    margin: 10px auto;
+    font-size: 26px;
+    line-height: 32px;
+    font-weight: 400;
+  }
+}
+.plan {
+  p {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+}
+::ng-deep sug-ui-progress-bar {
+  .progress-bar {
+    color: #004d40 !important;
+    overflow: visible !important;
+  }
+}
+
+::ng-deep .chart-icon {
+  cursor: pointer;
+  color: #f68b1c;
+  font-size: 16px;
+  padding: 4px;
+
+  &:hover {
+    color: #f68b1c;
+    background-color: rgba(0, 123, 255, 0.1);
+    border-radius: 3px;
+  }
+}
+
+::ng-deep {
+  .delivery-stats-list li.delivery-stat-item {
+    padding: 0 !important;
+  }
+}

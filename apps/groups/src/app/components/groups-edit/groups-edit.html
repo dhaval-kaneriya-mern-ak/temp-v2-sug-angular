@@ -1,0 +1,146 @@
+<div class="group-list">
+  <sug-ui-loading-spinner
+    [isLoading]="isLoading()"
+    [isFullPageLoader]="true"
+  ></sug-ui-loading-spinner>
+  <h2 class="text-2xl font-bold mb-4">Group Members</h2>
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="groups-list">
+      <sug-ui-loading-spinner
+        [isLoading]="isLoading()"
+        [isFullPageLoader]="true"
+      ></sug-ui-loading-spinner>
+      <div class="d-flex gap-3 flex-wrap justify-content-between mb-4">
+        <div class="dropdown-container">
+          <div class="dropdown-item">
+            Sort By
+            <sug-ui-select-box
+              [options]="sortByOptions"
+              [initialSelectedOption]="selectedSortBy"
+              design="sort"
+            ></sug-ui-select-box>
+          </div>
+          <div class="dropdown-item">
+            Order
+            <sug-ui-select-box
+              [options]="sortOrderOptions"
+              [initialSelectedOption]="selectedSortOrder"
+              design="sort"
+            ></sug-ui-select-box>
+          </div>
+          <div></div>
+        </div>
+        <div class="search-input-container">
+          <div class="search-box mb-3 d-flex">
+            <i
+              class="fa-solid fa-magnifying-glass btn-search"
+              title="Search"
+              aria-hidden="true"
+            ></i>
+            <input
+              type="text"
+              [formControl]="searchControl"
+              placeholder="Search Member..."
+              class="form-control"
+            />
+          </div>
+          <sug-ui-button
+            [buttonText]="'Add Member'"
+            [severity]="'primary'"
+            [outlined]="false"
+            icon="pi pi-plus"
+            styleClass="rounded-1"
+          >
+          </sug-ui-button>
+        </div>
+      </div>
+      <!-- 🔹 Templates OUTSIDE table -->
+      <ng-template #nameTemplate let-row>
+        <div class="d-flex align-items-center gap-2">
+          <!-- PROFILE IMAGE -->
+          <img
+            *ngIf="row.showImage"
+            [src]="row.profilePicUrl"
+            class="avatar-img"
+            (error)="row.showImage = false"
+            alt="Profile Picture"
+          />
+
+          <!-- INITIALS FALLBACK -->
+          <div
+            *ngIf="!row.showImage"
+            class="avatar-fallback"
+            [style.background]="row.bgColor"
+            [style.color]="row.textColor"
+          >
+            {{ row.initials }}
+          </div>
+
+          <span>{{ row.firstname }} {{ row.lastname }}</span>
+        </div>
+      </ng-template>
+      <ng-template #actionTemplate let-rowData>
+        <div class="d-flex justify-content-end gap-3">
+          <i class="fa-solid fa-circle-info"></i>
+          <i
+            class="fa-solid fa-trash-can btn-action"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Delete member ' + rowData.firstname + ' ' + rowData.lastname"
+            (click)="openDeleteDialog(rowData)"
+            (keydown.enter)="openDeleteDialog(rowData)"
+            (keydown.space)="openDeleteDialog(rowData)"
+            title="Delete member"
+          ></i>
+        </div>
+      </ng-template>
+
+      <!-- 🔹 Table -->
+      <sug-ui-table
+        *ngIf="tableColumns().length"
+        [data]="tableData()"
+        [columns]="tableColumns()"
+        [totalRecords]="paginationOptions().totalRecords"
+        [rows]="paginationOptions().rows"
+        [first]="paginationOptions().first"
+        [loading]="isLoading()"
+        (sort)="onTableHeaderSort($event)"
+      >
+      </sug-ui-table>
+
+      <div class="my-3">
+        <sug-ui-pagination
+          [paginationOptions]="paginationOptions()"
+          [paginationKey]="paginationKey"
+          (selectedPaginationOption)="onPaginationChange($event)"
+        ></sug-ui-pagination>
+      </div>
+    </div>
+  </div>
+</div>
+<sug-ui-dialog
+  [config]="deletedialogConf"
+  [(visible)]="isDeleteDialogVisible"
+  [showHeader]="false"
+  [showFooter]="false"
+>
+  <div class="delete-confirmation p-4 text-center">
+    <h3 class="mb-2">Are you sure?</h3>
+    <p class="mb-4">
+      You are about to delete the member "{{ selectedMemberToDelete?.firstname
+      }} {{ selectedMemberToDelete?.lastname }}".
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <sug-ui-button
+        label="Remove"
+        icon=""
+        [rounded]="false"
+        [size]="'large'"
+        [severity]="'success'"
+        [outlined]="false"
+        styleClass="confirmation-btn"
+        (buttonClick)="confirmDeleteMember()"
+      ></sug-ui-button>
+    </div>
+  </div>
+</sug-ui-dialog>

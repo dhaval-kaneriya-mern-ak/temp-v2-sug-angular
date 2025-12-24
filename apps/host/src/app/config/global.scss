@@ -1,0 +1,254 @@
+@use 'sass:map';
+@use './_variable' as *;
+@use './_form' as *;
+@use './_button' as *;
+@use 'primeicons/primeicons.css'; // required to add this line
+@use 'bootstrap/scss/bootstrap.scss'; // required to add this line
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'); // required to add this line
+@import 'ngx-toastr/toastr';
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Bold.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Bold.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Bold.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Bold.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Bold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Heavy.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Heavy.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Heavy.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Heavy.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Heavy.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Black.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Black.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Black.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Black.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Black.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Medium.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Medium.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Medium.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Medium.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Light.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Light.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Light.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Light.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Roman.eot');
+  src: url('/fonts/helvetica_neue/HelveticaNeue-Roman.eot?#iefix')
+      format('embedded-opentype'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Roman.woff2') format('woff2'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Roman.woff') format('woff'),
+    url('/fonts/helvetica_neue/HelveticaNeue-Roman.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body {
+  font-size: 12px;
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-size: 14px;
+  color: $foreground;
+  background: $background;
+  font-family: $lato-font;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Helvetica Neue';
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: 0.2s all;
+  &:hover {
+    color: $primary-hover;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+.container {
+  margin: 0 auto;
+  @media (min-width: 576px) {
+    max-width: 100%;
+  }
+  @media (min-width: 992px) {
+    max-width: 970px;
+  }
+  @media (min-width: 1200px) {
+    max-width: 1170px;
+  }
+}
+.show-m {
+  display: block;
+  @media (min-width: 992px) {
+    display: none;
+  }
+}
+.show-d {
+  display: none;
+  @media (min-width: 992px) {
+    display: block;
+  }
+}
+.show-md {
+  display: none;
+  @media (min-width: 768px) {
+    display: block;
+  }
+}
+img {
+  max-width: 100%;
+  height: auto;
+  width: 100%;
+}
+.underline {
+  text-decoration: underline;
+}
+.socialIcons {
+  display: flex;
+  gap: 10px;
+  svg {
+    width: 30px;
+    height: 30px;
+    color: $primary-color;
+    border-radius: 2px;
+  }
+  &.greyIcon {
+    svg {
+      width: 24px;
+      height: 24px;
+      color: $secondary-color;
+      filter: grayscale(100%);
+    }
+  }
+}
+label {
+  margin-bottom: 10px;
+}
+textarea {
+  padding: 10px 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  &:focus {
+    box-shadow: none;
+    border: none;
+    outline: none;
+  }
+}
+.p-tabs {
+  .p-tablist {
+    overflow: auto;
+  }
+}
+input,
+textarea {
+  height: 36px;
+}
+::ng-deep {
+  .p-button,
+  .p-multiselect-label.p-placeholder {
+    line-height: 21px;
+  }
+}
+.back-btn {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background: transparent;
+  border: none;
+  color: #f68b1c;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 16px;
+  .pi {
+    font-size: 14px;
+  }
+}
+.help-dialog-content {
+  span {
+    color: #acc034;
+  }
+}
+.p-dialog {
+  max-width: 95vw !important;
+  .p-dialog-header .p-dialog-header-actions {
+    .p-dialog-close-button {
+      font-size: 18px;
+      color: #f68b1c;
+    }
+  }
+}
+.dialog-overflow-visible {
+  overflow: visible !important;
+}
+
+.badge.yellow {
+  color: black !important;
+}
+
+sug-ui-pagination {
+  .custom-paginator-container {
+    .p-paginator {
+      padding: 0;
+    }
+  }
+}

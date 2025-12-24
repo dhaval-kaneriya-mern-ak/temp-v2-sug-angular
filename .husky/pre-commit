@@ -1,0 +1,5 @@
+echo "🔧 Checking code format and linting..."
+npx lint-staged
+
+echo "🏗️  Running build (this may take a moment)..."
+npm run build:all -- --skip-nx-cache

@@ -1,0 +1,56 @@
+<div class="row message-container">
+  @if (showAnnouncementBar) {
+  <div
+    id="announcementBar-btspromo9204"
+    class="convert-special-banner hidden-xs"
+  >
+    <p id="customText">
+      You are trying the new Messages dashboard. Prefer the classic version?
+      <a
+        id="toggleDashboard"
+        (click)="goBackToClassic($event)"
+        (keyup.enter)="goBackToClassic($event)"
+        tabindex="0"
+        >Go Back</a
+      >
+    </p>
+  </div>
+  }
+  <div
+    class="col-12 d-inline-block d-sm-flex align-items-center justify-content-between"
+  >
+    <h2 class="tab-title">Messages</h2>
+    <div class="mb-3">
+      @if (!isProUser && !isTrialUser) {
+      <a href="/index.cfm?go=o.ProGeniusProducts&showtrial=1"
+        >Try Premium for Free</a
+      >
+      }
+    </div>
+  </div>
+  <div class="col-md-12">
+    <sug-ui-menu-tabs
+      [tabs]="navigationTabs"
+      [activeTab]="currentActiveTab"
+      [style]="'font-size:16px;'"
+      (selectionChange)="handleTabSelection($event)"
+    ></sug-ui-menu-tabs>
+  </div>
+  <div class="col-md-12 tab-content">
+    <router-outlet></router-outlet>
+  </div>
+  <div class="col-md-12">
+    <p class="link-text">
+      NOTE: Dates are in {{dateFormatString}}. Times are shown in {{timezone}}.
+      To modify, update your
+      <a href="/index.cfm?go=m.otherSettings#/">settings</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Verification Modal -->
+<sug-verification-modal
+  [visible]="verificationModalService.showModal()"
+  (verified)="onVerificationSuccess()"
+  (closed)="onVerificationModalClosed()"
+></sug-verification-modal>

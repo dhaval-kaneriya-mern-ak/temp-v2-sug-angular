@@ -1,0 +1,333 @@
+// Import shared chip component styles
+@import '../../shared/styles/_chip-components';
+@import '../../shared/styles/_compose_common';
+
+.compose-container {
+  padding: 15px 0;
+  position: relative;
+  h2 {
+    font-size: 30px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    @media (max-width: 767px) {
+      font-size: 18px;
+      .info-icon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+// Chip styles are now imported from shared partial
+.email-form-section {
+  max-width: 800px;
+  position: relative;
+  h3 {
+    display: flex;
+    gap: 10px;
+    font-weight: 400;
+    padding-right: 100px;
+    .info-icon {
+      font-size: 13px;
+    }
+    @media (max-width: 767px) {
+      font-size: 18px;
+      padding-right: 70px;
+    }
+  }
+  .form-wrapper {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+    @media (max-width: 767px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    label {
+      width: 30%;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+    }
+    input,
+    .add-link-btn {
+      width: 70%;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+      ::ng-deep {
+        .p-button {
+          width: 100%;
+        }
+      }
+    }
+    ::ng-deep {
+      .pi {
+        font-size: 20px;
+      }
+      .p-icon {
+        height: 20px;
+        width: 20px;
+      }
+      sug-ui-select-box {
+        width: 70%;
+      }
+      p-select,
+      .select-wrapper {
+        width: 100%;
+      }
+    }
+    textarea,
+    input {
+      padding: 5px 10px;
+      width: 70%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      @media (max-width: 767px) {
+        width: 100%;
+      }
+    }
+    textarea {
+      height: 200px;
+    }
+  }
+  .btn-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+  .check-options-wrap {
+    width: 70%;
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    .check-option-form-profile {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 20px 0;
+    }
+  }
+}
+::ng-deep {
+  sug-ui-multi-select-dropdown {
+    width: 70%;
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    .multi-select-wrapper .p-multiselect {
+      background: transparent;
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+  // .sug-ui-radio-checkbox-button-container {
+  //   padding-bottom: 10px;
+  // }
+  .p-multiselect-header {
+    .p-icon {
+      height: 20px;
+      width: 20px;
+    }
+    .p-inputicon {
+      margin-top: -11px;
+    }
+    .p-inputtext {
+      padding-block: 5px;
+    }
+  }
+}
+.info-note {
+  margin-bottom: 20px;
+}
+// Dialog custom radio options styling
+.dialog-content {
+  padding: 20px 0;
+  ::ng-deep {
+    .signup-radio-content {
+      margin-top: 5px;
+      margin-left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .signup-tooltip-content {
+      margin-top: 16px;
+      margin-left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      label {
+        font-weight: 500;
+        color: #374151;
+        white-space: nowrap;
+      }
+      .p-icon {
+        height: 16px;
+        width: 16px;
+      }
+      sug-ui-select-box {
+        flex: 1;
+        max-width: 300px;
+        width: 100%;
+      }
+      .p-select,
+      .select-wrapper {
+        width: 100%;
+      }
+
+      // Styling for buttons in second radio option
+      // .link-button and .info-button styles are imported from shared styles
+    }
+    .send-msg-dialog-content {
+      display: flex;
+      flex-direction: column;
+      // gap: 20px;
+      align-items: flex-start;
+      width: 90%;
+      .form-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      sug-ui-multi-select-dropdown {
+        width: 100%;
+      }
+      .btn-wrapper {
+        display: flex;
+        gap: 20px;
+      }
+    }
+    .social-btn-wrapper {
+      display: flex;
+      gap: 10px;
+      .social-btn .p-button {
+        background: transparent;
+        border: transparent;
+        cursor: pointer;
+        padding: 0;
+        border-radius: 0;
+        .p-icon {
+          height: 20px;
+          width: 20px;
+          color: #6b7280;
+        }
+        &:hover {
+          box-shadow: none;
+          color: #f68b1c;
+        }
+      }
+    }
+  }
+}
+.file-selection-wrap {
+  span {
+    margin-bottom: 10px;
+    display: block;
+    font-size: 16px;
+    i {
+      font-size: 16px;
+      color: #334155;
+    }
+  }
+  .btn-wrapper {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+}
+.recipient-info-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 70%;
+
+  @media (max-width: 767px) {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .recipient-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    align-items: center;
+
+    .recipient-label {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 400;
+    }
+
+    .edit-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      margin-left: 4px;
+
+      &:hover {
+        background-color: rgba(99, 102, 241, 0.08);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      i {
+        color: #f68b1c;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .recipient-details-btn {
+    background-color: #ff6b35;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: #ff5722;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus {
+      outline: 2px solid #ff6b35;
+      outline-offset: 2px;
+    }
+  }
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#from-user-mobile {
+  height: auto;
+}

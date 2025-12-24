@@ -1,0 +1,66 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
+<div class="message-details">
+  @if (detailsMessage) {
+  <div class="message-content-details">
+    <div class="content-info">
+      <div class="info">Sent</div>
+      <div class="info">
+        <span>{{ detailsMessage.sentdate }}</span>
+        <span>{{ detailsMessage.timezone.zone }}</span>
+      </div>
+    </div>
+    <div class="content-info">
+      <div class="info">Related Signup</div>
+      <div class="info color-info">
+        @if (detailsMessage.signups && detailsMessage.signups.length > 0) { @if
+        (detailsMessage.signups.length === 1) {
+        <a href="/go/{{detailsMessage.signups[0].urlid}}"
+          ><span>{{ detailsMessage.signups[0].title }}</span></a
+        >
+        } @else {
+        <span>Multiple Signups</span>
+        } } @else {
+        <span>{{ detailsMessage.title }}</span>
+        }
+      </div>
+    </div>
+    <div class="content-info">
+      <div class="info">From</div>
+      <div class="info">{{ detailsMessage.contactname }}</div>
+    </div>
+    <div class="content-info">
+      <div class="info">Reply To</div>
+      <div class="info">{{ detailsMessage.createdby?.email }}</div>
+    </div>
+    <div class="content-info">
+      <div class="info">Sent To</div>
+      <div class="info">{{ detailsMessage.senttoname }}</div>
+    </div>
+    <!-- TODO: Add attachments support when available in API -->
+    <!-- <div class="content-info">
+        <div class="info">Attachments</div>
+        <div class="info download-container">
+          <sug-ui-button icon="fa-solid fa-arrow-circle-down" label=" "></sug-ui-button>
+          Screenshot 2024-05-23 at 1.png
+        </div>
+      </div> -->
+  </div>
+  <div class="template-wrapper-main pt-5">
+    <div class="template-wrapper">
+      <div class="template-body">
+        <!-- Email preview content -->
+        <div class="email-preview">
+          <div class="email-content" [innerHTML]="sanitizedHtmlPreview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  } @else {
+  <div class="justify-content-center d-flex">
+    <p>Message details not found</p>
+  </div>
+  }
+</div>

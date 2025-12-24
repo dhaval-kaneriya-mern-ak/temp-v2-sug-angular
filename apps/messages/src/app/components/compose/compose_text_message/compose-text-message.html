@@ -1,0 +1,543 @@
+<sug-ui-loading-spinner
+  [isLoading]="isLoading"
+  [isFullPageLoader]="true"
+></sug-ui-loading-spinner>
+
+<div class="compose-container">
+  <!-- Validation Errors Display -->
+  @if (formValidationErrors && formValidationErrors.length > 0) {
+  <ul class="form-validation-errors">
+    @for (error of formValidationErrors; track error) {
+    <li class="error-item">{{ error }}</li>
+    }
+  </ul>
+  } @if (showRadioButtons) {
+  <div class="radio-selection">
+    <sug-ui-radio-checkbox-button
+      type="radio"
+      name="size"
+      [options]="radioOptions"
+      inputId="size-selection"
+      [(value)]="selectedValue"
+      [tooltipPosition]="'top'"
+      (changeEvent)="handleSelection($event)"
+    ></sug-ui-radio-checkbox-button>
+  </div>
+  } @if (!showRadioButtons) {
+  <div>
+    @switch (selectedValue) { @case ('emailoptionone') {
+    <div class="email-form-section">
+      <h3>
+        Invite People to Opt In to Text Messages
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="fa-solid fa-circle-question info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <div class="info-note">
+        <strong>Note:</strong> At this time, only mobile numbers from US,
+        Canada, and US territories are supported.
+      </div>
+      <form [formGroup]="inviteTextForm">
+        <div class="form-wrapper">
+          <label for="signup-links">From</label>
+          <input
+            type="text"
+            placeholder="Enter sender email address"
+            id="from-email"
+            formControlName="fromName"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">Reply To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            formControlName="replyTo"
+            [options]="subAdminsData"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="reply-to">To</label>
+          <sug-ui-multi-select-dropdown
+            id="reply-to"
+            formControlName="to"
+            [options]="groupData"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-subject">Subject</label>
+          <input
+            type="text"
+            placeholder="Enter email subject"
+            id="from-subject"
+            formControlName="subject"
+          />
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+            formControlName="message"
+          ></textarea>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
+        </div>
+        <div class="btn-wrapper">
+          <sug-ui-button
+            severity="success"
+            (buttonClick)="onPreviewAndSend(currentEmailForm)"
+            [disabled]="inviteTextForm.invalid || stateService.recipients.length === 0"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            label="Preview & Send"
+          ></sug-ui-button>
+          <sug-ui-button
+            severity="secondary"
+            [disabled]="inviteTextForm.invalid"
+            class="draft-btn"
+            icon=""
+            label="Save Draft"
+            (click)="onSaveDraft(messageStatus.DRAFT,'inviteToSignUp')"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } @case ('emailoptiontwo') {
+    <div class="email-form-section email-form-people">
+      <h3>
+        Send a Text Message to People Participating in a Sign Up
+        <sug-ui-tooltip
+          [text]="'Click to learn more about composing messages.'"
+          [position]="'bottom'"
+          [tooltipClass]="'custom-tooltip'"
+          [tooltipOptions]="{ showDelay: 200, autoHide: true, tooltipEvent: 'hover' }"
+        >
+          <p-button variant="text" size="small" (click)="openHelpDialog()">
+            <i class="fa-solid fa-circle-question info-icon"></i>
+          </p-button>
+        </sug-ui-tooltip>
+      </h3>
+      <form [formGroup]="sendTextEmailForm">
+        <div class="form-wrapper">
+          <label for="reply-to">Sign Up</label>
+          <sug-ui-multi-select-dropdown
+            formControlName="selectedSignups"
+            [options]="signupOptions"
+            appendTo="parent"
+            panelStyleClass="custom-dropdown"
+            (valueChanged)="onSignUpSelectionChange($event)"
+          ></sug-ui-multi-select-dropdown>
+        </div>
+        <div class="form-wrapper">
+          <label for="to">To</label>
+          @if (!hasPeopleSelection) {
+          <sug-ui-button
+            type="button"
+            class="add-link-btn"
+            icon=""
+            [disabled]="getSelectedSignup().length === 0"
+            label="Select People"
+            (buttonClick)="openPeopleDialog()"
+          >
+          </sug-ui-button>
+          } @if (hasPeopleSelection && stateService.selectedDateSlots.length ===
+          0 && stateService.selectedMemberGroups.length === 0) {
+          <div class="recipient-info-container signup-chips-container">
+            <div class="chips-container">
+              @for (item of stateService.selectedGroups; track item.value ||
+              $index; let i = $index) {
+              <span>
+                <p-chip
+                  class="gap-2"
+                  [label]="item.label"
+                  [removable]="true"
+                  (onRemove)="removeGroup(i)"
+                />
+              </span>
+              }
+            </div>
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openPeopleDialog()"
+                aria-label="Edit recipient selection"
+              >
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(true)"
+            >
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
+            </button>
+          </div>
+          } @if (stateService.selectedDateSlots.length > 0) {
+          <div class="recipient-info-container">
+            <div class="recipient-text">
+              <span class="recipient-label">Selected Dates/Slots</span>
+            </div>
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openDateSlotsDialog()"
+                aria-label="Edit selected slots"
+              >
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(true)"
+            >
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
+            </button>
+          </div>
+          } @if (stateService.selectedMemberGroups.length > 0) {
+          <div class="recipient-info-container">
+            <div class="recipient-text">
+              <span class="recipient-label">Custom Selection</span>
+            </div>
+            <div class="recipient-text">
+              <button
+                type="button"
+                class="edit-icon-btn"
+                (click)="openMyGroupDialog()"
+                aria-label="Edit selected member groups"
+              >
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(true)"
+            >
+              {{ textRecipientsCount }} Text Recipients
+            </button>
+            <button
+              type="button"
+              class="recipient-details-btn"
+              (click)="showRecipientDetails(false)"
+            >
+              {{ emailRecipientsCount }} Email Recipients
+            </button>
+          </div>
+          }
+        </div>
+        <div class="form-wrapper">
+          <label for="from-message">Message</label>
+          <textarea
+            id="from-message"
+            placeholder="Type your message here..."
+            formControlName="message"
+          ></textarea>
+        </div>
+        <div class="form-wrapper">
+          <label for="from-email"></label>
+          <div class="check-options-wrap" style="position: relative">
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                [label]="checkboxOptions[0].label"
+                type="checkbox"
+                [disabled]="getSelectedSignup().length === 0"
+                [formControlName]="'include' + checkboxOptions[0].value"
+                [binary]="true"
+                [inputId]="checkboxOptions[0].value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <a
+                [ngClass]="{'disabled': getSelectedSignup().length === 0}"
+                tabindex="-1"
+                (click)="showProfileData()"
+                (keyup)="false"
+              >
+                <i class="fa-solid fa-gear optionone-label"> </i>
+              </a>
+            </div>
+            @if (showProfile) {
+            <div class="check-option-form check-option-form-profile">
+              <input
+                type="text"
+                id="from-user-mobile"
+                formControlName="userMobile"
+              />
+              <sug-ui-button
+                severity="primary"
+                (buttonClick)="updateUserMobileNumber()"
+                [outlined]="false"
+                class="send-btn"
+                icon=""
+                label="Update My Profile"
+              ></sug-ui-button>
+            </div>
+            }
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                [label]="checkboxOptions[1].label"
+                type="checkbox"
+                [disabled]="getSelectedSignup().length === 0"
+                [formControlName]="'include' + checkboxOptions[1].value"
+                [binary]="true"
+                [inputId]="checkboxOptions[1].value"
+              >
+              </sug-ui-radio-checkbox-button>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+              <sug-ui-radio-checkbox-button
+                [label]="checkboxOptions[2].label"
+                type="checkbox"
+                [disabled]="getSelectedSignup().length === 0"
+                [formControlName]="'include' + checkboxOptions[2].value"
+                [binary]="true"
+                [inputId]="checkboxOptions[2].value"
+              >
+              </sug-ui-radio-checkbox-button>
+              <a
+                [ngClass]="{'disabled': getSelectedSignup().length === 0 || sendTextEmailForm.get('includefallback')?.value === false}"
+                tabindex="-1"
+                (click)="showEmailData()"
+                (keyup)="false"
+              >
+                <i class="fa-solid fa-gear optionthree-label"></i>
+              </a>
+            </div>
+            @if (showEmail) {
+            <div class="check-option-form mt-5">
+              <div class="form-wrapper">
+                <label for="email-subject">Email Subject</label>
+                <input
+                  type="text"
+                  formControlName="emailSubject"
+                  id="email-subject"
+                />
+              </div>
+              <div class="form-wrapper">
+                <label for="email-from">Email From</label>
+                <input
+                  type="text"
+                  formControlName="emailFrom"
+                  id="email-from"
+                />
+              </div>
+              <div class="form-wrapper">
+                <label for="reply-email">Email Reply To</label>
+                <sug-ui-multi-select-dropdown
+                  id="reply-email"
+                  formControlName="emailReplyTo"
+                  [options]="subAdminsData"
+                ></sug-ui-multi-select-dropdown>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        <div class="form-wrapper">
+          <label for="captcha"></label>
+          <ngx-recaptcha2
+            [siteKey]="siteKey"
+            (reset)="handleReset()"
+            (expire)="handleExpire()"
+            (success)="handleSuccess($event)"
+            [useGlobalDomain]="false"
+            formControlName="token"
+          >
+          </ngx-recaptcha2>
+        </div>
+        <div class="btn-wrapper">
+          <sug-ui-button
+            severity="success"
+            [disabled]="sendTextEmailForm.invalid || stateService.recipients.length === 0"
+            (buttonClick)="sendTextEmailForm
+      .get('includefallback')?.value === true ? onPreviewAndSend(currentEmailForm) : onSaveDraft(messageStatus.SEND)"
+            [outlined]="false"
+            class="send-btn"
+            icon=""
+            [label]="sendTextEmailForm
+      .get('includefallback')?.value === true ? 'Preview & Send' : 'Send'"
+          ></sug-ui-button>
+          <sug-ui-button
+            severity="secondary"
+            [disabled]="sendTextEmailForm.invalid"
+            class="draft-btn"
+            icon=""
+            label="Save Draft"
+            (click)="onSaveDraft(messageStatus.DRAFT,'emailParticipants')"
+          ></sug-ui-button>
+        </div>
+      </form>
+    </div>
+    } }
+    <button (click)="handleBackButton()" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+  </div>
+  }
+</div>
+<!-- Confirmation Dialog for Unsaved Changes -->
+<sug-confirmation-dialog
+  [(visible)]="isConfirmationDialogVisible"
+  [title]="dialogTitle"
+  [message]="dialogMessage"
+  (confirm)="onConfirmNavigation()"
+  (Cancel)="onCancelNavigation()"
+></sug-confirmation-dialog>
+<sug-help-dialog
+  [(visible)]="isHelpDialogVisible"
+  [title]="selectedValue === 'emailoptionone' ? 'Help: Invite people to opt in to text messages' : 'Help: Send a text message to people participating in a sign up'"
+>
+  <p>
+    Before you can send text messages to your group members, they must first opt
+    in to receive text messages from SignUpGenius. One way to do this is by
+    sending an opt-in invite to your group.
+  </p>
+  <h4>Will there be a sign up link in the opt-in invitation?</h4>
+  <p>
+    No. Because text messaging opt-in applies to all sign ups you create and is
+    not limited to a specific sign up, a sign up link is not included in the
+    opt-in invite. However, it is still necessary to create and publish a sign
+    up prior to sending any messages.
+  </p>
+  <h4>What if I dont know my participants email addresses?</h4>
+  <p>
+    Another way to invite participants to opt in to text messages is by
+    requesting their mobile number when they sign up. When creating a sign up,
+    check the “Phone” option under “Ask Participants For” in the Settings tab.
+    Below the mobile phone field on the sign up form, an opt-in checkbox will be
+    displayed to allow participants to give consent to receiving text messages
+    from you.
+  </p>
+  <h4>Will SignUpGenius send one group text or send individual texts?</h4>
+  <p>
+    We send out individual texts to the opted-in participants you select. They
+    will not see the mobile numbers of any other group members. You’ll be able
+    to confirm that each text was delivered by viewing the "Sent" tab of our
+    Messages area.
+  </p>
+  <h4>Is there a limit to the number of messages I can send?</h4>
+  <p>
+    The number of opt-in invitations you can send is determined by your premium
+    plan email limit. The text message limit is also based on your premium plan.
+    Learn more about your plan features and limitations
+    <a href="">here</a>.
+  </p>
+  <h4>Which countries can I send text messages to?</h4>
+  <p>
+    At this time, only mobile numbers from US, Canada, and US territories are
+    supported.
+  </p>
+</sug-help-dialog>
+<!-- People Selection Dialog -->
+<sug-people-selection-dialog
+  [(visible)]="isPeopleDialogVisible"
+  [isFromTextMessage]="hasWaitlistSlots"
+  [isTextMessageParticipants]="selectedValue === 'emailoptiontwo'"
+  [messageTypeId]="selectedValue === 'emailoptionone' ? 14 : 15"
+  [formType]="currentFormType"
+  [groupOptions]="groupData"
+  [selectedSignups]="getSelectedSignup()"
+  [isSignUpIndexPageSelected]="false"
+  [selectedGroups]="stateService.selectedGroups"
+  [selectedDateSlots]="stateService.selectedDateSlots"
+  [recipientCount]="stateService.recipientCount"
+  [peopleSelectionData]="stateService.peopleSelectionData"
+  [sendtotype]="selectedRadioOption.selectedValue"
+  (selectedGroupsChange)="stateService.setSelectedGroups($event)"
+  (recipientsChange)="showRecipientsCount($event)"
+  (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (peopleSelectionDataChange)="stateService.setPeopleSelectionData($event)"
+  (removeSlot)="stateService.removeSelectedSlot($event)"
+  (openDateSlotsDialog)="openDateSlotsDialog()"
+  (selectedRadioOption)="setSelectedRadio($event)"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (removeMemberGroup)="stateService.removeSelectedMemberGroup($event)"
+  (openMyGroupDialog)="openMyGroupDialog()"
+>
+</sug-people-selection-dialog>
+
+<!-- Date Slots Selection Dialog -->
+<sug-date-slots-selection
+  [(visible)]="isDateSlotsDialogVisible"
+  [selectedSignups]="getSelectedSignup()"
+  [selectedDateSlots]="stateService.selectedDateSlots"
+  (selectedDateSlotsChange)="stateService.setSelectedDateSlots($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="showRecipientsCount($event)"
+  (slotsSelected)="onDateSlotsSelected()"
+>
+</sug-date-slots-selection>
+
+<!-- My Groups Selection -->
+<sug-my-group-selection
+  [(visible)]="isMyGroupsDialogVisible"
+  [selectedMemberGroups]="stateService.selectedMemberGroups"
+  (selectedMemberGroupsChange)="stateService.setSelectedMemberGroups($event)"
+  (recipientCountChange)="stateService.setRecipientCount($event)"
+  (recipientsChange)="showRecipientsCount($event)"
+  (groupMemberSelected)="onMyGroupsSelected()"
+></sug-my-group-selection>
+
+<!-- Recipient Details Dialog -->
+<sug-recipient-details-dialog
+  [textOption]="showTextRecipients"
+  [(visible)]="isRecipientDialogVisible"
+  [recipients]="stateService.recipients"
+>
+</sug-recipient-details-dialog>
+<sug-file-selection-dialog [(visible)]="isSelectFileDialogVisible">
+</sug-file-selection-dialog>
+
+<!-- Preview Email Dialog -->
+<sug-preview-email
+  [showThemeSelection]="!userStateService.isBasicUser(userProfile)"
+  [(visible)]="isPreviewVisible"
+  [showTextPreview]="selectedValue === 'emailoptiontwo'"
+  [textMessage]="currentEmailForm.get('message')?.value"
+  [isScheduledMessage]="messageOriginalStatus === messageStatus.SCHEDULED"
+  [prePopulatedDate]="scheduledDateForPreview"
+  [prePopulatedTime]="scheduledTimeForPreview"
+  (scheduleEmail)="scheduleEmail($event)"
+  (sendNow)="onSaveDraft(messageStatus.SEND)"
+  (visibleChange)="onPreviewClose()"
+  (themeChange)="onThemeChange($event)"
+  [emailHtmlPreview]="emailHtmlPreview"
+  [availableThemes]="availableThemes"
+></sug-preview-email>
