@@ -13,6 +13,7 @@ import {
   SugUiMenuTabsComponent,
   SugUiButtonComponent,
   Tabs,
+  SugUiLoadingSpinnerComponent,
 } from '@lumaverse/sug-ui';
 
 import { ButtonModule } from 'primeng/button';
@@ -27,7 +28,8 @@ import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 import { UserStateService } from '@services/user-state.service';
 import { SuccessPageComponent } from '../utils/success-page/success-page.component';
-import { ISignUpItem } from '@services/interfaces';
+import { ISignUpItem, SignupOptionGroup } from '@services/interfaces';
+import { ComposeEmailStateService } from '../utils/services/compose-email-state.service';
 interface ComposeTab extends Tabs {
   restricted?: boolean;
   badge?: string;
@@ -43,8 +45,10 @@ interface ComposeTab extends Tabs {
     SugUiMenuTabsComponent,
     SugUiButtonComponent,
     SuccessPageComponent,
+    SugUiLoadingSpinnerComponent,
     // SugUiRadioCheckboxButtonComponent,
   ],
+  providers: [ComposeEmailStateService],
   templateUrl: './compose.html',
   styleUrl: './compose.scss',
 })
@@ -53,6 +57,7 @@ export class Compose implements OnInit, OnDestroy {
   composeService = inject(ComposeService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private stateService = inject(ComposeEmailStateService);
   private destroy$ = new Subject<void>();
   public currentActiveTab = '';
   public isProUser = false;
@@ -64,6 +69,8 @@ export class Compose implements OnInit, OnDestroy {
   isShowSuccessPage = false;
   successPageType: 'send' | 'draft' | 'scheduled' | 'custom' = 'send';
   successPageSelectedSignups: ISignUpItem[] = [];
+  public hasSignups = false;
+  public isLoadingSignups = true;
 
   // Navigation tabs
   navigationComposeTabs: ComposeTab[] = [
@@ -91,6 +98,8 @@ export class Compose implements OnInit, OnDestroy {
   ngOnInit() {
     this.initializeActiveTab();
     this.checkIfSuccessRoute();
+
+    this.loadSignupsData();
 
     // Subscribe to router events to detect route changes and update active tab
     this.router.events
@@ -159,6 +168,71 @@ export class Compose implements OnInit, OnDestroy {
 
   private checkIfSuccessRoute() {
     this.isSuccessRoute = this.router.url.includes('/success');
+  }
+
+  private loadSignupsData(): void {
+    this.isLoadingSignups = true;
+
+    this.composeService
+      .getSignUpList()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response?.data) {
+            const signupOptions = this.transformSignupsToOptions(response.data);
+            this.stateService.setSignUpOptions(signupOptions);
+            this.hasSignups = signupOptions && signupOptions.length > 0;
+          } else {
+            this.hasSignups = false;
+          }
+          this.isLoadingSignups = false;
+        },
+        error: () => {
+          this.hasSignups = false;
+          this.isLoadingSignups = false;
+        },
+      });
+  }
+
+  private transformSignupsToOptions(
+    signups: ISignUpItem[]
+  ): SignupOptionGroup[] {
+    const rsvpSignUps = signups.filter(
+      (signup) => signup.mode?.toLowerCase() === 'rsvp'
+    );
+    const regularSignUps = signups.filter(
+      (signup) => signup.mode?.toLowerCase() === 'standard'
+    );
+
+    const groups: SignupOptionGroup[] = [];
+
+    // Add RSVP Sign Ups group if there are any
+    if (rsvpSignUps.length > 0) {
+      groups.push({
+        label: 'RSVP Sign Ups',
+        value: 'rsvp-group',
+        items: rsvpSignUps.map((signup) => ({
+          label: signup.title || signup.fulltitle || 'Untitled',
+          value: signup.signupid.toString(),
+          signupData: signup,
+        })),
+      });
+    }
+
+    // Add Standard Sign Ups group if there are any
+    if (regularSignUps.length > 0) {
+      groups.push({
+        label: 'Standard Sign Ups',
+        value: 'standard-group',
+        items: regularSignUps.map((signup) => ({
+          label: signup.title || signup.fulltitle || 'Untitled',
+          value: signup.signupid.toString(),
+          signupData: signup,
+        })),
+      });
+    }
+
+    return groups;
   }
 
   ngOnDestroy() {
